@@ -1,0 +1,31 @@
+create table &TOOLKIT._status_severity(
+  fss_id number, 
+	fss_name varchar2(50 char), 
+	fss_html varchar2(200 char), 
+	fss_status varchar2(200 char), 
+  constraint pk_&TOOLKIT._status_severity primary key (fss_id) enable
+) organization index;
+
+comment on table &TOOLKIT._status_severity  is 'Tabelle zur Speicherung von GUI-Angaben zur Filterung von Schweregraden';
+comment on column &TOOLKIT._status_severity.fss_id is 'Technischer Schlüssel, entspricht MESSAGE_SEVERITY';
+comment on column &TOOLKIT._status_severity.fss_name is 'Bezeichnung des Schweregrades';
+comment on column &TOOLKIT._status_severity.fss_html is 'HTML-Snippet, Langform';
+comment on column &TOOLKIT._status_severity.fss_status is 'HTML-Snippet, Status-Icon';
+
+
+merge into &TOOLKIT._status_severity s
+using (select 30 fss_id,
+              'Error' fss_name,
+              '<span class="fa-bg-red">Error</span>' fss_html,
+              '<i class="fa fa-times fa-text-red"/>' fss_status
+         from dual 
+       union all
+       select 40, 'Warning', '<span class="fa-bg-yellow">Warning</span>', '<i class="fa fa-exclamation-triangle fa-text-red"/>' from dual union all
+       select 50, 'Milestone', '<span class="fa-bg-green">Milestone</span>', '<i class="fa fa-check fa-text-green"/>' from dual union all
+       select 60, 'Information', '<span>Information</span>', '<i class="fa fa-check fa-text-green"/>' from dual union all
+       select 70, 'Additional Info', '	<span>Additional Info</span>', '<i class="fa fa-check fa-text-green"/>' from dual) v
+   on (s.fss_id = v.fss_id)
+ when not matched then insert(fss_id, fss_name, fss_html, fss_status)
+      values(v.fss_id, v.fss_name, v.fss_html, v.fss_status);
+      
+commit;

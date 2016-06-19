@@ -1,0 +1,68 @@
+create table &TOOLKIT._status(
+  fst_id varchar2(26 char), 
+	fst_fcl_id varchar2(50 char), 
+	fst_fsg_id varchar2(26 char),
+	fst_msg_id varchar2(50 char), 
+	fst_name varchar2(50 char), 
+	fst_description varchar2(200 char), 
+	fst_active char(1 byte) default 'Y', 
+	fst_retries_on_error number default 0, 
+	fst_retry_schedule varchar2(30 byte), 
+	fst_retry_time number,  
+	constraint pk_&TOOLKIT._status primary key (fst_id, fst_fcl_id),
+  constraint fk_fst_fcl_id foreign key (fst_fcl_id)
+	  references &TOOLKIT._class (fcl_id),
+  constraint fk_fst_fsg_id foreign key (fst_fsg_id)
+	  references &TOOLKIT._status_group (fsg_id),
+  constraint fk_fst_msg_id foreign key (fst_msg_id)
+	  references message (message_id),
+  constraint nn_fst_active check (fst_active is not null),
+  constraint nn_fst_msg_id check (fst_msg_id is not null),
+  constraint chk_fst_active check (fst_active in ('Y', 'N')),
+  constraint nn_fst_retries_on_error check (fst_retries_on_error is not null),
+  constraint chk_retry check (
+       (fst_retries_on_error = 0 and fst_retry_schedule is null and fst_retry_time is null)
+    or (    (fst_retries_on_error > 0 and (fst_retry_schedule is not null or fst_retry_time is not null))
+        and (fst_retries_on_error > 0 and (fst_retry_schedule is null or fst_retry_time is null))
+       )
+    ),
+  constraint nn_fst_name check (fst_name is not null),
+  constraint chk_fst_retry_time check (fst_retry_time between 0 and 60)
+) organization index;
+
+comment on table &TOOLKIT._status  is 'Tabelle zur Speicherung von &TOOLKIT.-Status pro Typ';
+comment on column &TOOLKIT._status.fst_id is 'Primärschlüssel';
+comment on column &TOOLKIT._status.fst_fcl_id is 'Primärschlüssel, Referenz auf &TOOLKIT._CLASS';
+comment on column &TOOLKIT._status.fst_fsg_id is 'Gruppierungskriterium';
+comment on column &TOOLKIT._status.fst_msg_id is 'Name der Message, die zum Logging genutzt werden soll, Referenz auf MESSAGE';
+comment on column &TOOLKIT._status.fst_name is 'Klartextbezeichnung für LOV';
+comment on column &TOOLKIT._status.fst_description is 'Optionale Beschreibung';
+comment on column &TOOLKIT._status.fst_active is 'Flag, das anzeigt, ob die Klasse aktuell verwendet wird';
+comment on column &TOOLKIT._status.fst_retries_on_error is 'Wie viele erneute Versuche sollen im Fehlerfall unternommen werden? Default: 0';
+comment on column &TOOLKIT._status.fst_retry_schedule is 'Optionale Einstellung: Falls FST_RETRIES_ON_ERROR > 0: Welcher Schedule soll verwendet werden, um einen erneuten Versuch zu unternehmen';
+comment on column &TOOLKIT._status.fst_retry_time is 'Optionale Einstellung: Falls FST_RETRIES_ON_ERROR > 0: Wie lange soll vor einem erneuten Versuch gewartet werden?';
+
+create index idx_fk_fst_fsg_id on &TOOLKIT._status (fst_fsg_id);
+create index idx_fk_fst_fcl_id on &TOOLKIT._status (fst_fcl_id, fst_id);
+create index idx_fk_fst_msg_id on &TOOLKIT._status (fst_msg_id);
+
+merge into &TOOLKIT._status c
+using (select 'ERROR' fst_id,
+              '&TOOLKIT.' fst_fcl_id,
+              'ERROR' fst_fsg_id,
+              '&TOOLKIT._FINAL_STATE' fst_msg_id,
+              'Error' fst_name,
+              'Process stopped due to an error' fst_description,
+              0 fst_retries_on_error,
+              null fst_retry_schedule,
+              null fst_retry_time
+         from dual) v
+   on (c.fst_id = v.fst_id)
+ when matched then update set
+      fst_fsg_id = v.fst_fsg_id,
+      fst_msg_id = v.fst_msg_id,
+      fst_description = v.fst_description
+ when not matched then insert(fst_id, fst_fcl_id, fst_fsg_id, fst_msg_id, fst_name, fst_description, fst_retries_on_error, fst_retry_schedule, fst_retry_time)
+      values(v.fst_id, v.fst_fcl_id, v.fst_fsg_id, v.fst_msg_id, v.fst_name, v.fst_description, v.fst_retries_on_error, v.fst_retry_schedule, v.fst_retry_time);
+      
+commit;

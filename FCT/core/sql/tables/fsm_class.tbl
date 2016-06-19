@@ -1,0 +1,28 @@
+create table &TOOLKIT._class(
+  fcl_id varchar2(3 char), 
+	fcl_name varchar2(50 char), 
+	fcl_description varchar2(200 char), 
+	fcl_active char(1 byte) default 'Y', 
+	constraint pk_&TOOLKIT._class primary key (fcl_id),
+  constraint nn_fcl_active check (fcl_active is not null),
+  constraint nn_fcl_name check (fcl_name is not null),
+  constraint chk_fcl_active check (fcl_active in ('Y', 'N'))
+) organization index;
+
+comment on table &TOOLKIT._class  is 'Tabelle zur Speicherung von &TOOLKIT.-Klassen';
+comment on column &TOOLKIT._class.fcl_id is 'Primärschlüssel';
+comment on column &TOOLKIT._class.fcl_name is 'Klartextbezeichnung für LOV';
+comment on column &TOOLKIT._class.fcl_description is 'Optionale Beschreibung';
+comment on column &TOOLKIT._class.fcl_active is 'Flag, das anzeigt, ob die Klasse aktuell verwendet wird';
+
+
+merge into &TOOLKIT._class c
+using (select '&TOOLKIT.' fcl_id, 
+              'Finite State Machine' fcl_name,
+              'Abstracdt super class, defines interface' fcl_description
+         from dual) v
+   on (c.fcl_id = v.fcl_id)
+ when not matched then insert(fcl_id, fcl_name, fcl_description)
+      values(v.fcl_id, v.fcl_name, v.fcl_description);
+      
+commit;

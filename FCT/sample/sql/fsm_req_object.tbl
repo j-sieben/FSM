@@ -1,0 +1,22 @@
+create table fct_req_object(
+  req_id number, 
+	req_rtp_id varchar2(50 char), 
+	req_rre_id varchar2(50 char), 
+	req_text varchar2(1000 char),
+  constraint pk_fct_req_object primary key (req_id),
+  constraint fk_req_id foreign key (req_id)
+	  references fct_object (fct_id) on delete cascade,
+  constraint fk_req_rre_id foreign key (req_rre_id)
+	  references fct_req_requestor (rre_id),
+  constraint fk_req_rtp_id foreign key (req_rtp_id)
+	  references fct_req_types (rtp_id)
+);
+
+comment on table fct_req_object  is 'table to store concrete attributes for type FCT_REQ';
+comment on column fct_req_object.req_id is 'primary key, reference to FCT_OBJECT';
+comment on column fct_req_object.req_rtp_id is 'Request type, reference to FCT_REQ_TYPE';
+comment on column fct_req_object.req_rre_id is 'Requesting person, reference to FCT_REQ_REQUESTOR';
+comment on column fct_req_object.req_text is 'Text the requestor has entered for her request';
+
+create index idx_req_rtp_id on fct_req_object (req_rtp_id);
+create index idx_req_rre_id on fct_req_object (req_rre_id);

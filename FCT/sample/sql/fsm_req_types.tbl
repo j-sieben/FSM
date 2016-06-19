@@ -1,0 +1,20 @@
+create table &TOOLKIT._req_types(
+  rtp_id varchar2(50 char), 
+	rtp_name varchar2(100 char), 
+	rtp_description varchar2(200 char), 
+	rtp_active char(1 byte) default 'Y', 
+  constraint pk_&TOOLKIT._req_types primary key (rtp_id),
+  constraint chk_rtp_active check (rtp_active in ('Y', 'N'))
+) organization;
+
+comment on table &TOOLKIT._req_types  is 'Request type';
+comment on column &TOOLKIT._req_types.rtp_id is 'primary key';
+comment on column &TOOLKIT._req_types.rtp_name is 'descriptive name for LOV';
+comment on column &TOOLKIT._req_types.rtp_description is 'optional description';
+comment on column &TOOLKIT._req_types.rtp_active is 'flag to indicate whether req_type is in use actually';
+
+insert into &TOOLKIT._req_types(rtp_id, rtp_name, rtp_description)
+select 'OBJECT_PRIV', 'Object privilege', 'Request to be granted an object privilege' from dual union all
+select 'SYSTEM_PRIV', 'System privilege', 'Request to be granted an system privilege' from dual;
+
+commit;

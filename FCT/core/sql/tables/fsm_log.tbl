@@ -1,0 +1,22 @@
+create table &TOOLKIT._log(	
+  fsl_id number, 
+	fsl_&TOOLKIT._id number, 
+	fsl_session_id varchar2(30 char), 
+	fsl_user_name varchar2(60 char), 
+	fsl_log_date timestamp (6), 
+	fsl_msg_text clob, 
+	fsl_severity number, 
+	fsl_fst_id varchar2(26 byte), 
+	fsl_fev_list varchar2(200 char), 
+	fsl_fcl_id varchar2(30 char), 
+	fsl_msg_id varchar2(30 char), 
+	fsl_msg_args msg_args_char,
+  constraint pk_&TOOLKIT._log primary key (fsl_id),
+  constraint fsl_&TOOLKIT._id foreign key (fsl_&TOOLKIT._id)
+	  references &TOOLKIT._object (&TOOLKIT._id) on delete cascade
+);
+
+
+create index idx_fsl_session_id on &TOOLKIT._log (fsl_session_id);
+create index idx_fsl_log_date on &TOOLKIT._log (fsl_log_date);
+create index idx_fsl_&TOOLKIT._id on &TOOLKIT._log (fsl_&TOOLKIT._id);

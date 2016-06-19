@@ -1,0 +1,37 @@
+create table &TOOLKIT._status_change_log(
+  fsl_id number, 
+	fsl_&TOOLKIT._id number, 
+	fsl_fst_id varchar2(50 char), 
+	fsl_fev_id varchar2(50 char), 
+	fsl_fcl_id varchar2(50 char), 
+	fsl_&TOOLKIT._validity number, 
+	fsl_timestamp timestamp (6) with time zone default systimestamp, 
+	constraint pk_&TOOLKIT._status_change_log primary key (fsl_id),
+  constraint fk_fsl_fcl_id foreign key (fsl_fcl_id)
+	  references &TOOLKIT._class (fcl_id) on delete cascade,
+  constraint fk_fsl_fev_id foreign key (fsl_fev_id, fsl_fcl_id)
+	  references &TOOLKIT._event (fev_id, fev_fcl_id) on delete cascade,
+  constraint fk_fsl_&TOOLKIT._id foreign key (fsl_&TOOLKIT._id)
+	  references &TOOLKIT._object (&TOOLKIT._id) on delete cascade,
+  constraint fk_fsl_fst_id foreign key (fsl_fst_id, fsl_fcl_id)
+	  references &TOOLKIT._status (fst_id, fst_fcl_id) on delete cascade,
+  constraint nn_fsl_&TOOLKIT._validity check (fsl_&TOOLKIT._validity is not null),
+  constraint nn_fsl_&TOOLKIT._id check (fsl_&TOOLKIT._id is not null),
+  constraint nn_fsl_fcl_id check (fsl_fcl_id is not null)
+) organization index;
+
+comment on table &TOOLKIT._status_change_log  is 'Logtabelle für die Statusübergänge von &TOOLKIT.';
+comment on column &TOOLKIT._status_change_log.fsl_id is 'Technischer Schlüssel, Primärschlüssel, ermittelt aus ordered Sequence &TOOLKIT._LOG_SEQ';
+comment on column &TOOLKIT._status_change_log.fsl_&TOOLKIT._id is 'ID des &TOOLKIT.-Objekts, sollte aus Sequenz &TOOLKIT._SEQ gewonnen werden';
+comment on column &TOOLKIT._status_change_log.fsl_fst_id is 'Neuer Status des &TOOLKIT.-Objekts, Referenz auf Tabelle &TOOLKIT._STATUS';
+comment on column &TOOLKIT._status_change_log.fsl_fev_id is 'Ausgelöster Event, Referenz auf Tabelle &TOOLKIT._EVENT';
+comment on column &TOOLKIT._status_change_log.fsl_fcl_id is 'Typ der &TOOLKIT., Referenz auf Tabelle &TOOLKIT._CLASS';
+comment on column &TOOLKIT._status_change_log.fsl_&TOOLKIT._validity is 'Ergebnis der Zuordnung des neuen Status. 0 = Fehler, 1 = OK';
+comment on column &TOOLKIT._status_change_log.fsl_timestamp is 'Zeitstempel, zu dem der Statuswechsel erfolgt ist';
+
+
+create index idx_fk_fsl_fev_id on &TOOLKIT._status_change_log (fsl_fev_id, fsl_fcl_id);
+create index idx_fk_fsl_fst_id on &TOOLKIT._status_change_log (fsl_fst_id, fsl_fcl_id);
+create index idx_fk_fsl_fcl_id on &TOOLKIT._status_change_log (fsl_fcl_id);
+create index idx_fk_fsl_&TOOLKIT._id on &TOOLKIT._status_change_log (fsl_&TOOLKIT._id);
+
