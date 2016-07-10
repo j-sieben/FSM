@@ -133,12 +133,12 @@ end;
 To combine status and event, they are linked to each other in table `FCT_TRANSITION`. This table not only defines which events are allowed for a FCT in a given state but also if certain user roles are required for this event to be allowed. Additionally, it is possible that a certain event is raised only if the machine is in invalid state. This way it is possible to create fallback solutions and the like. Transitions may fire automatically or manually, either job-based or manually by calling `raise_evnet` on the respective class instance.
 
 ## Concrete package
-To implement the functionality, helper package is provided. Most methods are fairly simple once you get the basic idea. Here's a sample code of a package body that is called by `FCT_DOC_TYPE`:
+To implement the functionality, a helper package is provided. Most methods are fairly simple once you get the basic idea. Here's a sample code of a package body that is called by `FCT_REQ_TYPE`:
 ```
 create or replace package body fct_req_pkg
 as
 
-  c_pkg constant varchar2(30 byte) := $$var;
+  c_pkg constant varchar2(30 byte) := $$PLSQL_UNIT;
   c_fcl_id constant varchar2(3 byte) := 'REQ';
   c_ok constant number := 0;
   c_error constant number := 1;
