@@ -153,7 +153,7 @@ as
     p_req in fct_req_type)
   as
   begin
-    pit.enter('persist', c_pkg);
+    pit.enter_optional('persist', c_pkg);
 
     -- propagation to abstract super class
     fct_pkg.persist(p_req);
@@ -173,7 +173,7 @@ as
 
     commit;
 
-    pit.leave;
+    pit.leave_optional;
   end persist;
 
 
@@ -183,11 +183,11 @@ as
     return number
   as
   begin
-    pit.enter('raise_initialize', c_pkg);
+    pit.enter_optional('raise_initialize', c_pkg);
     g_result := c_ok;
     -- Logic goes here
     p_req.fct_validity := g_result;
-    pit.leave;
+    pit.leave_optional;
     return p_req.set_status(fct_fst.req_in_process);
   end raise_initialize;
 
@@ -207,7 +207,7 @@ as
   as
     l_req_id fct_req_object.req_id%type;
   begin
-    pit.enter('create_FCT_req', c_pkg);
+    pit.enter_optional('create_FCT_req', c_pkg);
     l_req_id := coalesce(p_req_id, fct_seq.nextval);
 
     p_req.fct_id := l_req_id;
@@ -225,7 +225,7 @@ as
       persist(p_req);
     end if;
 
-    pit.leave;
+    pit.leave_optional;
   end create_fct_req;
 
 
@@ -235,6 +235,7 @@ as
   as
     l_req fct_req_object_vw%rowtype;
   begin
+    pit.enter_mandatory('create_fct_req', c_pkg);
     select *
       into l_req
       from fct_req_object_vw
@@ -247,6 +248,7 @@ as
       p_req_rtp_id => l_req.req_rtp_id,
       p_req_rre_id => l_req.req_rre_id,
       p_req_text => l_req.req_text);
+    pit.leave_mandatory;
   end create_fct_req;
 
 
@@ -256,7 +258,7 @@ as
     return integer
   as
   begin
-    pit.enter('raise_event', c_pkg);
+    pit.enter_mandatory('raise_event', c_pkg);
     -- propagate event to super class
     g_result := fct_pkg.raise_event(p_req, p_fev_id);
 
@@ -276,7 +278,7 @@ as
       pit.warn(msg.fct_event_not_allowed, msg_args(p_fev_id, p_req.fct_fst_id), p_req.fct_id);
       g_result := c_ok;
     end if;
-    pit.leave;
+    pit.leave_mandatory;
     return g_result;
   end raise_event;
 
@@ -286,9 +288,9 @@ as
     return integer
   as
   begin
-    pit.enter('set_status', c_pkg);
+    pit.enter_mandatory('set_status', c_pkg);
     persist(p_req);
-    pit.leave;
+    pit.leave_mandatory;
     return fct_pkg.c_ok;
   exception
     when others then
@@ -300,10 +302,10 @@ end fct_req_pkg;
 
 Main points are:
 - Method `RAISE_EVENT` implements its functionality by providing a simple case statement to distinguish between the events passed in and call respective event handler methods.
-- Each event handler method set the machine to a new status and returns `FCT_PKG.C_OK` if no error has occurred and `FCT_PKG.C_ERROR` otherwise.
+- Each event handler method sets the machine to a new status and returns `FCT_PKG.C_OK` if no error has occurred and `FCT_PKG.C_ERROR` otherwise.
 - An instance is persisted automatically, creating a new row in the respective instance tables or updating the information.
 - If an event requires logic outside the maintenance of the status itself, it calls helper methods from other packages, such as `CHECK_PRIVILEGE` or similar.
-- Any status and event does have its own message to be logged. It may be a generic message but can be very specific as well. The whole package is instrumented with calls to PIT. Certain status changes provide additional information to the log by calling `<FCT_INSTANCE>.notify()`
+- Any status and event does have its own message to be logged. It may be a generic message but can be very specific as well. The whole package is instrumented with calls to [PIT](http://github.com/j-sieben/PIT). Certain status changes provide additional information to the log by calling `<FCT_INSTANCE>.notify()`
 
 ## Dependency between metadata and packages
 As a downside to this design, there is a dependency between the code located in packages and metadata defined in database tables. If you define an event in table `FCT_EVENT` there needs to be an event handler in package `FCT_DOC_PKG`. As of now, there is no way to force PL/SQL to check for those dependencies in both directions: It is possible to check that an event that is raised must exist in the table but it's not easily possible to assure that for any event defined in the table there is an event handler in the package.
