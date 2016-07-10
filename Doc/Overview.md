@@ -283,7 +283,7 @@ as
         p_message_name => msg.fct_event_not_allowed, 
         p_arg_list => msg_args(p_fev_id, p_req.fct_fst_id), 
         p_affected_id => p_req.fct_id);
-      g_result := c_ok;
+      g_result := c_error;
     end if;
     pit.leave_mandatory;
     return g_result;
