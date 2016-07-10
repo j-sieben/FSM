@@ -125,15 +125,19 @@ begin
     p_ftr_raise_automatically => true);
     
   commit;
+  
+  fct_admin_pkg.create_event_package;
+  fct_admin_pkg.create_status_package;
  
 end;
 /
 ```
+At the end two methods are called which (re-)create packages called `FCT_FEV` for events and `FCT_FST` for status. These packages hold constants for any status and event created. They're named by convention `<FCT_NAME>_<STATUS|EVENT_NAME>`, so fi if there is a status called `CREATED` for `FCL_REQ`, constant `FCT_FST.REQ_CREATED` is provided to reference this status. This is to avoid typos when referencing status and event names.
 
-To combine status and event, they are linked to each other in table `FCT_TRANSITION`. This table not only defines which events are allowed for a FCT in a given state but also if certain user roles are required for this event to be allowed. Additionally, it is possible that a certain event is raised only if the machine is in invalid state. This way it is possible to create fallback solutions and the like. Transitions may fire automatically or manually, either job-based or manually by calling `raise_evnet` on the respective class instance.
+Status and events are linked to each other in table `FCT_TRANSITION`. This table not only defines which events are allowed for a FCT in a given state but also if a given user role is required for this event to be raised. Additionally, it is possible to raise an event only if the machine is in error state. This way it is possible to create fallback solutions if a requested status can't be reached. Transitions may fire automatically or manually, either job-based or manually by calling `raise_event` on the respective class instance.
 
 ## Concrete package
-To implement the functionality, a helper package is provided. Most methods are fairly simple once you get the basic idea. Here's a sample code of a package body that is called by `FCT_REQ_TYPE`:
+To implement the functionality, a helper package is provided. Most methods are fairly simple once you get the basic idea. Here's a sample code of a package body `FCT_REQ_PKG` that is called by `FCT_REQ_TYPE`:
 ```
 create or replace package body fct_req_pkg
 as
@@ -264,7 +268,7 @@ as
 
     -- process event
     if instr(':' || p_req.fct_fev_list || ':', ':' || p_fev_id || ':') > 0 then
-      -- Eventweiche
+      -- Event switch
       case p_fev_id
       when fct_fev.req_initialize then
         g_result := raise_initialize(p_req);
@@ -275,7 +279,10 @@ as
         pit.warn(msg.fct_invalid_event, msg_args(p_fev_id), p_req.fct_id);
       end case;
     else
-      pit.warn(msg.fct_event_not_allowed, msg_args(p_fev_id, p_req.fct_fst_id), p_req.fct_id);
+      pit.warn(
+        p_message_name => msg.fct_event_not_allowed, 
+        p_arg_list => msg_args(p_fev_id, p_req.fct_fst_id), 
+        p_affected_id => p_req.fct_id);
       g_result := c_ok;
     end if;
     pit.leave_mandatory;
@@ -305,12 +312,12 @@ Main points are:
 - Each event handler method sets the machine to a new status and returns `FCT_PKG.C_OK` if no error has occurred and `FCT_PKG.C_ERROR` otherwise.
 - An instance is persisted automatically, creating a new row in the respective instance tables or updating the information.
 - If an event requires logic outside the maintenance of the status itself, it calls helper methods from other packages, such as `CHECK_PRIVILEGE` or similar.
-- Any status and event does have its own message to be logged. It may be a generic message but can be very specific as well. The whole package is instrumented with calls to [PIT](http://github.com/j-sieben/PIT). Certain status changes provide additional information to the log by calling `<FCT_INSTANCE>.notify()`
+- Any status and event does have its own message to be logged. It may be a generic message but can be very specific as well. The whole package is instrumented with calls to [PIT](http://github.com/j-sieben/PIT). Certain status changes provide additional information to the log by calling `<FCT_INSTANCE>.notify()` and referencing messages defined in PIT.
 
 ## Dependency between metadata and packages
 As a downside to this design, there is a dependency between the code located in packages and metadata defined in database tables. If you define an event in table `FCT_EVENT` there needs to be an event handler in package `FCT_DOC_PKG`. As of now, there is no way to force PL/SQL to check for those dependencies in both directions: It is possible to check that an event that is raised must exist in the table but it's not easily possible to assure that for any event defined in the table there is an event handler in the package.
 
-The first requirement is achieved by automatically creating a status- and an event package: `FCT_FST` and `FCT_FEV` respectively. Package `FCT_FST` consists of a package specification only and defines a constant per status, combined of class type and status. In our example, there exists a constant named `FCT_FST.DOC_INITIALIZED` and an event called `FCT_FEV.DOC_INITIALIZE` which shall be referenced in the package to assure that any event or status referenced really exists.
+The first requirement is achieved by automatically creating a status- and an event package: `FCT_FST` and `FCT_FEV` respectively. Package `FCT_FST` consists of a package specification only and defines a constant per status, combined of class type and status. In our example, there exists a constant named `FCT_FST.REQ_CREATED` and an event called `FCT_FEV.REQ_INITIALIZE`. In your code, reference events and status only via the constants in the respective package to assure that any event or status referenced really exists.
 
 The second requirement can only be achieved by either creating a code generator that creates the event switch (the case expression in the sample code in method `RAISE_EVENT`) and stubs for the event handlers or by checking the metadata from `USER_PROCEDURES` against the metatdata tables. Other options may be possible but they have not been implemented yet.
 
