@@ -9,12 +9,18 @@ define plsql_dir=&CORE_DIR.plsql/
 prompt - cleaning up installation
 @&CORE_DIR.clean_up.sql
 
-prompt - creating default messages
-@&CORE_DIR.create_default_messages.sql
+--prompt - creating default messages
+--@&CORE_DIR.create_default_messages.sql
 
 prompt - create type specifications
 prompt . - type &TOOLKIT._type
 @&type_dir.fsm_type.tps
+
+
+
+prompt - create char table
+prompt . - type char_table
+@&type_dir.char_table.tps
 
 prompt - create tables
 prompt . - table &TOOLKIT._CLASS

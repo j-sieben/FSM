@@ -1,4 +1,4 @@
-create or replace package body FCT_util
+create or replace package body &TOOLKIT._util
 as
 
   /* INTERFACE */
@@ -13,7 +13,7 @@ as
     p_replacement char_table)
   as
   begin
-	pit.enter_detailed;
+	--pit.enter_detailed;
     for l_replacement_count in 1 .. p_replacement.count
     loop
       if (l_replacement_count mod 2 = 1) then
@@ -23,7 +23,7 @@ as
                      p_replacement(l_replacement_count + 1));
       end if;
     end loop;
-	pit.leave_detailed;
+	--pit.leave_detailed;
   end bulk_replace;
 
 
@@ -34,10 +34,10 @@ as
   as
     l_val varchar2(32767);
   begin
-	pit.enter_detailed;
+	--pit.enter_detailed;
     l_val := p_value;
     bulk_replace(l_val, p_replacement);
-	pit.leave_detailed;
+	--pit.leave_detailed;
     return l_val;
   end bulk_replace;
 

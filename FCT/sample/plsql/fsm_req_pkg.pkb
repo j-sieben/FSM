@@ -16,7 +16,7 @@ as
     p_req in &TOOLKIT._req_type)
   as
   begin
-    pit.enter('persist', c_pkg);
+    --pit.enter('persist', c_pkg);
 
     -- propagation to abstract super class
     &TOOLKIT._pkg.persist(p_req);
@@ -36,7 +36,7 @@ as
 
     commit;
 
-    pit.leave;
+    --pit.leave;
   end persist;
   
   
@@ -46,11 +46,11 @@ as
     return number
   as
   begin
-    pit.enter('raise_initialize', c_pkg);
+    --pit.enter('raise_initialize', c_pkg);
     g_result := c_ok;
     -- Logic goes here
     p_req.&TOOLKIT._validity := g_result;
-    pit.leave;
+    --pit.leave;
     return p_req.set_status(&TOOLKIT._fst.REQ_IN_PROCESS);
   end raise_initialize;
   
@@ -63,7 +63,7 @@ as
     c_object_priv constant &TOOLKIT._req_types.rtp_id%type := 'OBJECT_PRIV';
     c_system_priv constant &TOOLKIT._req_types.rtp_id%type := 'SYSTEM_PRIV';
   begin
-    pit.enter('raise_check', c_pkg);
+    --pit.enter('raise_check', c_pkg);
     g_result := c_ok;
     -- Logic goes here
     case 
@@ -76,7 +76,7 @@ as
     end case;
     
     p_req.&TOOLKIT._validity := g_result;
-    pit.leave;
+    --pit.leave;
     return p_req.set_status(l_new_status);
   end raise_check;
   
@@ -86,11 +86,11 @@ as
     return number
   as
   begin
-    pit.enter('raise_grant', c_pkg);
+    --pit.enter('raise_grant', c_pkg);
     g_result := c_ok;
     -- Logic goes here
     p_req.&TOOLKIT._validity := g_result;
-    pit.leave;
+    --pit.leave;
     return p_req.set_status(&TOOLKIT._fst.REQ_GRANTED);
   end raise_grant;
   
@@ -100,11 +100,11 @@ as
     return number
   as
   begin
-    pit.enter('raise_reject', c_pkg);
+    --pit.enter('raise_reject', c_pkg);
     g_result := c_ok;
     -- Logic goes here
     p_req.&TOOLKIT._validity := g_result;
-    pit.leave;
+    --pit.leave;
     return p_req.set_status(&TOOLKIT._fst.REQ_REJECTED);
   end raise_reject;
 
@@ -114,9 +114,9 @@ as
     return number
   as
   begin
-    pit.enter('raise_nil', c_pkg);
+    --pit.enter('raise_nil', c_pkg);
     -- no implementation required, event shouldn't be fired ever
-    pit.leave;
+    --pit.leave;
     p_req.&TOOLKIT._validity := c_ok;
     return p_req.set_status(&TOOLKIT._fst.&TOOLKIT._ERROR);
   end raise_nil;
@@ -134,7 +134,7 @@ as
   as 
     l_req_id &TOOLKIT._req_object.req_id%type;
   begin
-    pit.enter('create_&TOOLKIT._req', c_pkg);
+    --pit.enter('create_&TOOLKIT._req', c_pkg);
     l_req_id := coalesce(p_req_id, &TOOLKIT._seq.nextval);
 
     p_req.&TOOLKIT._id := l_req_id;
@@ -146,13 +146,13 @@ as
     p_req.req_text := p_req_text;
 
     if p_req_id is null then
-      pit.verbose(msg.&TOOLKIT._CREATED, msg_args(c_fcl_id, to_char(l_req_id)), l_req_id);
+      --pit.verbose(msg.&TOOLKIT._CREATED, msg_args(c_fcl_id, to_char(l_req_id)), l_req_id);
       g_result := p_req.set_status(&TOOLKIT._fst.REQ_CREATED);
     else
       persist(p_req);
     end if;
     
-    pit.leave;
+    --pit.leave;
   end create_&TOOLKIT._req;
     
 
@@ -183,7 +183,7 @@ as
     return integer
   as
   begin
-    pit.enter('raise_event', c_pkg);
+    --pit.enter('raise_event', c_pkg);
     -- propagate event to super class
     g_result := &TOOLKIT._pkg.raise_event(p_req, p_fev_id);
 
@@ -201,14 +201,15 @@ as
         g_result := raise_reject(p_req);
       when &TOOLKIT._fev.&TOOLKIT._NIL then
         g_result := raise_nil(p_req);
-      else
-        pit.warn(msg.&TOOLKIT._INVALID_EVENT, msg_args(p_fev_id), p_req.&TOOLKIT._id);
+      ELSE
+          NULL;
+        --pit.warn(msg.&TOOLKIT._INVALID_EVENT, msg_args(p_fev_id), p_req.&TOOLKIT._id);
       end case;
     else
-      pit.warn(msg.&TOOLKIT._EVENT_NOT_ALLOWED, msg_args(p_fev_id, p_req.&TOOLKIT._fst_id), p_req.&TOOLKIT._id);
+      --pit.warn(msg.&TOOLKIT._EVENT_NOT_ALLOWED, msg_args(p_fev_id, p_req.&TOOLKIT._fst_id), p_req.&TOOLKIT._id);
       g_result := c_ok;
     end if;
-    pit.leave;
+    --pit.leave;
     return g_result;
   end raise_event;
     
@@ -218,9 +219,9 @@ as
     return integer
   as
   begin
-    pit.enter('set_status', c_pkg);
+    --pit.enter('set_status', c_pkg);
     persist(p_req);
-    pit.leave;
+    --pit.leave;
     return &TOOLKIT._pkg.C_OK;
   exception
     when others then

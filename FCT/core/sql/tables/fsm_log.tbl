@@ -10,7 +10,7 @@ create table &TOOLKIT._log(
 	fsl_fev_list varchar2(200 char), 
 	fsl_fcl_id varchar2(30 char), 
 	fsl_msg_id varchar2(30 char), 
-	fsl_msg_args msg_args_char,
+	--fsl_msg_args msg_args_char,
   constraint pk_&TOOLKIT._log primary key (fsl_id),
   constraint fsl_&TOOLKIT._id foreign key (fsl_&TOOLKIT._id)
 	  references &TOOLKIT._object (&TOOLKIT._id) on delete cascade
