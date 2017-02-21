@@ -51,14 +51,14 @@ create or replace type body &TOOLKIT._type as
 
 
   member procedure notify(
-    p_msg in varchar2,
-    p_msg_args in msg_args default null)
+    p_msg in varchar2/*,
+    p_msg_args in msg_args default null*/)
   as
   begin
     &TOOLKIT._pkg.notify(
       p_&TOOLKIT. => self,
-      p_msg => p_msg,
-      p_msg_args => p_msg_args);
+      p_msg => p_msg/*,
+      p_msg_args => p_msg_args*/);
   end notify;
 
   member function to_string

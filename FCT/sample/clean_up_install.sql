@@ -39,8 +39,9 @@ begin
     end;
   end loop;
   
-  delete from message
-   where message_name in ('');
+ /* delete from message
+   where message_name in ('');*/
+   
    
   delete from parameter_tab
    where parameter_group_id = '&TOOLKIT.'

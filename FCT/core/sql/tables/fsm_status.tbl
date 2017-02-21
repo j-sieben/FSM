@@ -14,8 +14,8 @@ create table &TOOLKIT._status(
 	  references &TOOLKIT._class (fcl_id),
   constraint fk_fst_fsg_id foreign key (fst_fsg_id)
 	  references &TOOLKIT._status_group (fsg_id),
-  constraint fk_fst_msg_id foreign key (fst_msg_id)
-	  references message (message_id),
+  /*constraint fk_fst_msg_id foreign key (fst_msg_id)
+	  references message (message_id),*/
   constraint nn_fst_active check (fst_active is not null),
   constraint nn_fst_msg_id check (fst_msg_id is not null),
   constraint chk_fst_active check (fst_active in ('Y', 'N')),

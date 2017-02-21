@@ -1,10 +1,10 @@
 create or replace package &TOOLKIT._pkg
-  authid current_user -- FÃ¼r Leserecht auf USER_IDENTIFIERS
+  authid current_user -- Für Leserecht auf USER_IDENTIFIERS
 as
   /* Package zur generischen Verwaltung einer Finite State Machine (&TOOLKIT.)
    * %usage: Das Package beinhaltet die Implementierung der abstrakten Klasse
    *         &TOOLKIT._TYPE und stellt generische Funktionen zum Logging, zur Verwaltung
-   *         von Events und StatusÃ¤nderungen bereit.
+   *         von Events und Statusänderungen bereit.
    */
 
   /* Packagekonstanten zur Verwendung in abgeleiteten &TOOLKIT.-Instanzen */
@@ -27,8 +27,8 @@ as
     return integer;
 
 
-  /* "Konstruktor"-Prozedur: Erstellt kein Objekt, sondern lediglich EintrÃ¤ge
-   * in &TOOLKIT._OBJECT als Referenzpunkt fÃ¼r Konstruktormethoden der abgeleiteten Klassen.
+  /* "Konstruktor"-Prozedur: Erstellt kein Objekt, sondern lediglich Einträge
+   * in &TOOLKIT._OBJECT als Referenzpunkt für Konstruktormethoden der abgeleiteten Klassen.
    * %param p_&TOOLKIT. &TOOLKIT._TYPE-Instanz
    * %usage Wird von den Konstruktoren der abgeleiteten Klassen aufgerufen, um
    *        einen Eintrag in &TOOLKIT._OBJECT zu erstellen. Falls vorhanden, werden Attribute
@@ -64,16 +64,16 @@ as
     return boolean;
 
 
-  /* Funktion zum Ã„ndern eines Status.
+  /* Funktion zum Ändern eines Status.
    * %param p_&TOOLKIT. Instanz der &TOOLKIT. (konkrete Klasse des von &TOOLKIT._TYPE geerbeten Typs)
-   * %return Erfolgflag. Normalerweise 0 = Fehler oder 1 = OK. Es kÃ¶nnen aber auch
+   * %return Erfolgflag. Normalerweise 0 = Fehler oder 1 = OK. Es können aber auch
    *         weitere Returnwerte verarbeitet werden. Die Werte werden in &TOOLKIT._VALIDITY
    *         des &TOOLKIT.-Objekts gespeichert.
    * %usage Ein neuer Status wird durch die Logik des Eventhandlers bestimmt und
-   *        in die Klasse eingetragen. Auf Basis des neuen Status kÃ¶nnen weitere
-   *        Events ermittelt werden, die nun ausgelÃ¶st werden kÃ¶nnen.
-   *        Ist der nachfolgende Event automatisch, wird er unmittelbar ausgelÃ¶st,
-   *        ansonsten wartet die &TOOLKIT. auf die AuslÃ¶sung des entsprechenden Status.
+   *        in die Klasse eingetragen. Auf Basis des neuen Status können weitere
+   *        Events ermittelt werden, die nun ausgelöst werden können.
+   *        Ist der nachfolgende Event automatisch, wird er unmittelbar ausgelöst,
+   *        ansonsten wartet die &TOOLKIT. auf die Auslösung des entsprechenden Status.
    */
   function set_status(
     p_&TOOLKIT. in out nocopy &TOOLKIT._type)
@@ -104,14 +104,14 @@ as
   /* Prozedur speichert eine Notiz zu einer &TOOLKIT.-Instanz
    * %param p_&TOOLKIT. Instanz von &TOOLKIT._TYPE, zu der eine Notiz gespeichert werden soll
    * %param p_note_type Referenz auf MSG, wird als Meldung erstellt
-   * %param p_comment zusÃ¤tzlicher Kommentar, Freitext, wird als MSG_ARG interpretiert
-   * %usage Die Prozedur wird wÃ¤hrend der Bearbeitung aufgerufen, um Vermerke
+   * %param p_comment zusätzlicher Kommentar, Freitext, wird als MSG_ARG interpretiert
+   * %usage Die Prozedur wird während der Bearbeitung aufgerufen, um Vermerke
    *        zur Bearbeitung zu speichern
    */
   procedure notify(
     p_&TOOLKIT. in out nocopy &TOOLKIT._type,
-    p_msg in varchar2,
-    p_msg_args in msg_args);
+    p_msg in varchar2/*,
+    p_msg_args in msg_args*/);
 
 
   /* Funktion zur Umwandlung des Objects in eine Zeichenkette

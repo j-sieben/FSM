@@ -5,10 +5,10 @@ define FSM_CLASS=REQ
 
 prompt &h2.Installing sample application
 prompt &h3.Remove existing installation
-@&sample_dir.clean_up_install.sql
+--@&sample_dir.clean_up_install.sql
 
 prompt &s1.Create internal messages
-@&sample_dir./create_default_messages.sql
+--@&sample_dir./create_default_messages.sql
 
 prompt &h3.Create initial status, events and transitions
 @&sample_dir.create_initial_data.sql

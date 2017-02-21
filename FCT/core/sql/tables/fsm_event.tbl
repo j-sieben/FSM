@@ -13,8 +13,8 @@ create table &TOOLKIT._event (
   constraint pk_&TOOLKIT._event primary key (fev_id, fev_fcl_id) enable,
   constraint fk_fev_fcl_id foreign key (fev_fcl_id)
 	  references &TOOLKIT._class (fcl_id),
-  constraint fk_fev_msg_id foreign key (fev_msg_id)
-	  references message (message_id),
+  /*constraint fk_fev_msg_id foreign key (fev_msg_id)
+	  references message (message_id),*/
   constraint nn_fev_command check (fev_command is not null),
   constraint nn_fev_name check (fev_name is not null),
   constraint nn_fev_msg_id check (fev_msg_id is not null)

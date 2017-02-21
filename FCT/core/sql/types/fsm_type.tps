@@ -22,8 +22,8 @@ as object(
     p_fst_id in varchar2)
     return number,
   member procedure notify(
-    p_msg in varchar2,
-    p_msg_args in msg_args default null),
+    p_msg in varchar2/*,
+    p_msg_args in msg_args default null*/),
   member function to_string
     return varchar2,
   member procedure finalize
