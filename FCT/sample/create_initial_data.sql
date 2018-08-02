@@ -9,49 +9,49 @@ begin
   &TOOLKIT._admin_pkg.merge_status(
     p_fst_id => 'GRANTED',
     p_fst_fcl_id => 'REQ',
-    p_fst_msg_id => 'FCT_REQ_GRANTED',
+    p_fst_msg_id => '&TOOLKIT._REQ_GRANTED',
     p_fst_name => 'Granted',
     p_fst_description => 'Request was granted');
     
   &TOOLKIT._admin_pkg.merge_status(
     p_fst_id => 'CREATED',
     p_fst_fcl_id => 'REQ',
-    p_fst_msg_id => 'FCT_STATUS_CHANGED',
+    p_fst_msg_id => '&TOOLKIT._STATUS_CHANGED',
     p_fst_name => 'Request created',
     p_fst_description => 'Request has been created');
     
   &TOOLKIT._admin_pkg.merge_status(
     p_fst_id => 'GRANT_AUTOMATICALLY',
     p_fst_fcl_id => 'REQ',
-    p_fst_msg_id => 'FCT_STATUS_CHANGED',
+    p_fst_msg_id => '&TOOLKIT._STATUS_CHANGED',
     p_fst_name => 'Granted automatically',
     p_fst_description => 'Request my be granted automatically');
     
   &TOOLKIT._admin_pkg.merge_status(
     p_fst_id => 'GRANT_MANUALLY',
     p_fst_fcl_id => 'REQ',
-    p_fst_msg_id => 'FCT_REQ_PENDING',
+    p_fst_msg_id => '&TOOLKIT._REQ_PENDING',
     p_fst_name => 'To be granted manually',
     p_fst_description => 'Request must be granted manually');
     
   &TOOLKIT._admin_pkg.merge_status(
     p_fst_id => 'GRANT_SUPERVISOR',
     p_fst_fcl_id => 'REQ',
-    p_fst_msg_id => 'FCT_REQ_PENDING',
+    p_fst_msg_id => '&TOOLKIT._REQ_PENDING',
     p_fst_name => 'To be granted by Supervisor',
     p_fst_description => 'Request must be granted by supervisor');
     
   &TOOLKIT._admin_pkg.merge_status(
     p_fst_id => 'IN_PROCESS',
     p_fst_fcl_id => 'REQ',
-    p_fst_msg_id => 'FCT_STATUS_CHANGED',
+    p_fst_msg_id => '&TOOLKIT._STATUS_CHANGED',
     p_fst_name => 'Request in process',
     p_fst_description => 'Request is in process');
     
   &TOOLKIT._admin_pkg.merge_status(
     p_fst_id => 'REJECTED',
     p_fst_fcl_id => 'REQ',
-    p_fst_msg_id => 'FCT_REQ_REJECTED',
+    p_fst_msg_id => '&TOOLKIT._REQ_REJECTED',
     p_fst_name => 'Rejected',
     p_fst_description => 'Request was rejected');
     
@@ -60,7 +60,7 @@ begin
   &TOOLKIT._admin_pkg.merge_event(
     p_fev_id => 'CHECK',
     p_fev_fcl_id => 'REQ',
-    p_fev_msg_id => 'FCT_EVENT_RAISED',
+    p_fev_msg_id => '&TOOLKIT._EVENT_RAISED',
     p_fev_name => 'Check Request',
     p_fev_description => 'Check incoming request',
     p_fev_command => 'Check',
@@ -69,7 +69,7 @@ begin
   &TOOLKIT._admin_pkg.merge_event(
     p_fev_id => 'GRANT',
     p_fev_fcl_id => 'REQ',
-    p_fev_msg_id => 'FCT_EVENT_RAISED',
+    p_fev_msg_id => '&TOOLKIT._EVENT_RAISED',
     p_fev_name => 'Grant request',
     p_fev_description => 'Grant request',
     p_fev_command => 'Grant',
@@ -79,7 +79,7 @@ begin
   &TOOLKIT._admin_pkg.merge_event(
     p_fev_id => 'INITIALIZE',
     p_fev_fcl_id => 'REQ',
-    p_fev_msg_id => 'FCT_EVENT_RAISED',
+    p_fev_msg_id => '&TOOLKIT._EVENT_RAISED',
     p_fev_name => 'Initialize',
     p_fev_description => 'Initialize Request',
     p_fev_command => 'Initialize',
@@ -88,7 +88,7 @@ begin
   &TOOLKIT._admin_pkg.merge_event(
     p_fev_id => 'NIL',
     p_fev_fcl_id => 'REQ',
-    p_fev_msg_id => 'FCT_EVENT_RAISED',
+    p_fev_msg_id => '&TOOLKIT._EVENT_RAISED',
     p_fev_name => 'No Action',
     p_fev_description => 'No Action',
     p_fev_command => 'NIL',
@@ -97,7 +97,7 @@ begin
   &TOOLKIT._admin_pkg.merge_event(
     p_fev_id => 'REJECT',
     p_fev_fcl_id => 'REQ',
-    p_fev_msg_id => 'FCT_EVENT_RAISED',
+    p_fev_msg_id => '&TOOLKIT._EVENT_RAISED',
     p_fev_name => 'Reject Request',
     p_fev_description => 'Reject request',
     p_fev_command => 'Reject',

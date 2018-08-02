@@ -10,7 +10,7 @@ prompt - cleaning up installation
 @&CORE_DIR.clean_up.sql
 
 prompt - creating default messages
-@&CORE_DIR.create_default_messages.sql
+@&CORE_DIR.messages/&DEFAULT_LANGUAGE./create_messages.sql
 
 prompt - create type specifications
 prompt . - type &TOOLKIT._type

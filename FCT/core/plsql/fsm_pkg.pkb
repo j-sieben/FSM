@@ -174,7 +174,7 @@ as
     p_msg_args in msg_args default null)
   as
     l_message message_type;
-    l_message_id message.message_name%type;
+    l_message_id &TOOLKIT._event.fev_msg_id%type;
     l_user varchar2(50);
     l_session varchar2(50);
     l_msg_args msg_args;    
@@ -251,7 +251,7 @@ as
     p_fev_id in &TOOLKIT._event.fev_id%type)
     return integer
   as
-    l_message_id message.message_name%type;
+    l_message_id &TOOLKIT._status.fst_msg_id%type;
     l_old_fst_id &TOOLKIT._status.fst_id%type;
     l_new_fst_id &TOOLKIT._status.fst_id%type;
   begin

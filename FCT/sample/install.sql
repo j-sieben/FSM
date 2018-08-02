@@ -1,3 +1,8 @@
+
+prompt
+prompt &section.
+prompt &h1.Installing &TOOLKIT. sample instance
+
 define sql_dir=&sample_dir.sql/
 define plsql_dir=&sample_dir.plsql/
 
@@ -7,8 +12,8 @@ prompt &h2.Installing sample application
 prompt &h3.Remove existing installation
 @&sample_dir.clean_up_install.sql
 
-prompt &s1.Create internal messages
-@&sample_dir./create_default_messages.sql
+prompt &s1.Create &TOOLKIT. sample messages
+@&sample_dir./messages/&DEFAULT_LANGUAGE./create_messages.sql
 
 prompt &h3.Create initial status, events and transitions
 @&sample_dir.create_initial_data.sql

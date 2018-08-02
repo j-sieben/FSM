@@ -39,12 +39,12 @@ begin
     end;
   end loop;
   
-  delete from message
-   where message_name in ('');
+  delete from pit_message
+   where pms_name like ('&TOOLKIT._REQ%');
    
   delete from parameter_tab
-   where parameter_group_id = '&TOOLKIT.'
-     and parameter_id in ('');
+   where par_pgr_id = '&TOOLKIT.'
+     and par_id in ('');
    
   delete from &TOOLKIT._transition
    where ftr_fcl_id = '&FSM_CLASS.';
