@@ -1,14 +1,7 @@
 create or replace package body &TOOLKIT._admin_pkg
 as
 
-  c_pkg constant varchar2(30 byte) := $$PLSQL_UNIT;
-
-  c_ok constant number := 0;
-  c_error constant number := 1;
-  c_true constant char(1 byte) := 'Y';
-  c_false constant char(1 byte) := 'N';
-  c_cr constant char(1 byte) := chr(13);
-  
+  C_PKG constant util_&TOOLKIT..ora_name_type := $$PLSQL_UNIT;  
   
   /* Helper */
   function bool_to_char(
@@ -16,15 +9,8 @@ as
     return varchar2
   as
   begin
-    return case when p_bool then c_true else c_false end;
+    return case when p_bool then util_&TOOLKIT..C_TRUE else util_&TOOLKIT..C_FALSE end;
   end bool_to_char;
-  
-
-  procedure initialize
-  as
-  begin
-    null;
-  end initialize;
   
   
   /* INTERFACE */
@@ -34,7 +20,7 @@ as
     p_fcl_description in &TOOLKIT._class.fcl_description%type,
     p_fcl_active in boolean default true)
   as
-    l_active char(1 byte);
+    l_active util_&TOOLKIT..flag_type;
   begin
     l_active := bool_to_char(p_fcl_active);
     merge into &TOOLKIT._class c
@@ -66,9 +52,9 @@ as
     p_fev_button_highlight in boolean default false,
     p_fev_confirm_message in &TOOLKIT._event.fev_confirm_message%type default null)
   as
-    l_active char(1 byte);
-    l_raised_by_user char(1 byte);
-    l_button_highlight char(1 byte);
+    l_active util_&TOOLKIT..flag_type;
+    l_raised_by_user util_&TOOLKIT..flag_type;
+    l_button_highlight util_&TOOLKIT..flag_type;
   begin
     l_active := bool_to_char(p_fev_active);
     l_raised_by_user := bool_to_char(p_fev_raised_by_user);
@@ -116,7 +102,7 @@ as
     p_fst_retry_schedule in &TOOLKIT._status.fst_retry_schedule%type default null,
     p_fst_retry_time in &TOOLKIT._status.fst_retry_time%type default null)
   as
-    l_active char(1 byte);
+    l_active util_&TOOLKIT..flag_type;
   begin
     l_active := bool_to_char(p_fst_active);
     merge into &TOOLKIT._status s
@@ -157,8 +143,8 @@ as
     p_ftr_raise_on_status in number default 0,
     p_ftr_required_role in varchar2 default null)
   as
-    l_active char(1 byte);
-    l_raise_automatically char(1 byte);
+    l_active util_&TOOLKIT..flag_type;
+    l_raise_automatically util_&TOOLKIT..flag_type;
   begin
     l_active := bool_to_char(p_ftr_active);
     l_raise_automatically := bool_to_char(p_ftr_raise_automatically);
@@ -192,20 +178,20 @@ as
 
   procedure create_event_package
   as
-    c_pkg_name constant varchar2(30) := '&TOOLKIT._fev';
+    C_PKG_NAME constant varchar2(30) := '&TOOLKIT._fev';
     l_sql_text clob :=
-      'create or replace package ' || c_pkg_name || ' as' || c_cr;
+      'create or replace package ' || C_PKG_NAME || ' as' || util_&TOOLKIT..C_CR;
     l_chunk varchar2(200 char);
-    l_end_sql varchar2(50) := 'end ' || c_pkg_name || ';';
+    l_end_sql varchar2(50) := 'end ' || C_PKG_NAME || ';';
 
     cursor event_cur is
       select upper(fev_id) fev_id, upper(fev_fcl_id) fev_fcl_id
         from &TOOLKIT._event
-       where fev_active = c_true
+       where fev_active = util_&TOOLKIT..C_TRUE
        order by fev_fcl_id, fev_id;
 
     c_event_template constant varchar2(200) :=
-      q'~  #FCL#_#FEV# constant varchar2(30 byte) := '#FEV#';~' || c_cr;
+      q'~  #FCL#_#FEV# constant varchar2(30 byte) := '#FEV#';~' || util_&TOOLKIT..C_CR;
   begin
     for evt in event_cur loop
       l_chunk := replace(replace(c_event_template, 
@@ -220,19 +206,19 @@ as
 
   procedure create_status_package
   as
-    c_pkg_name constant varchar2(30) := '&TOOLKIT._fst';
+    C_PKG_NAME constant varchar2(30) := '&TOOLKIT._fst';
     l_sql_text clob :=
-      'create or replace package ' || c_pkg_name || ' as' || c_cr;
+      'create or replace package ' || C_PKG_NAME || ' as' || util_&TOOLKIT..C_CR;
     l_chunk varchar2(200 char);
-    l_end_sql varchar2(50) := 'end ' || c_pkg_name || ';';
+    l_end_sql varchar2(50) := 'end ' || C_PKG_NAME || ';';
 
     cursor status_cur is
       select upper(fst_id) fst_id, upper(fst_fcl_id) fst_fcl_id
         from &TOOLKIT._status
-       where fst_active = c_true
+       where fst_active = util_&TOOLKIT..C_TRUE
        order by fst_fcl_id, fst_id;
     c_status_template constant varchar2(200) :=
-      q'~  #FCL#_#FST# constant varchar2(30 byte) := '#FST#';~' || c_cr;
+      q'~  #FCL#_#FST# constant varchar2(30 byte) := '#FST#';~' || util_&TOOLKIT..C_CR;
   begin
     for sta in status_cur loop
       l_chunk := replace(replace(c_status_template,
@@ -244,7 +230,5 @@ as
     execute immediate l_sql_text;
   end create_status_package;
 
-begin
-  initialize;
 end &TOOLKIT._admin_pkg;
 /

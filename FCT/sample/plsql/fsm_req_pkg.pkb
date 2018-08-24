@@ -1,13 +1,11 @@
 create or replace package body &TOOLKIT._req_pkg
 as
 
-  c_pkg constant varchar2(30 byte) := $$PLSQL_UNIT;
+  C_PKG constant varchar2(30 byte) := $$PLSQL_UNIT;
   c_fcl_id constant varchar2(3 byte) := 'REQ';
-  c_ok constant number := 0;
-  c_error constant number := 1;
   c_initial_status constant varchar2(50 char) := &TOOLKIT._fst.REQ_CREATED;
 
-  g_result integer;
+  g_result binary_integer;
   g_new_status &TOOLKIT._status.fst_id%type;
   
   /* HELPER */
@@ -16,7 +14,7 @@ as
     p_req in &TOOLKIT._req_type)
   as
   begin
-    pit.enter('persist', c_pkg);
+    pit.enter('persist', C_PKG);
 
     -- propagation to abstract super class
     &TOOLKIT._pkg.persist(p_req);
@@ -43,11 +41,11 @@ as
   /* EVENT HANDLER */
   function raise_initialize(
     p_req in out nocopy &TOOLKIT._req_type)
-    return number
+    return binary_integer
   as
   begin
-    pit.enter('raise_initialize', c_pkg);
-    g_result := c_ok;
+    pit.enter('raise_initialize', C_PKG);
+    g_result := util_&TOOLKIT..C_OK;
     -- Logic goes here
     p_req.&TOOLKIT._validity := g_result;
     pit.leave;
@@ -57,25 +55,27 @@ as
   
   function raise_check(
     p_req in out nocopy &TOOLKIT._req_type)
-    return number
+    return binary_integer
   as
     l_new_status &TOOLKIT._status.fst_id%type;
-    c_object_priv constant &TOOLKIT._req_types.rtp_id%type := 'OBJECT_PRIV';
-    c_system_priv constant &TOOLKIT._req_types.rtp_id%type := 'SYSTEM_PRIV';
+    C_OBJECT_PRIV constant &TOOLKIT._req_types.rtp_id%type := 'OBJECT_PRIV';
+    C_SYSTEM_PRIV constant &TOOLKIT._req_types.rtp_id%type := 'SYSTEM_PRIV';
   begin
-    pit.enter('raise_check', c_pkg);
-    g_result := c_ok;
+    pit.enter('raise_check', C_PKG);
+    
+    g_result := util_&TOOLKIT..C_OK;
     -- Logic goes here
     case 
-    when p_req.req_rtp_id = c_object_priv and p_req.req_rre_id = 'PATABALLA' then
+    when p_req.req_rtp_id = C_OBJECT_PRIV and p_req.req_rre_id = 'PATABALLA' then
       l_new_status := &TOOLKIT._fst.REQ_GRANT_AUTOMATICALLY;
-    when p_req.req_rtp_id = c_object_priv then
+    when p_req.req_rtp_id = C_OBJECT_PRIV then
       l_new_status := &TOOLKIT._fst.REQ_GRANT_MANUALLY;
     else
       l_new_status := &TOOLKIT._fst.REQ_GRANT_SUPERVISOR;
     end case;
     
     p_req.&TOOLKIT._validity := g_result;
+    
     pit.leave;
     return p_req.set_status(l_new_status);
   end raise_check;
@@ -83,13 +83,15 @@ as
   
   function raise_grant(
     p_req in out nocopy &TOOLKIT._req_type)
-    return number
+    return binary_integer
   as
   begin
-    pit.enter('raise_grant', c_pkg);
-    g_result := c_ok;
+    pit.enter('raise_grant', C_PKG);
+    
+    g_result := util_&TOOLKIT..C_OK;
     -- Logic goes here
     p_req.&TOOLKIT._validity := g_result;
+    
     pit.leave;
     return p_req.set_status(&TOOLKIT._fst.REQ_GRANTED);
   end raise_grant;
@@ -97,13 +99,15 @@ as
   
   function raise_reject(
     p_req in out nocopy &TOOLKIT._req_type)
-    return number
+    return binary_integer
   as
   begin
-    pit.enter('raise_reject', c_pkg);
-    g_result := c_ok;
+    pit.enter('raise_reject', C_PKG);
+    
+    g_result := util_&TOOLKIT..C_OK;
     -- Logic goes here
     p_req.&TOOLKIT._validity := g_result;
+    
     pit.leave;
     return p_req.set_status(&TOOLKIT._fst.REQ_REJECTED);
   end raise_reject;
@@ -111,13 +115,15 @@ as
 
   function raise_nil(
     p_req in out nocopy &TOOLKIT._req_type)
-    return number
+    return binary_integer
   as
   begin
-    pit.enter('raise_nil', c_pkg);
+    pit.enter('raise_nil', C_PKG);
+    
     -- no implementation required, event shouldn't be fired ever
+    
     pit.leave;
-    p_req.&TOOLKIT._validity := c_ok;
+    p_req.&TOOLKIT._validity := util_&TOOLKIT..C_OK;
     return p_req.set_status(&TOOLKIT._fst.&TOOLKIT._ERROR);
   end raise_nil;
   
@@ -125,16 +131,17 @@ as
   /* INTERFACE */
   procedure create_&TOOLKIT._req(
     p_req in out nocopy &TOOLKIT._req_type,
-    p_req_id in number default null,
-    p_req_fst_id in varchar2 default &TOOLKIT._fst.REQ_CREATED,
-    p_req_fev_list in varchar2 default null,
-    p_req_rtp_id in varchar2,
-    p_req_rre_id in varchar2,
-    p_req_text in varchar2)
+    p_req_id in &TOOLKIT._req_object.req_id%type default null,
+    p_req_fst_id in &TOOLKIT._status.fst_id%type default &TOOLKIT._fst.REQ_CREATED,
+    p_req_fev_list in &TOOLKIT._event.fev_id%type default null,
+    p_req_rtp_id in &TOOLKIT._req_types.rtp_id%type,
+    p_req_rre_id in &TOOLKIT._req_requestor.rre_id%type,
+    p_req_text in &TOOLKIT._req_object.req_text%type)
   as 
     l_req_id &TOOLKIT._req_object.req_id%type;
   begin
-    pit.enter('create_&TOOLKIT._req', c_pkg);
+    pit.enter('create_&TOOLKIT._req', C_PKG);
+    
     l_req_id := coalesce(p_req_id, &TOOLKIT._seq.nextval);
 
     p_req.&TOOLKIT._id := l_req_id;
@@ -158,7 +165,7 @@ as
 
   procedure create_&TOOLKIT._req(
     p_req in out nocopy &TOOLKIT._req_type,
-    p_req_id in number)
+    p_req_id in &TOOLKIT._req_object.req_id%type)
   as
     l_req &TOOLKIT._req_object_vw%rowtype;
   begin
@@ -166,6 +173,7 @@ as
       into l_req
       from &TOOLKIT._req_object_vw
      where &TOOLKIT._id = p_req_id;
+     
     create_&TOOLKIT._req(
       p_req => p_req,
       p_req_id => l_req.&TOOLKIT._id,
@@ -174,16 +182,18 @@ as
       p_req_rtp_id => l_req.req_rtp_id,
       p_req_rre_id => l_req.req_rre_id,
       p_req_text => l_req.req_text);
+      
   end create_&TOOLKIT._req;
     
 
   function raise_event(
     p_req in out nocopy &TOOLKIT._req_type,
     p_fev_id in &TOOLKIT._event.fev_id%type)
-    return integer
+    return binary_integer
   as
   begin
-    pit.enter('raise_event', c_pkg);
+    pit.enter('raise_event', C_PKG);
+    
     -- propagate event to super class
     g_result := &TOOLKIT._pkg.raise_event(p_req, p_fev_id);
 
@@ -206,8 +216,9 @@ as
       end case;
     else
       pit.warn(msg.&TOOLKIT._EVENT_NOT_ALLOWED, msg_args(p_fev_id, p_req.&TOOLKIT._fst_id), p_req.&TOOLKIT._id);
-      g_result := c_ok;
+      g_result := util_&TOOLKIT..C_OK;
     end if;
+    
     pit.leave;
     return g_result;
   end raise_event;
@@ -215,16 +226,18 @@ as
     
   function set_status(
     p_req in out nocopy &TOOLKIT._req_type)
-    return integer
+    return binary_integer
   as
   begin
-    pit.enter('set_status', c_pkg);
+    pit.enter('set_status', C_PKG);
+    
     persist(p_req);
+    
     pit.leave;
-    return &TOOLKIT._pkg.C_OK;
+    return util_&TOOLKIT..C_OK;
   exception
     when others then
-      return &TOOLKIT._pkg.C_ERROR;
+      return util_&TOOLKIT..C_ERROR;
   end set_status;
 
 end &TOOLKIT._req_pkg;

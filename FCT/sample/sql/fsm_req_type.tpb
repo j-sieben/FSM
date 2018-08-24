@@ -62,11 +62,11 @@ as
     -- persist status
     l_result := &TOOLKIT._req_pkg.set_status(l_self);
     -- raise automatic events
-    if l_self.&TOOLKIT._auto_raise = &TOOLKIT._pkg.C_TRUE and l_result = &TOOLKIT._pkg.C_OK then
+    if l_self.&TOOLKIT._auto_raise = util_&TOOLKIT..C_TRUE and l_result = util_&TOOLKIT..C_OK then
       l_result := l_self.raise_event(l_self.&TOOLKIT._fev_list);
     end if;
     -- call destructor, if next_event_list = 'NIL'
-    if l_result = &TOOLKIT._pkg.C_OK and l_self.&TOOLKIT._fev_list = 'NIL' then
+    if l_result = util_&TOOLKIT..C_OK and l_self.&TOOLKIT._fev_list = 'NIL' then
       l_self.finalize;
     end if;
     return l_result;

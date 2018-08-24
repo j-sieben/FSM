@@ -1,23 +1,22 @@
 create or replace package body &TOOLKIT._pkg 
 as
 
-  c_pkg constant varchar2(30 byte) := $$PLSQL_UNIT;
-  c_cr constant char(1 byte) := chr(13);
+  C_PKG constant varchar2(30 byte) := $$PLSQL_UNIT;
   
   g_log_level number;
   g_user varchar2(30 byte);
   
-  /* PL/SQL-Tabelle zur Speicherung der Status/Event-spezifischen Benachrichtigungsmails */
+  /* PL/SQL table to cache notification messages */
   type &TOOLKIT._message_tab is table of varchar2(200 char)
     index by &TOOLKIT._status.fst_id%type;
   
-  -- Instanzen
-  event_messages &TOOLKIT._message_tab;
-  event_names &TOOLKIT._message_tab;
-  status_messages &TOOLKIT._message_tab;
-  status_names &TOOLKIT._message_tab;
+  -- Instances
+  g_event_messages &TOOLKIT._message_tab;
+  g_event_names &TOOLKIT._message_tab;
+  g_status_messages &TOOLKIT._message_tab;
+  g_status_names &TOOLKIT._message_tab;
   
-  /* Initialisierungsprozedur des Packages */
+  /* Initialize package */
   procedure initialize
   as
     cursor status_message_cur is
@@ -27,56 +26,63 @@ as
       select fev_id, fev_msg_id, fev_name
         from &TOOLKIT._event;
   begin
-    pit.enter_detailed('initialize', c_pkg);
+    pit.enter_detailed('initialize', C_PKG);
+    
+    -- cache list of often used messages for statusses
     for fst in status_message_cur loop
-      status_messages(fst.fst_id) := fst.fst_msg_id;
-      status_names(fst.fst_id) := fst.fst_name;
+      g_status_messages(fst.fst_id) := fst.fst_msg_id;
+      g_status_names(fst.fst_id) := fst.fst_name;
     end loop;
+    -- ... and events
     for fev in event_message_cur loop
-      event_messages(fev.fev_id) := fev.fev_msg_id;
-      event_names(fev.fev_id) := fev.fev_name;
+      g_event_messages(fev.fev_id) := fev.fev_msg_id;
+      g_event_names(fev.fev_id) := fev.fev_name;
     end loop;
+    
     g_log_level := param.get_integer('PIT_&TOOLKIT._DEFAULT_LOG_LEVEL', 'PIT');
     g_user := user;
+    
     pit.leave_detailed;
   end initialize;
   
   /* HELPER */
-  /* Prozedur speichert einen erneuten Ausfuehrungsversuch einer &TOOLKIT. 
-   * %param p_&TOOLKIT. &TOOLKIT.-Instanz
-   * %param p_retry_schedule Schedule, der fuer den erneuten Versuch verwendet
-   *        werden soll
-   * %usage Wird aufgerufen, wenn ein erneuter Ausfuehrungsversuch einer &TOOLKIT.-Instanz
-   *        angeforert wird, um den Versuch zu persistieren
+  /* Methode persists retry of a &TOOLKIT. instance to achieve a new status 
+   * %param p_&TOOLKIT. &TOOLKIT. instance
+   * %param p_retry_schedule schedule to be used for the next retry
+   * %usage Is called when a &TOOLKIT. instance could not achieve a new status
+   *        and retries it. This method stores the retry event
    */
   procedure persist_retry(
     p_&TOOLKIT. in out nocopy &TOOLKIT._type,
     p_retry_schedule in &TOOLKIT._object.&TOOLKIT._retry_schedule%type)
   as
   begin
-    pit.enter_detailed('persist_retry', c_pkg);
+    pit.enter_detailed('persist_retry', C_PKG);
+    
     update &TOOLKIT._object
        set &TOOLKIT._validity = p_&TOOLKIT..&TOOLKIT._validity,
            &TOOLKIT._retry_schedule = p_retry_schedule
      where &TOOLKIT._id = p_&TOOLKIT..&TOOLKIT._id;
     commit;
+    
     pit.leave_detailed;
   end persist_retry;
   
   
-  /* Funktion liefert die aktuelle SESSION_ID, falls ueber APEX keine
-   * APEX-Session vereinbart wurde
+  /* Methode delivers the actual session id as offerd in V$SESSION
    */
   function get_session_id
     return varchar2
   as
-    l_session_id varchar2(30);
+    l_session_id util_&TOOLKIT..ora_name_type;
   begin
-    pit.enter_detailed('get_session_id', c_pkg);
+    pit.enter_detailed('get_session_id', C_PKG);
+    
     select to_char(sid || ',' || serial#)
       into l_session_id
       from v$session
      where rownum = 1;
+     
     pit.leave_detailed;
     return l_session_id;
   end get_session_id;
@@ -95,10 +101,10 @@ as
     p_wait_time in &TOOLKIT._status.fst_retry_time%type,
     p_try_count in &TOOLKIT._status.fst_retries_on_error%type)
   as
-    l_result number;
-    l_try_count number;
+    l_result binary_integer;
+    l_try_count binary_integer;
   begin
-    pit.enter_optional('re_fire_event', c_pkg);
+    pit.enter_optional('re_fire_event', C_PKG);
     if p_wait_time is not null then
       pit.info(
         msg.&TOOLKIT._RETRYING, 
@@ -126,10 +132,10 @@ as
   procedure proceed_with_error_event(
     p_&TOOLKIT. in out nocopy &TOOLKIT._type)
   as
-    l_result number;
+    l_result binary_integer;
     l_event &TOOLKIT._event.fev_id%type;
   begin
-    pit.enter_optional('proceed_with_error_event', c_pkg);
+    pit.enter_optional('proceed_with_error_event', C_PKG);
     pit.verbose(
       msg.&TOOLKIT._VALIDITY, 
       msg_args(
@@ -140,11 +146,11 @@ as
       from &TOOLKIT._transition
      where ftr_fst_id = p_&TOOLKIT..&TOOLKIT._fst_id
        and ftr_fcl_id = p_&TOOLKIT..&TOOLKIT._fcl_id
-       and ftr_raise_on_status = c_error;
+       and ftr_raise_on_status = util_&TOOLKIT..C_ERROR;
     pit.verbose(msg.&TOOLKIT._THROW_ERROR_EVENT, msg_args(l_event), p_&TOOLKIT..&TOOLKIT._id);
     
     p_&TOOLKIT..&TOOLKIT._fev_list := l_event;
-    p_&TOOLKIT..&TOOLKIT._validity := c_error;
+    p_&TOOLKIT..&TOOLKIT._validity := util_&TOOLKIT..C_ERROR;
     
     persist_retry(p_&TOOLKIT., null);
     
@@ -175,23 +181,23 @@ as
   as
     l_message message_type;
     l_message_id &TOOLKIT._event.fev_msg_id%type;
-    l_user varchar2(50);
-    l_session varchar2(50);
+    l_user util_&TOOLKIT..ora_name_type;
+    l_session util_&TOOLKIT..ora_name_type;
     l_msg_args msg_args;    
-    c_pit_&TOOLKIT. constant varchar2(10) := 'PIT_&TOOLKIT.';
+    C_PIT_&TOOLKIT. constant varchar2(10) := 'PIT_&TOOLKIT.';
   begin
-    pit.enter_optional('log_change', c_pkg);
+    pit.enter_optional('log_change', C_PKG);
     -- prepare Message
     case
     when p_fev_id is not null then
-      l_message_id := event_messages(p_fev_id);
-      l_msg_args := msg_args(event_names(p_fev_id));
+      l_message_id := g_event_messages(p_fev_id);
+      l_msg_args := msg_args(g_event_names(p_fev_id));
     when p_fst_id = &TOOLKIT._fst.&TOOLKIT._ERROR then
       l_message_id := msg.&TOOLKIT._DELIVERY_FAILED;
-      l_msg_args := msg_args(status_names(p_fst_id));
+      l_msg_args := msg_args(g_status_names(p_fst_id));
     when p_fst_id is not null then
-      l_message_id := status_messages(p_fst_id);
-      l_msg_args := msg_args(status_names(p_fst_id));
+      l_message_id := g_status_messages(p_fst_id);
+      l_msg_args := msg_args(g_status_names(p_fst_id));
     else
       l_message_id := p_msg;
       l_msg_args := p_msg_args;
@@ -227,12 +233,12 @@ as
     p_&TOOLKIT. in &TOOLKIT._type)
   as
   begin
-    pit.enter('persist', c_pkg, msg_params(msg_param('id', p_&TOOLKIT..&TOOLKIT._id)));
+    pit.enter('persist', C_PKG, msg_params(msg_param('id', p_&TOOLKIT..&TOOLKIT._id)));
     merge into &TOOLKIT._object o
     using (select p_&TOOLKIT..&TOOLKIT._id &TOOLKIT._id,
                   p_&TOOLKIT..&TOOLKIT._fcl_id &TOOLKIT._fcl_id,
                   p_&TOOLKIT..&TOOLKIT._fst_id &TOOLKIT._fst_id,
-                  coalesce(p_&TOOLKIT..&TOOLKIT._validity, c_ok) &TOOLKIT._validity,
+                  coalesce(p_&TOOLKIT..&TOOLKIT._validity, util_&TOOLKIT..C_OK) &TOOLKIT._validity,
                   p_&TOOLKIT..&TOOLKIT._fev_list &TOOLKIT._fev_list
              from dual) v
        on (o.&TOOLKIT._id = v.&TOOLKIT._id)
@@ -255,18 +261,18 @@ as
     l_old_fst_id &TOOLKIT._status.fst_id%type;
     l_new_fst_id &TOOLKIT._status.fst_id%type;
   begin
-    pit.enter('raise_event', c_pkg);
+    pit.enter('raise_event', C_PKG);
     -- LOG verwalten
     log_change(
       p_&TOOLKIT. => p_&TOOLKIT., 
       p_fev_id => p_fev_id);
-    p_&TOOLKIT..&TOOLKIT._validity := c_ok;
+    p_&TOOLKIT..&TOOLKIT._validity := util_&TOOLKIT..C_OK;
     pit.leave;
-    return c_ok;
+    return util_&TOOLKIT..C_OK;
   exception
     when others then
       pit.sql_exception(msg.&TOOLKIT._SQL_ERROR, msg_args(p_&TOOLKIT..&TOOLKIT._fcl_id, to_char(p_&TOOLKIT..&TOOLKIT._id), p_fev_id));
-      return c_error;
+      return util_&TOOLKIT..C_ERROR;
   end raise_event;
     
   
@@ -289,10 +295,10 @@ as
          and &TOOLKIT..&TOOLKIT._validity != 1;
     l_validity &TOOLKIT._object.&TOOLKIT._validity%type;
   begin
-    pit.enter('retry', c_pkg);
+    pit.enter('retry', C_PKG);
     for &TOOLKIT. in &TOOLKIT._cur(p_&TOOLKIT..&TOOLKIT._id) loop
-      if &TOOLKIT..fst_retries_on_error > 0 then
-        pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, c_true), p_&TOOLKIT..&TOOLKIT._id);
+      if &TOOLKIT..fst_retries_on_error > util_&TOOLKIT..C_ERROR then
+        pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, util_&TOOLKIT..C_TRUE), p_&TOOLKIT..&TOOLKIT._id);
         -- take retry into account
         -- &TOOLKIT._VALIDITY may have one of the following values:
         -- 0 = no retry planned yet (or succesful state conversion, then this method wouldn't have been called)
@@ -321,7 +327,7 @@ as
           re_fire_event(p_&TOOLKIT., p_fev_id, &TOOLKIT..fst_retry_time, l_validity);
         end case;
       else
-        pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, c_false), p_&TOOLKIT..&TOOLKIT._id);
+        pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, util_&TOOLKIT..C_FALSE), p_&TOOLKIT..&TOOLKIT._id);
         proceed_with_error_event(p_&TOOLKIT.);
       end if;
       pit.leave;
@@ -335,16 +341,16 @@ as
     return boolean
   as
     l_result boolean;
-    l_has_role number;
+    l_has_role binary_integer;
   begin
-    pit.enter_optional('&TOOLKIT._allows_event', c_pkg);
+    pit.enter_optional('&TOOLKIT._allows_event', C_PKG);
     -- Pruefe, ob Event im aktuellen Status erlaubt ist
-    l_result := instr(':' || p_&TOOLKIT..&TOOLKIT._fev_list || ':', ':' || p_fev_id || ':') > 0;
+    l_result := instr(':' || p_&TOOLKIT..&TOOLKIT._fev_list || ':', ':' || p_fev_id || ':') > util_&TOOLKIT..C_ERROR;
     
     -- Pruefe, ob aktueller Benutzer erforderliche Rollenrechte besitzt
     select case 
-           when ftr_required_role is not null then 0 --auth_user.is_authorized(ftr_required_role)
-           else 1 end
+           when ftr_required_role is not null then util_&TOOLKIT..C_ERROR -- auth_user.is_authorized(ftr_required_role)
+           else util_&TOOLKIT..C_OK end
       into l_has_role
       from &TOOLKIT._transition
      where ftr_fev_id = p_fev_id
@@ -352,7 +358,7 @@ as
        and ftr_fcl_id = p_&TOOLKIT..&TOOLKIT._fcl_id;
     
     pit.leave_optional;
-    return l_result and l_has_role > 0;
+    return l_result and l_has_role > util_&TOOLKIT..C_ERROR;
   exception
     when no_data_found then
       return false;
@@ -371,11 +377,11 @@ as
          and fcl_id = p_&TOOLKIT..&TOOLKIT._fcl_id
          and ftr_raise_on_status = p_&TOOLKIT..&TOOLKIT._validity;
     l_old_fst_id &TOOLKIT._status.fst_id%type;
-    l_result number := c_ok;
+    l_result binary_integer := util_&TOOLKIT..C_OK;
   begin
-    pit.enter('set_status', c_pkg);
+    pit.enter('set_status', C_PKG);
     pit.assert_not_null(p_&TOOLKIT..&TOOLKIT._fst_id);
-    p_&TOOLKIT..&TOOLKIT._validity := coalesce(p_&TOOLKIT..&TOOLKIT._validity, c_ok);
+    p_&TOOLKIT..&TOOLKIT._validity := coalesce(p_&TOOLKIT..&TOOLKIT._validity, util_&TOOLKIT..C_OK);
     
     -- Ermittle nächste mögliche Events
     for evt in next_event_cur(p_&TOOLKIT.) loop
@@ -399,7 +405,7 @@ as
         p_&TOOLKIT..&TOOLKIT._fst_id := &TOOLKIT._fst.&TOOLKIT._ERROR;
         return set_status(p_&TOOLKIT.);
       else
-        return c_error;
+        return util_&TOOLKIT..C_ERROR;
       end if;
     when others then
       pit.sql_exception(msg.SQL_ERROR);
@@ -407,7 +413,7 @@ as
         p_&TOOLKIT..&TOOLKIT._fst_id := &TOOLKIT._fst.&TOOLKIT._ERROR;
         return set_status(p_&TOOLKIT.);
       else
-        return c_error;
+        return util_&TOOLKIT..C_ERROR;
       end if;
   end set_status;
   
@@ -426,18 +432,18 @@ as
     p_fev_id in &TOOLKIT._event.fev_id%type)
     return varchar2
   as
-    l_next_fst_id varchar2(4000);
-    c_delimiter constant varchar2(1) := ':';
+    l_next_fst_list util_&TOOLKIT..max_sql_char;
+    C_DELIMITER constant varchar2(1) := ':';
   begin
-    select listagg(ftr_fst_list, c_delimiter) within group (order by ftr_fst_list)
-      into l_next_fst_id
+    select listagg(ftr_fst_list, C_DELIMITER) within group (order by ftr_fst_list)
+      into l_next_fst_list
       from &TOOLKIT._transition
      where ftr_fst_id = p_&TOOLKIT..&TOOLKIT._fst_id
        and ftr_fev_id = p_fev_id
        and ftr_fcl_id = p_&TOOLKIT..&TOOLKIT._fcl_id;
-    if instr(l_next_fst_id, c_delimiter) = 0 then
-      notify(p_&TOOLKIT., msg.&TOOLKIT._NEXT_STATUS_RECOGNIZED, msg_args(l_next_fst_id));
-      return l_next_fst_id;
+    if instr(l_next_fst_list, C_DELIMITER) = 0 then
+      notify(p_&TOOLKIT., msg.&TOOLKIT._NEXT_STATUS_RECOGNIZED, msg_args(l_next_fst_list));
+      return l_next_fst_list;
     else
       pit.error(msg.&TOOLKIT._NEXT_STATUS_NU, msg_args(p_&TOOLKIT..&TOOLKIT._fst_id), p_&TOOLKIT..&TOOLKIT._id);
       return null;
@@ -451,11 +457,11 @@ as
   
   procedure notify(
     p_&TOOLKIT. in out nocopy &TOOLKIT._type,
-    p_msg in varchar2,
+    p_msg in util_&TOOLKIT..ora_name_type,
     p_msg_args in msg_args)
   as
   begin
-    pit.enter('notify', c_pkg);
+    pit.enter('notify', C_PKG);
     log_change(
       p_&TOOLKIT. => p_&TOOLKIT.,
       p_msg => p_msg,

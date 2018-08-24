@@ -18,6 +18,9 @@ prompt &section.
 prompt &h1.Checking whether required users exist
 @check_users_exist.sql
 
+prompt &h2.grant user rights
+@set_grants.sql
+
 alter session set current_schema=&INSTALL_USER.;
 
 prompt

@@ -39,25 +39,30 @@ begin
     end;
   end loop;
   
+  delete from &TOOLKIT._transition
+   where ftr_fcl_id = '&FSM_CLASS.';
+  dbms_output.put_line('&s1.' || sql%ROWCOUNT || ' transitions deleted.');
+   
+  delete from &TOOLKIT._status
+   where fst_fcl_id = '&FSM_CLASS.';
+  dbms_output.put_line('&s1.' || sql%ROWCOUNT || ' status deleted.');
+   
+  delete from &TOOLKIT._event
+   where fev_fcl_id = '&FSM_CLASS.';
+  dbms_output.put_line('&s1.' || sql%ROWCOUNT || ' events deleted.');
+  
   delete from pit_message
    where pms_name like ('&TOOLKIT._REQ%');
+  dbms_output.put_line('&s1.' || sql%ROWCOUNT || ' PIT messages deleted.');
    
   delete from parameter_tab
    where par_pgr_id = '&TOOLKIT.'
      and par_id in ('');
+  dbms_output.put_line('&s1.' || sql%ROWCOUNT || ' parameters deleted.');
    
-  delete from &TOOLKIT._transition
-   where ftr_fcl_id = '&FSM_CLASS.';
-   
-  delete from &TOOLKIT._status
-   where fst_fcl_id = '&FSM_CLASS.';
-   
-  delete from &TOOLKIT._event
-   where fev_fcl_id = '&FSM_CLASS.';
+  commit;
   
   &TOOLKIT._admin_pkg.create_event_package;
   &TOOLKIT._admin_pkg.create_status_package;
-  
-  commit;
 end;
 /

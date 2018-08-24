@@ -1,13 +1,7 @@
-create or replace package body FCT_util
+create or replace package body util_&TOOLKIT.
 as
 
   /* INTERFACE */
-  procedure initialize as
-  begin
-    null;
-  end initialize;
-
-
   procedure bulk_replace(
     p_value in out nocopy varchar2,
     p_replacement char_table)
@@ -32,7 +26,7 @@ as
     p_replacement char_table)
     return varchar2
   as
-    l_val varchar2(32767);
+    l_val max_char;
   begin
 	pit.enter_detailed;
     l_val := p_value;
@@ -41,7 +35,5 @@ as
     return l_val;
   end bulk_replace;
 
-begin
-  initialize;
-end FCT_util;
+end util_&TOOLKIT.;
 /

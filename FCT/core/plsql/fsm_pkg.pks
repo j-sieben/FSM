@@ -7,11 +7,6 @@ as
    *         von Events und Statusänderungen bereit.
    */
 
-  /* Packagekonstanten zur Verwendung in abgeleiteten &TOOLKIT.-Instanzen */
-  c_ok constant integer := 0;
-  c_error constant integer := 1;
-  c_true constant char(1 byte) := 'Y';
-  c_false constant char(1 byte) := 'N';
 
   /* Funktion hat auf abstrakter Ebene lediglich die Aufgabe, das Logging
    * zu uebernehmen.
@@ -110,7 +105,7 @@ as
    */
   procedure notify(
     p_&TOOLKIT. in out nocopy &TOOLKIT._type,
-    p_msg in varchar2,
+    p_msg in util_&TOOLKIT..ora_name_type,
     p_msg_args in msg_args);
 
 
