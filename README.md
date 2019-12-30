@@ -17,7 +17,7 @@ This is where FCT comes in. It abstracts the complexity away by separating the s
 
 ## Use case
 
-As an example, I needed to implement a system that processes letters for patients in a hospital. A letter might have more tha one addresse and, based on the addresse, may be sent by email information, per fax or per postal mail. The letter is in .doc format and contains the addresses as a data island within the document. Each letter is automatically opened in Word and creates a PDF for each addressee. The address and the filename of the PDF is written to a local file that is read into the database by using an external table.
+As an example, I needed to implement a system that processes letters for patients in a hospital. A letter might have more than one addresse and, based on the addresse, may be sent by email information, per fax or per postal mail. The letter is in `.docx` format and contains the addresses as a data island within the document. Each letter is automatically opened in Word and creates a PDF for each addressee. The address and the filename of the PDF is written to a local file that is read into the database by using an external table.
 
 This example was implemented using two FCT instances: `FCT_DOC` and `FCT_PDF`. An instance of `FCT_DOC` was created per letter that had to be processed whereas an instance of `FCT_PDF` was created per copy of the letter, including a reference to the `FCT_DOC` instance it belongs to.
 
