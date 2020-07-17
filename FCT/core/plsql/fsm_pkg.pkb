@@ -203,7 +203,11 @@ as
       l_msg_args := p_msg_args;
     end case;
     
-    l_message := pit_pkg.get_message(l_message_id, to_char(p_&TOOLKIT..&TOOLKIT._id), l_msg_args);
+    l_message := pit.get_message(
+                   p_message_name => l_message_id,
+                   p_msg_args => l_msg_args, 
+                   p_affected_id => to_char(p_FSM.FSM_id));
+                   
     -- TODO: Pruefen, ob Ermittlung des Username/Session durch APEX_ADAPTER buggy ist
     if instr(l_message.session_id, ':') > 0 then
       l_user := substr(l_message.session_id, 1, instr(l_message.session_id, ':') - 1);
@@ -223,7 +227,7 @@ as
       &TOOLKIT._log_seq.nextval, to_number(l_message.affected_id), l_session, l_user,
       current_timestamp, l_message.message_text, l_message.severity,
       p_&TOOLKIT..&TOOLKIT._fst_id, p_&TOOLKIT..&TOOLKIT._fev_list, p_&TOOLKIT..&TOOLKIT._fcl_id,
-      l_message.message_name, pit_pkg.cast_to_char_list(l_message.message_args));
+      l_message.message_name, pit_pkg.cast_to_msg_args_char(l_message.message_args));
     pit.leave_optional;
   end log_change;
   
@@ -483,7 +487,7 @@ as
     event_list: #FEV_LIST#
 ]';
   begin
-    &TOOLKIT._util.bulk_replace(l_result, char_table(
+    utl_text.bulk_replace(l_result, char_table(
       '#&TOOLKIT._ID#', p_&TOOLKIT..&TOOLKIT._id,
       '#&TOOLKIT._FCL_ID#', p_&TOOLKIT..&TOOLKIT._fcl_id,
       '#&TOOLKIT._FST_ID#', p_&TOOLKIT..&TOOLKIT._fst_id,
