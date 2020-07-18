@@ -46,13 +46,13 @@ prompt . - view &TOOLKIT._HIERARCHY_VW
 @&view_dir.fsm_hierarchy_vw.vw
 
 --prompt . - view &TOOLKIT._FSL_LOG_VW
---@&view_dir.fsm_fsl_log_vw.vw
+@&view_dir.fsm_fsl_log_vw.vw
 
 prompt . - view BL_&TOOLKIT._ACTIVE_STATUS_EVENT
 @&view_dir.bl_fsm_active_status_event.vw
 
 --prompt . - view &TOOLKIT._NEXT_COMMANDS_VW
---@&view_dir.fsm_next_commands_vw.vw
+@&view_dir.fsm_next_commands_vw.vw
 
 prompt - sequences
 prompt . - sequence &TOOLKIT._seq
@@ -83,9 +83,6 @@ prompt . - package &TOOLKIT._UTIL
 prompt . - package &TOOLKIT._ADMIN_PKG
 @&plsql_dir.fsm_admin_pkg.pkb
 
-prompt . - package &TOOLKIT._PKG
-@&plsql_dir.fsm_pkg.pkb
-
 
 prompt - create helper packages
 prompt . - create event and status packages
@@ -94,3 +91,6 @@ begin
   &TOOLKIT._admin_pkg.create_status_package;
 end;
 /
+
+prompt . - package &TOOLKIT._PKG
+@&plsql_dir.fsm_pkg.pkb

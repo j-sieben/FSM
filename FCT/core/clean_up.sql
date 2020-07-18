@@ -12,8 +12,8 @@ declare
             from all_objects
            where object_name in (
                  '&TOOLKIT._TYPE', -- Typen
-                 '&TOOLKIT._ADMIN_PKG', '&TOOLKIT._PKG', -- Packages
-                 '&TOOLKIT._FSL_LOG_VW', '&TOOLKIT._HIERARCHY_VW', -- Views
+                 '&TOOLKIT._ADMIN_PKG', '&TOOLKIT._PKG', '&TOOLKIT._FST', '&TOOLKIT._FEV', 'UTL_&TOOLKIT.', -- Packages
+                 '&TOOLKIT._FSL_LOG_VW', '&TOOLKIT._HIERARCHY_VW', 'BL_&TOOLKIT._ACTIVE_STATUS_EVENT', -- Views
                  '&TOOLKIT._CLASS', '&TOOLKIT._EVENT', '&TOOLKIT._LOG', '&TOOLKIT._OBJECT', '&TOOLKIT._STATUS', '&TOOLKIT._STATUS_GROUP',
                  '&TOOLKIT._STATUS_SEVERITY', '&TOOLKIT._TRANSITION', -- Tabellen
                  '',  -- Synonyme
@@ -30,7 +30,7 @@ begin
                         when 'TYPE' then ' force' 
                         when 'TABLE' then ' cascade constraints' 
                         end;
-     dbms_output.put_line('. - ' || initcap(obj.type) || ' ' || obj.name || ' deleted.');
+      dbms_output.put_line('. - ' || initcap(obj.type) || ' ' || obj.name || ' deleted.');
     
     exception
       when object_does_not_exist or table_does_not_exist or sequence_does_not_exist or synonym_does_not_exist then

@@ -7,18 +7,16 @@ set pages 9999
 whenever sqlerror exit
 clear screen
 set termout off
-col sys_user new_val SYS_USER format a30
-col install_user new_val INSTALL_USER format a30
-col default_language new_val DEFAULT_LANGUAGE format a30
+col sys_user new_val SYS_USER format a128
+col install_user new_val INSTALL_USER format a128
+col remote_user new_val REMOTE_USER format a128
 
 select user sys_user,
        upper('&1.') install_user,
-       upper('&2.') default_language
-  from V$NLS_VALID_VALUES
- where parameter = 'LANGUAGE'
-   and value = upper('&2.');
+       upper('&2.') remote_user
+  from dual;
    
-col ora_name_type new_val ORA_NAME_TYPE format a30
+col ora_name_type new_val ORA_NAME_TYPE format a128
 select 'varchar2(' || data_length || ' byte)' ora_name_type
   from all_tab_columns
  where table_name = 'USER_TABLES'

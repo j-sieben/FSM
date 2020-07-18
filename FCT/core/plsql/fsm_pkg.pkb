@@ -26,7 +26,7 @@ as
       select fev_id, fev_msg_id, fev_name
         from &TOOLKIT._event;
   begin
-    pit.enter_detailed('initialize', C_PKG);
+    pit.enter_detailed;
     
     -- cache list of often used messages for statusses
     for fst in status_message_cur loop
@@ -57,7 +57,10 @@ as
     p_retry_schedule in &TOOLKIT._object.&TOOLKIT._retry_schedule%type)
   as
   begin
-    pit.enter_detailed('persist_retry', C_PKG);
+    pit.enter_detailed(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque'),
+                    msg_param('p_retry_schedule', p_retry_schedule)));
     
     update &TOOLKIT._object
        set &TOOLKIT._validity = p_&TOOLKIT..&TOOLKIT._validity,
@@ -76,14 +79,16 @@ as
   as
     l_session_id util_&TOOLKIT..ora_name_type;
   begin
-    pit.enter_detailed('get_session_id', C_PKG);
+    pit.enter_detailed;
     
     select to_char(sid || ',' || serial#)
       into l_session_id
       from v$session
      where rownum = 1;
      
-    pit.leave_detailed;
+    pit.leave_detailed(
+      p_params => msg_params(
+                    msg_param('Session-ID', l_session_id)));
     return l_session_id;
   end get_session_id;
   
@@ -104,7 +109,12 @@ as
     l_result binary_integer;
     l_try_count binary_integer;
   begin
-    pit.enter_optional('re_fire_event', C_PKG);
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque'),
+                    msg_param('p_fev_id', p_fev_id),
+                    msg_param('p_wait_time', p_wait_time),
+                    msg_param('p_try_count', p_try_count)));
     if p_wait_time is not null then
       pit.info(
         msg.&TOOLKIT._RETRYING, 
@@ -135,7 +145,9 @@ as
     l_result binary_integer;
     l_event &TOOLKIT._event.fev_id%type;
   begin
-    pit.enter_optional('proceed_with_error_event', C_PKG);
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque')));
     pit.verbose(
       msg.&TOOLKIT._VALIDITY, 
       msg_args(
@@ -186,7 +198,13 @@ as
     l_msg_args msg_args;    
     C_PIT_&TOOLKIT. constant varchar2(10) := 'PIT_&TOOLKIT.';
   begin
-    pit.enter_optional('log_change', C_PKG);
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque'),
+                    msg_param('p_fev_id', p_fev_id),
+                    msg_param('p_fst_id', p_fst_id),
+                    msg_param('p_msg', p_msg),
+                    msg_param('p_msg_args', 'opaque')));
     -- prepare Message
     case
     when p_fev_id is not null then
@@ -227,7 +245,8 @@ as
       &TOOLKIT._log_seq.nextval, to_number(l_message.affected_id), l_session, l_user,
       current_timestamp, l_message.message_text, l_message.severity,
       p_&TOOLKIT..&TOOLKIT._fst_id, p_&TOOLKIT..&TOOLKIT._fev_list, p_&TOOLKIT..&TOOLKIT._fcl_id,
-      l_message.message_name, pit_pkg.cast_to_msg_args_char(l_message.message_args));
+      l_message.message_name, pit_util.cast_to_msg_args_char(l_message.message_args));
+      
     pit.leave_optional;
   end log_change;
   
@@ -237,7 +256,9 @@ as
     p_&TOOLKIT. in &TOOLKIT._type)
   as
   begin
-    pit.enter('persist', C_PKG, msg_params(msg_param('id', p_&TOOLKIT..&TOOLKIT._id)));
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque')));
     merge into &TOOLKIT._object o
     using (select p_&TOOLKIT..&TOOLKIT._id &TOOLKIT._id,
                   p_&TOOLKIT..&TOOLKIT._fcl_id &TOOLKIT._fcl_id,
@@ -252,7 +273,8 @@ as
           &TOOLKIT._fev_list = v.&TOOLKIT._fev_list
      when not matched then insert(&TOOLKIT._id, &TOOLKIT._fcl_id, &TOOLKIT._fst_id, &TOOLKIT._validity, &TOOLKIT._fev_list)
           values(v.&TOOLKIT._id, v.&TOOLKIT._fcl_id, v.&TOOLKIT._fst_id, v.&TOOLKIT._validity, v.&TOOLKIT._fev_list);
-    pit.leave;
+          
+    pit.leave_mandatory;
   end persist;
   
 
@@ -265,13 +287,19 @@ as
     l_old_fst_id &TOOLKIT._status.fst_id%type;
     l_new_fst_id &TOOLKIT._status.fst_id%type;
   begin
-    pit.enter('raise_event', C_PKG);
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque'),
+                    msg_param('p_fev_id', p_fev_id)));
     -- LOG verwalten
     log_change(
       p_&TOOLKIT. => p_&TOOLKIT., 
       p_fev_id => p_fev_id);
     p_&TOOLKIT..&TOOLKIT._validity := util_&TOOLKIT..C_OK;
-    pit.leave;
+    
+    pit.leave_mandatory(
+      p_params => msg_params(
+                    msg_param('Status', util_&TOOLKIT..C_OK)));
     return util_&TOOLKIT..C_OK;
   exception
     when others then
@@ -299,7 +327,11 @@ as
          and &TOOLKIT..&TOOLKIT._validity != 1;
     l_validity &TOOLKIT._object.&TOOLKIT._validity%type;
   begin
-    pit.enter('retry', C_PKG);
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque'),
+                    msg_param('p_fev_id', p_fev_id)));
+                    
     for &TOOLKIT. in &TOOLKIT._cur(p_&TOOLKIT..&TOOLKIT._id) loop
       if &TOOLKIT..fst_retries_on_error > util_&TOOLKIT..C_ERROR then
         pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, util_&TOOLKIT..C_TRUE), p_&TOOLKIT..&TOOLKIT._id);
@@ -334,8 +366,10 @@ as
         pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, util_&TOOLKIT..C_FALSE), p_&TOOLKIT..&TOOLKIT._id);
         proceed_with_error_event(p_&TOOLKIT.);
       end if;
-      pit.leave;
+      
     end loop;
+    
+    pit.leave_mandatory;
   end retry;
   
   
@@ -347,7 +381,11 @@ as
     l_result boolean;
     l_has_role binary_integer;
   begin
-    pit.enter_optional('&TOOLKIT._allows_event', C_PKG);
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque'),
+                    msg_param('p_fev_id', p_fev_id)));
+                    
     -- Pruefe, ob Event im aktuellen Status erlaubt ist
     l_result := instr(':' || p_&TOOLKIT..&TOOLKIT._fev_list || ':', ':' || p_fev_id || ':') > util_&TOOLKIT..C_ERROR;
     
@@ -365,6 +403,7 @@ as
     return l_result and l_has_role > util_&TOOLKIT..C_ERROR;
   exception
     when no_data_found then
+      pit.leave_optional;
       return false;
   end allows_event;
   
@@ -383,7 +422,10 @@ as
     l_old_fst_id &TOOLKIT._status.fst_id%type;
     l_result binary_integer := util_&TOOLKIT..C_OK;
   begin
-    pit.enter('set_status', C_PKG);
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque')));
+                    
     pit.assert_not_null(p_&TOOLKIT..&TOOLKIT._fst_id);
     p_&TOOLKIT..&TOOLKIT._validity := coalesce(p_&TOOLKIT..&TOOLKIT._validity, util_&TOOLKIT..C_OK);
     
@@ -401,14 +443,19 @@ as
     
     notify(p_&TOOLKIT., msg.&TOOLKIT._NEXT_EVENTS, msg_args(p_&TOOLKIT..&TOOLKIT._fev_list, p_&TOOLKIT..&TOOLKIT._auto_raise));
     
-    pit.leave;
+    pit.leave_mandatory(
+      p_params => msg_params(
+                    msg_param('Result', p_&TOOLKIT..&TOOLKIT._validity)));
     return p_&TOOLKIT..&TOOLKIT._validity;
   exception
     when msg.ASSERTION_FAILED_ERR then
       if p_&TOOLKIT..&TOOLKIT._fst_id != &TOOLKIT._fst.&TOOLKIT._ERROR then
         p_&TOOLKIT..&TOOLKIT._fst_id := &TOOLKIT._fst.&TOOLKIT._ERROR;
+        
+        pit.leave_mandatory;
         return set_status(p_&TOOLKIT.);
       else
+        pit.leave_mandatory;
         return util_&TOOLKIT..C_ERROR;
       end if;
     when others then
@@ -417,6 +464,7 @@ as
         p_&TOOLKIT..&TOOLKIT._fst_id := &TOOLKIT._fst.&TOOLKIT._ERROR;
         return set_status(p_&TOOLKIT.);
       else
+        pit.leave_mandatory;
         return util_&TOOLKIT..C_ERROR;
       end if;
   end set_status;
@@ -439,6 +487,11 @@ as
     l_next_fst_list util_&TOOLKIT..max_sql_char;
     C_DELIMITER constant varchar2(1) := ':';
   begin
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque'),
+                    msg_param('p_fev_id', p_fev_id)));
+                    
     select listagg(ftr_fst_list, C_DELIMITER) within group (order by ftr_fst_list)
       into l_next_fst_list
       from &TOOLKIT._transition
@@ -447,6 +500,10 @@ as
        and ftr_fcl_id = p_&TOOLKIT..&TOOLKIT._fcl_id;
     if instr(l_next_fst_list, C_DELIMITER) = 0 then
       notify(p_&TOOLKIT., msg.&TOOLKIT._NEXT_STATUS_RECOGNIZED, msg_args(l_next_fst_list));
+      
+      pit.leave_optional(
+      p_params => msg_params(
+                    msg_param('Next Status', l_next_fst_list)));
       return l_next_fst_list;
     else
       pit.error(msg.&TOOLKIT._NEXT_STATUS_NU, msg_args(p_&TOOLKIT..&TOOLKIT._fst_id), p_&TOOLKIT..&TOOLKIT._id);
@@ -465,12 +522,18 @@ as
     p_msg_args in msg_args)
   as
   begin
-    pit.enter('notify', C_PKG);
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_&TOOLKIT.', 'opaque'),
+                    msg_param('p_msg', p_msg),
+                    msg_param('p_msg_args', 'opaque')));
+                    
     log_change(
       p_&TOOLKIT. => p_&TOOLKIT.,
       p_msg => p_msg,
       p_msg_args => p_msg_args);
-    pit.leave;
+      
+    pit.leave_mandatory;
   end notify;
   
   
