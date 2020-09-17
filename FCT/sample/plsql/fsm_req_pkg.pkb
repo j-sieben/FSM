@@ -1,7 +1,6 @@
 create or replace package body &TOOLKIT._req_pkg
 as
 
-  C_PKG constant varchar2(30 byte) := $$PLSQL_UNIT;
   c_fcl_id constant varchar2(3 byte) := 'REQ';
   c_initial_status constant varchar2(50 char) := &TOOLKIT._fst.REQ_CREATED;
 
@@ -14,7 +13,7 @@ as
     p_req in &TOOLKIT._req_type)
   as
   begin
-    pit.enter('persist', C_PKG);
+    pit.enter_optional('persist');
 
     -- propagation to abstract super class
     &TOOLKIT._pkg.persist(p_req);
@@ -34,7 +33,7 @@ as
 
     commit;
 
-    pit.leave;
+    pit.leave_optional;
   end persist;
   
   
@@ -44,11 +43,13 @@ as
     return binary_integer
   as
   begin
-    pit.enter('raise_initialize', C_PKG);
+    pit.enter_optional('raise_initialize');
+    
     g_result := util_&TOOLKIT..C_OK;
     -- Logic goes here
     p_req.&TOOLKIT._validity := g_result;
-    pit.leave;
+    
+    pit.leave_optional;
     return p_req.set_status(&TOOLKIT._fst.REQ_IN_PROCESS);
   end raise_initialize;
   
@@ -61,7 +62,7 @@ as
     C_OBJECT_PRIV constant &TOOLKIT._req_types.rtp_id%type := 'OBJECT_PRIV';
     C_SYSTEM_PRIV constant &TOOLKIT._req_types.rtp_id%type := 'SYSTEM_PRIV';
   begin
-    pit.enter('raise_check', C_PKG);
+    pit.enter_optional('raise_check');
     
     g_result := util_&TOOLKIT..C_OK;
     -- Logic goes here
@@ -76,7 +77,7 @@ as
     
     p_req.&TOOLKIT._validity := g_result;
     
-    pit.leave;
+    pit.leave_optional;
     return p_req.set_status(l_new_status);
   end raise_check;
   
@@ -86,13 +87,13 @@ as
     return binary_integer
   as
   begin
-    pit.enter('raise_grant', C_PKG);
+    pit.enter_optional('raise_grant');
     
     g_result := util_&TOOLKIT..C_OK;
     -- Logic goes here
     p_req.&TOOLKIT._validity := g_result;
     
-    pit.leave;
+    pit.leave_optional;
     return p_req.set_status(&TOOLKIT._fst.REQ_GRANTED);
   end raise_grant;
   
@@ -102,13 +103,13 @@ as
     return binary_integer
   as
   begin
-    pit.enter('raise_reject', C_PKG);
+    pit.enter_optional('raise_reject');
     
     g_result := util_&TOOLKIT..C_OK;
     -- Logic goes here
     p_req.&TOOLKIT._validity := g_result;
     
-    pit.leave;
+    pit.leave_optional;
     return p_req.set_status(&TOOLKIT._fst.REQ_REJECTED);
   end raise_reject;
 
@@ -118,12 +119,12 @@ as
     return binary_integer
   as
   begin
-    pit.enter('raise_nil', C_PKG);
+    pit.enter_optional('raise_nil');
     
     -- no implementation required, event shouldn't be fired ever
-    
-    pit.leave;
     p_req.&TOOLKIT._validity := util_&TOOLKIT..C_OK;
+    
+    pit.leave_optional;
     return p_req.set_status(&TOOLKIT._fst.&TOOLKIT._ERROR);
   end raise_nil;
   
@@ -140,7 +141,7 @@ as
   as 
     l_req_id &TOOLKIT._req_object.req_id%type;
   begin
-    pit.enter('create_&TOOLKIT._req', C_PKG);
+    pit.enter_mandatory;
     
     l_req_id := coalesce(p_req_id, &TOOLKIT._seq.nextval);
 
@@ -159,7 +160,7 @@ as
       persist(p_req);
     end if;
     
-    pit.leave;
+    pit.leave_mandatory;
   end create_&TOOLKIT._req;
     
 
@@ -181,8 +182,7 @@ as
       p_req_fev_list => l_req.&TOOLKIT._fev_list,
       p_req_rtp_id => l_req.req_rtp_id,
       p_req_rre_id => l_req.req_rre_id,
-      p_req_text => l_req.req_text);
-      
+      p_req_text => l_req.req_text);      
   end create_&TOOLKIT._req;
     
 
@@ -192,7 +192,7 @@ as
     return binary_integer
   as
   begin
-    pit.enter('raise_event', C_PKG);
+    pit.enter_mandatory;
     
     -- propagate event to super class
     g_result := &TOOLKIT._pkg.raise_event(p_req, p_fev_id);
@@ -219,7 +219,7 @@ as
       g_result := util_&TOOLKIT..C_OK;
     end if;
     
-    pit.leave;
+    pit.leave_mandatory;
     return g_result;
   end raise_event;
     
@@ -229,11 +229,11 @@ as
     return binary_integer
   as
   begin
-    pit.enter('set_status', C_PKG);
+    pit.enter_mandatory;
     
     persist(p_req);
     
-    pit.leave;
+    pit.leave_mandatory;
     return util_&TOOLKIT..C_OK;
   exception
     when others then
