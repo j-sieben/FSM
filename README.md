@@ -53,7 +53,9 @@ The responsibility of the `FCT` related database objects in this example are:
 
 Some basic database tables store the metadata for the `FCT`, whereas an abstract object type `FCT_TYPE` implements all necessary logic to receive events, change status and log all movements. `FCT` supports arbitrary concrete `FCT` types to allow to store application specific attributes with the machine. This concreate machines are implemented as objects which inherit from `FCT_TYPE`, such as `FCT_DOC` which works as a concrete FCT to organize a document oriented workflow.
 
-All logic is implemented in PL/SQL using a simple design pattern to allow for easy extension and adoption to your own requirements. Ideally, the logging mechanism is based on the multi language features of [PIT](https://github.com/j-sieben/PIT) because the requirements for logging within `FCT` are identical to those `PIT` takes care for already. It may also be used standalone. If `PIT` is not present during installation, it will install itself standalone with limited logging functionality. If you decide to recompile `FCT_TYPE` and `FCT_PKG` later without `PIT` being present, make sure to the PL/SQL compile flag `PIT_PRESENT` to `false`. Should you decide to extend `FCT` with `PIT`, install `PIT` first and then recompile `FCT` in a new session or set the compile flag to `true`.
+All logic is implemented in PL/SQL using a simple design pattern to allow for easy extension and adoption to your own requirements. 
+
+As for logging `FCT` relies on [PIT](https://github.com/j-sieben/PIT) to be present.
 
 ## Disclaimer
 
