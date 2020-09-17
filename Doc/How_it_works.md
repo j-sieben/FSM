@@ -6,6 +6,35 @@ To create a new concrete FCT you inherit from `FCT_TYPE` and create a concrete c
 
 Create a package called `FCT_ORDER_PKG` to hold the FCT related logic and a second package called `BL_ORDER` to hold the business logic around the order process. Type `FCT_ORDER` will need to overwrite the abstract methods `RAISE_EVENT` and `SET_STATUS` and eventually `FINALIZE` if you need a specific destructor. As this method is a concrete method, it's mandatory to provide two constructor methods: One with all relevant attributes in place and a second that only takes the `FCT_ID` as a parameter to re-create the instance from the persistence layer. All type methods simply call methods in package `FCT_ORDER_PKG`.
 
+As an example, review the following code from the samples folder (`fsm` is assumed as the name for the finite state machine):
+
+```
+create or replace type fsm_req_type under fsm_type(
+  req_rtp_id varchar2(50 char),
+  req_rre_id varchar2(50 char),
+  req_text varchar2(1000 char),
+  constructor function fsm_req_type(
+    self in out nocopy fsm_req_type,
+    p_req_id in number default null,
+    p_req_rtp_id in varchar2,
+    p_req_rre_id in varchar2,
+    p_req_text in varchar2)
+    return self as result,
+  constructor function fsm_req_type(
+    self in out nocopy fsm_req_type,
+    p_fsm_id in number)
+    return self as result,
+  overriding member function raise_event(
+    p_fev_id in varchar2)
+    return number,
+  overriding member function set_status(
+    p_fst_id in varchar2)
+    return number
+);
+```
+
+It is important to create this class `under fsm_type` as this is the inheritance mechanism supported by SQL. By overriding the `raise_event` and `set_status` methods you open a way into your own implementation within package `FSM_REQ_PKG`.
+
 ## Create the database objects
 Besides the type and the package, you need a table or a combination of tables to store an instance of `FCT_ORDER`. I don't advice to simply use an object oriented table and have a column of type `FCT_ORDER` as the downside of this approach is a significantly harder SQL access to data within the orders. I consider a »traditional« relational table to be the best option for storing data, even if it's used within an object.
 
