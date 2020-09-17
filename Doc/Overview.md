@@ -87,7 +87,7 @@ Each concrete FCT type requires a type body to implement the methods. Basically 
 
 ## Metadata
 To define the status, event and transitions, three tables are populated: `FCT_STATUS`, `FCT_EVENT`, `FCT_TRANSITION`. The type of the concrete class is secured by storing it in table `FCT_CLASS`. For convenience, FCT provides an admin package calle `FCT_ADMIN_PKG` with helper methods to create events, status and transitions. To create a complete set of status, events and transitions, you may want to review the following code, creating a status of `CREATED` and `IN_PROCESS`, an event called `INITIALIZE` that is allowed to be raised if the FCT is in status `CREATED` and transits the FCT to status `IN_PROCESS`. The last call creates this transition:
-`````
+```
 begin
   fct_admin_pkg.merge_class(
     p_fcl_id => 'REQ',
