@@ -5,11 +5,11 @@ create table &TOOLKIT._req_object(
 	req_text varchar2(1000 char),
   constraint pk_&TOOLKIT._req_object primary key (req_id),
   constraint fk_req_id foreign key (req_id)
-	  references fct_object (fct_id) on delete cascade,
+	  references &TOOLKIT._object (&TOOLKIT._id) on delete cascade,
   constraint fk_req_rre_id foreign key (req_rre_id)
-	  references fct_req_requestor (rre_id),
+	  references &TOOLKIT._req_requestor (rre_id),
   constraint fk_req_rtp_id foreign key (req_rtp_id)
-	  references fct_req_types (rtp_id)
+	  references &TOOLKIT._req_types (rtp_id)
 );
 
 comment on table &TOOLKIT._req_object  is 'table to store concrete attributes for type &TOOLKIT._REQ';

@@ -1,4 +1,4 @@
-create or replace package body util_&TOOLKIT.
+create or replace package body utl_&TOOLKIT.
 as
 
   /* INTERFACE */
@@ -35,5 +35,5 @@ as
     return l_val;
   end bulk_replace;
 
-end util_&TOOLKIT.;
+end utl_&TOOLKIT.;
 /

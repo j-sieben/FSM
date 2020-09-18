@@ -69,7 +69,7 @@ prompt . - package &TOOLKIT._PKG
 @&plsql_dir.fsm_pkg.pks
 
 prompt . - package &TOOLKIT._UTIL
-@&plsql_dir.fsm_util.pks
+@&plsql_dir.utl_fsm.pks
 
 
 prompt - create type implementations
@@ -78,7 +78,7 @@ prompt . - type &TOOLKIT._type
 
 prompt - create package implementations
 prompt . - package &TOOLKIT._UTIL
-@&plsql_dir.fsm_util.pkb
+@&plsql_dir.utl_fsm.pkb
 
 prompt . - package &TOOLKIT._ADMIN_PKG
 @&plsql_dir.fsm_admin_pkg.pkb

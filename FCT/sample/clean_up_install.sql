@@ -38,7 +38,7 @@ begin
         raise;
     end;
   end loop;
-  
+/*  
   delete from &TOOLKIT._transition
    where ftr_fcl_id = '&FSM_CLASS.';
   dbms_output.put_line('&s1.' || sql%ROWCOUNT || ' transitions deleted.');
@@ -61,7 +61,7 @@ begin
   dbms_output.put_line('&s1.' || sql%ROWCOUNT || ' parameters deleted.');
    
   commit;
-  
+  */
   &TOOLKIT._admin_pkg.create_event_package;
   &TOOLKIT._admin_pkg.create_status_package;
 end;

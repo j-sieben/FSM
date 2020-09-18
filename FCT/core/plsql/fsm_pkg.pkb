@@ -77,7 +77,7 @@ as
   function get_session_id
     return varchar2
   as
-    l_session_id util_&TOOLKIT..ora_name_type;
+    l_session_id utl_&TOOLKIT..ora_name_type;
   begin
     pit.enter_detailed;
     
@@ -158,11 +158,11 @@ as
       from &TOOLKIT._transition
      where ftr_fst_id = p_&TOOLKIT..&TOOLKIT._fst_id
        and ftr_fcl_id = p_&TOOLKIT..&TOOLKIT._fcl_id
-       and ftr_raise_on_status = util_&TOOLKIT..C_ERROR;
+       and ftr_raise_on_status = utl_&TOOLKIT..C_ERROR;
     pit.verbose(msg.&TOOLKIT._THROW_ERROR_EVENT, msg_args(l_event), p_&TOOLKIT..&TOOLKIT._id);
     
     p_&TOOLKIT..&TOOLKIT._fev_list := l_event;
-    p_&TOOLKIT..&TOOLKIT._validity := util_&TOOLKIT..C_ERROR;
+    p_&TOOLKIT..&TOOLKIT._validity := utl_&TOOLKIT..C_ERROR;
     
     persist_retry(p_&TOOLKIT., null);
     
@@ -193,8 +193,8 @@ as
   as
     l_message message_type;
     l_message_id &TOOLKIT._event.fev_msg_id%type;
-    l_user util_&TOOLKIT..ora_name_type;
-    l_session util_&TOOLKIT..ora_name_type;
+    l_user utl_&TOOLKIT..ora_name_type;
+    l_session utl_&TOOLKIT..ora_name_type;
     l_msg_args msg_args;    
     C_PIT_&TOOLKIT. constant varchar2(10) := 'PIT_&TOOLKIT.';
   begin
@@ -263,7 +263,7 @@ as
     using (select p_&TOOLKIT..&TOOLKIT._id &TOOLKIT._id,
                   p_&TOOLKIT..&TOOLKIT._fcl_id &TOOLKIT._fcl_id,
                   p_&TOOLKIT..&TOOLKIT._fst_id &TOOLKIT._fst_id,
-                  coalesce(p_&TOOLKIT..&TOOLKIT._validity, util_&TOOLKIT..C_OK) &TOOLKIT._validity,
+                  coalesce(p_&TOOLKIT..&TOOLKIT._validity, utl_&TOOLKIT..C_OK) &TOOLKIT._validity,
                   p_&TOOLKIT..&TOOLKIT._fev_list &TOOLKIT._fev_list
              from dual) v
        on (o.&TOOLKIT._id = v.&TOOLKIT._id)
@@ -295,16 +295,16 @@ as
     log_change(
       p_&TOOLKIT. => p_&TOOLKIT., 
       p_fev_id => p_fev_id);
-    p_&TOOLKIT..&TOOLKIT._validity := util_&TOOLKIT..C_OK;
+    p_&TOOLKIT..&TOOLKIT._validity := utl_&TOOLKIT..C_OK;
     
     pit.leave_mandatory(
       p_params => msg_params(
-                    msg_param('Status', util_&TOOLKIT..C_OK)));
-    return util_&TOOLKIT..C_OK;
+                    msg_param('Status', utl_&TOOLKIT..C_OK)));
+    return utl_&TOOLKIT..C_OK;
   exception
     when others then
       pit.sql_exception(msg.&TOOLKIT._SQL_ERROR, msg_args(p_&TOOLKIT..&TOOLKIT._fcl_id, to_char(p_&TOOLKIT..&TOOLKIT._id), p_fev_id));
-      return util_&TOOLKIT..C_ERROR;
+      return utl_&TOOLKIT..C_ERROR;
   end raise_event;
     
   
@@ -333,8 +333,8 @@ as
                     msg_param('p_fev_id', p_fev_id)));
                     
     for &TOOLKIT. in &TOOLKIT._cur(p_&TOOLKIT..&TOOLKIT._id) loop
-      if &TOOLKIT..fst_retries_on_error > util_&TOOLKIT..C_ERROR then
-        pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, util_&TOOLKIT..C_TRUE), p_&TOOLKIT..&TOOLKIT._id);
+      if &TOOLKIT..fst_retries_on_error > utl_&TOOLKIT..C_ERROR then
+        pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, utl_&TOOLKIT..C_TRUE), p_&TOOLKIT..&TOOLKIT._id);
         -- take retry into account
         -- &TOOLKIT._VALIDITY may have one of the following values:
         -- 0 = no retry planned yet (or succesful state conversion, then this method wouldn't have been called)
@@ -363,7 +363,7 @@ as
           re_fire_event(p_&TOOLKIT., p_fev_id, &TOOLKIT..fst_retry_time, l_validity);
         end case;
       else
-        pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, util_&TOOLKIT..C_FALSE), p_&TOOLKIT..&TOOLKIT._id);
+        pit.verbose(msg.&TOOLKIT._RETRY_REQUESTED, msg_args(p_fev_id, &TOOLKIT..fst_id, utl_&TOOLKIT..C_FALSE), p_&TOOLKIT..&TOOLKIT._id);
         proceed_with_error_event(p_&TOOLKIT.);
       end if;
       
@@ -387,12 +387,12 @@ as
                     msg_param('p_fev_id', p_fev_id)));
                     
     -- Pruefe, ob Event im aktuellen Status erlaubt ist
-    l_result := instr(':' || p_&TOOLKIT..&TOOLKIT._fev_list || ':', ':' || p_fev_id || ':') > util_&TOOLKIT..C_ERROR;
+    l_result := instr(':' || p_&TOOLKIT..&TOOLKIT._fev_list || ':', ':' || p_fev_id || ':') > utl_&TOOLKIT..C_ERROR;
     
     -- Pruefe, ob aktueller Benutzer erforderliche Rollenrechte besitzt
     select case 
-           when ftr_required_role is not null then util_&TOOLKIT..C_ERROR -- auth_user.is_authorized(ftr_required_role)
-           else util_&TOOLKIT..C_OK end
+           when ftr_required_role is not null then utl_&TOOLKIT..C_ERROR -- auth_user.is_authorized(ftr_required_role)
+           else utl_&TOOLKIT..C_OK end
       into l_has_role
       from &TOOLKIT._transition
      where ftr_fev_id = p_fev_id
@@ -400,7 +400,7 @@ as
        and ftr_fcl_id = p_&TOOLKIT..&TOOLKIT._fcl_id;
     
     pit.leave_optional;
-    return l_result and l_has_role > util_&TOOLKIT..C_ERROR;
+    return l_result and l_has_role > utl_&TOOLKIT..C_ERROR;
   exception
     when no_data_found then
       pit.leave_optional;
@@ -420,14 +420,14 @@ as
          and fcl_id = p_&TOOLKIT..&TOOLKIT._fcl_id
          and ftr_raise_on_status = p_&TOOLKIT..&TOOLKIT._validity;
     l_old_fst_id &TOOLKIT._status.fst_id%type;
-    l_result binary_integer := util_&TOOLKIT..C_OK;
+    l_result binary_integer := utl_&TOOLKIT..C_OK;
   begin
     pit.enter_mandatory(
       p_params => msg_params(
                     msg_param('p_&TOOLKIT.', 'opaque')));
                     
     pit.assert_not_null(p_&TOOLKIT..&TOOLKIT._fst_id);
-    p_&TOOLKIT..&TOOLKIT._validity := coalesce(p_&TOOLKIT..&TOOLKIT._validity, util_&TOOLKIT..C_OK);
+    p_&TOOLKIT..&TOOLKIT._validity := coalesce(p_&TOOLKIT..&TOOLKIT._validity, utl_&TOOLKIT..C_OK);
     
     -- Ermittle nächste mögliche Events
     for evt in next_event_cur(p_&TOOLKIT.) loop
@@ -456,7 +456,7 @@ as
         return set_status(p_&TOOLKIT.);
       else
         pit.leave_mandatory;
-        return util_&TOOLKIT..C_ERROR;
+        return utl_&TOOLKIT..C_ERROR;
       end if;
     when others then
       pit.sql_exception(msg.SQL_ERROR);
@@ -465,7 +465,7 @@ as
         return set_status(p_&TOOLKIT.);
       else
         pit.leave_mandatory;
-        return util_&TOOLKIT..C_ERROR;
+        return utl_&TOOLKIT..C_ERROR;
       end if;
   end set_status;
   
@@ -484,7 +484,7 @@ as
     p_fev_id in &TOOLKIT._event.fev_id%type)
     return varchar2
   as
-    l_next_fst_list util_&TOOLKIT..max_sql_char;
+    l_next_fst_list utl_&TOOLKIT..max_sql_char;
     C_DELIMITER constant varchar2(1) := ':';
   begin
     pit.enter_optional(
@@ -518,7 +518,7 @@ as
   
   procedure notify(
     p_&TOOLKIT. in out nocopy &TOOLKIT._type,
-    p_msg in util_&TOOLKIT..ora_name_type,
+    p_msg in utl_&TOOLKIT..ora_name_type,
     p_msg_args in msg_args)
   as
   begin

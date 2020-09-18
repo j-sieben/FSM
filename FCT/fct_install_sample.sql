@@ -2,7 +2,7 @@
 -- This script allows an abbreviation (please use 3 to 5 characters max) for the Finite State Machine
 -- Default toolkit name. Please change with caution! Before changing it, remove any existing installation 
 -- within the same schema.
-define TOOLKIT=FCT
+define TOOLKIT=FSM
 
 -- Params:
 -- 1.: Name of the database owner of the Toolkit
@@ -32,6 +32,7 @@ prompt &h2.Installing core functionality
 prompt
 prompt &section.
 prompt &h1.Finalize installation
+
 prompt &h2.Revoke user rights
 @revoke_grants.sql
 

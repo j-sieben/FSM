@@ -8,6 +8,8 @@ define plsql_dir=&sample_dir.plsql/
 
 define FSM_CLASS=REQ
 
+alter session set current_schema=&INSTALL_USER.;
+
 prompt &h2.Installing sample application
 prompt &h3.Remove existing installation
 @&sample_dir.clean_up_install.sql

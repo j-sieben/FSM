@@ -1,4 +1,4 @@
-create or replace package util_&TOOLKIT.
+create or replace package utl_&TOOLKIT.
   authid current_user
 as
 
@@ -31,5 +31,5 @@ as
     p_value in varchar2,
     p_replacement char_table) return varchar2;
 
-end util_&TOOLKIT.;
+end utl_&TOOLKIT.;
 /
