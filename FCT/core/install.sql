@@ -1,10 +1,10 @@
 prompt &TOOLKIT. core installation
 
-define table_dir=&CORE_DIR.sql/tables/
-define type_dir=&CORE_DIR.sql/types/
-define view_dir=&CORE_DIR.sql/views/
-define sequence_dir=&CORE_DIR.sql/sequences/
-define plsql_dir=&CORE_DIR.plsql/
+define table_dir=&CORE_DIR.tables/
+define type_dir=&CORE_DIR.types/
+define view_dir=&CORE_DIR.views/
+define sequence_dir=&CORE_DIR.sequences/
+define pkg_dir=&CORE_DIR.packages/
 
 prompt - cleaning up installation
 @&CORE_DIR.clean_up.sql
@@ -63,13 +63,13 @@ prompt . - sequence &TOOLKIT._log_seq
 
 prompt - create package specifications
 prompt . - package &TOOLKIT._ADMIN_PKG
-@&plsql_dir.fsm_admin_pkg.pks
+@&pkg_dir.fsm_admin_pkg.pks
 
 prompt . - package &TOOLKIT._PKG
-@&plsql_dir.fsm_pkg.pks
+@&pkg_dir.fsm_pkg.pks
 
 prompt . - package &TOOLKIT._UTIL
-@&plsql_dir.utl_fsm.pks
+@&pkg_dir.utl_fsm.pks
 
 
 prompt - create type implementations
@@ -78,10 +78,10 @@ prompt . - type &TOOLKIT._type
 
 prompt - create package implementations
 prompt . - package &TOOLKIT._UTIL
-@&plsql_dir.utl_fsm.pkb
+@&pkg_dir.utl_fsm.pkb
 
 prompt . - package &TOOLKIT._ADMIN_PKG
-@&plsql_dir.fsm_admin_pkg.pkb
+@&pkg_dir.fsm_admin_pkg.pkb
 
 
 prompt - create helper packages
@@ -93,4 +93,4 @@ end;
 /
 
 prompt . - package &TOOLKIT._PKG
-@&plsql_dir.fsm_pkg.pkb
+@&pkg_dir.fsm_pkg.pkb

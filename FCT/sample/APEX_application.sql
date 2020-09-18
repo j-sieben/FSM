@@ -86,7 +86,7 @@ wwv_flow_api.create_flow(
 ,p_display_id=>nvl(wwv_flow_application_install.get_application_id,120)
 ,p_owner=>nvl(wwv_flow_application_install.get_schema,'DOAG')
 ,p_name=>nvl(wwv_flow_application_install.get_application_name,'FlowControlToolkit Test')
-,p_alias=>nvl(wwv_flow_application_install.get_application_alias,'FCT')
+,p_alias=>nvl(wwv_flow_application_install.get_application_alias,'FSM')
 ,p_page_view_logging=>'YES'
 ,p_page_protection_enabled_y_n=>'Y'
 ,p_checksum_salt=>'7EE295F1E4A83BF8CC80BA88E796E04504411FECEAD18542855E04E37E3717DF'
@@ -165,8 +165,8 @@ wwv_flow_api.create_list(
 '       image, ',
 '       image_attrib, ',
 '       image_alt',
-'  from ui_fct_next_commands',
-' where fct_id = :P3_REQ_ID',
+'  from ui_fsm_next_commands',
+' where fsm_id = :P3_REQ_ID',
 ' order by label'))
 ,p_list_status=>'PUBLIC'
 );
@@ -197,7 +197,7 @@ wwv_flow_api.g_varchar2_table(6) := '0A7D0D0A0D0A2E66612D746578742D626C7565207B0
 wwv_flow_api.g_varchar2_table(7) := '636F6C6F723A233265623832650D0A7D0D0A0D0A2E66612D746578742D79656C6C6F77207B0D0A09636F6C6F723A236666663534370D0A7D0D0A0D0A2E66612D746578742D67726579207B0D0A09636F6C6F723A233830383038300D0A7D0D0A';
 wwv_flow_api.create_app_static_file(
  p_id=>wwv_flow_api.id(15227677574330364)
-,p_file_name=>'fct_test.css'
+,p_file_name=>'fsm_test.css'
 ,p_mime_type=>'text/css'
 ,p_file_charset=>'utf-8'
 ,p_file_content => wwv_flow_api.varchar2_to_blob(wwv_flow_api.g_varchar2_table)
@@ -272,10 +272,10 @@ wwv_flow_api.create_list_of_values(
 );
 wwv_flow_api.create_list_of_values(
  p_id=>wwv_flow_api.id(15230331202371884)
-,p_lov_name=>'LOV_FCT_SEVERITY'
+,p_lov_name=>'LOV_FSM_SEVERITY'
 ,p_lov_query=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'select d, r',
-'  from lov_fct_severity'))
+'  from lov_fsm_severity'))
 );
 wwv_flow_api.create_list_of_values(
  p_id=>wwv_flow_api.id(15197841659262460)
@@ -7534,7 +7534,7 @@ wwv_flow_api.create_user_interface(
 ,p_navigation_list_position=>'SIDE'
 ,p_navigation_list_template_id=>wwv_flow_api.id(15167415691132892)
 ,p_nav_list_template_options=>'#DEFAULT#'
-,p_css_file_urls=>'#APP_IMAGES#fct_test.css'
+,p_css_file_urls=>'#APP_IMAGES#fsm_test.css'
 ,p_nav_bar_type=>'LIST'
 ,p_nav_bar_list_id=>wwv_flow_api.id(15173767534132912)
 ,p_nav_bar_list_template_id=>wwv_flow_api.id(15165012890132890)
@@ -7795,7 +7795,7 @@ wwv_flow_api.create_page_item(
 '</h2>',
 '<p>',
 '  This is a mockup to prevent having to log on and off with different application users while demonstrating the core functionality.<br>Choose an entry to distinguish between a normale user and a supervisor to demonstrate that certain functionality of'
-||' the FCT can be based on roles.',
+||' the FSM can be based on roles.',
 '</p>'))
 ,p_attribute_01=>'SUBMIT'
 ,p_attribute_03=>'N'
@@ -8101,8 +8101,8 @@ wwv_flow_api.create_page_process(
 ,p_process_sequence=>10
 ,p_process_point=>'AFTER_HEADER'
 ,p_process_type=>'NATIVE_FORM_FETCH'
-,p_process_name=>'Fetch Row from FCT_REQ_OBJECT'
-,p_attribute_02=>'FCT_REQ_OBJECT'
+,p_process_name=>'Fetch Row from FSM_REQ_OBJECT'
+,p_attribute_02=>'FSM_REQ_OBJECT'
 ,p_attribute_03=>'P3_REQ_ID'
 ,p_attribute_04=>'REQ_ID'
 );
@@ -8113,7 +8113,7 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'persist request'
 ,p_process_sql_clob=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'ui_test_fct_pkg.persist_request(',
+'ui_test_fsm_pkg.persist_request(',
 '  p_req_id => :P3_REQ_ID,',
 '  p_req_rtp_id => :P3_REQ_RTP_ID,',
 '  p_req_rre_id => :P3_REQ_RRE_ID,',
@@ -8128,7 +8128,7 @@ wwv_flow_api.create_page_process(
 ,p_process_point=>'AFTER_SUBMIT'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'delete request'
-,p_process_sql_clob=>'ui_test_fct_pkg.delete_request(:P3_REQ_ID);'
+,p_process_sql_clob=>'ui_test_fsm_pkg.delete_request(:P3_REQ_ID);'
 ,p_process_error_message=>'Error deleting request: <br>#SQLERRM#'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 ,p_process_when=>'DELETE'
@@ -8141,7 +8141,7 @@ wwv_flow_api.create_page_process(
 ,p_process_point=>'AFTER_SUBMIT'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'raise event'
-,p_process_sql_clob=>'ui_test_fct_pkg.raise_event(:P3_REQ_ID, :REQUEST);'
+,p_process_sql_clob=>'ui_test_fsm_pkg.raise_event(:P3_REQ_ID, :REQUEST);'
 ,p_process_error_message=>'Error executing event #REQUEST#:<br>#SQLERRM#'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 ,p_process_when=>'SAVE:CREATE:DELETE'
@@ -8189,13 +8189,13 @@ wwv_flow_api.create_page_plug(
 ,p_plug_display_point=>'BODY'
 ,p_plug_source=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'select FSL_ID,',
-'       FSL_FCT_ID,',
+'       FSL_FSM_ID,',
 '       LOG_DATE,',
 '       FSL_MSG_TEXT,',
 '       SEVERITY,',
 '       FSL_USER_NAME',
-'  from UI_FCT_TEST_LOG',
-' where fsl_fct_id = :P4_REQ_ID',
+'  from UI_FSM_TEST_LOG',
+' where fsl_fsm_id = :P4_REQ_ID',
 '   and fsl_severity <= :P4_FSL_SEVERITY',
 ' order by fsl_id desc'))
 ,p_plug_source_type=>'NATIVE_IR'
@@ -8232,7 +8232,7 @@ wwv_flow_api.create_worksheet_column(
 );
 wwv_flow_api.create_worksheet_column(
  p_id=>wwv_flow_api.id(15219313549248642)
-,p_db_column_name=>'FSL_FCT_ID'
+,p_db_column_name=>'FSL_FSM_ID'
 ,p_display_order=>2
 ,p_column_identifier=>'B'
 ,p_column_label=>'Fsl Fct Id'
@@ -8323,10 +8323,10 @@ wwv_flow_api.create_page_item(
 ,p_item_plug_id=>wwv_flow_api.id(15218413999248637)
 ,p_prompt=>'Restrict severity to'
 ,p_display_as=>'NATIVE_SELECT_LIST'
-,p_named_lov=>'LOV_FCT_SEVERITY'
+,p_named_lov=>'LOV_FSM_SEVERITY'
 ,p_lov=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'select d, r',
-'  from lov_fct_severity'))
+'  from lov_fsm_severity'))
 ,p_cSize=>30
 ,p_cMaxlength=>4000
 ,p_cHeight=>1
@@ -8514,46 +8514,46 @@ wwv_flow_api.create_install_script(
 ,p_script_clob=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'create or replace view ui_main_master as',
 'select req.req_id, req.req_id req_id_details, fst.fst_name, rre.rre_name, rtp.rtp_name, req.req_text',
-'  from fct_object fct',
-'  join fct_req_object req on fct.fct_id = req.req_id',
-'  join fct_status fst on fct.fct_fst_id = fst.fst_id',
-'  join fct_req_requestor rre on req.req_rre_id = rre.rre_id',
-'  join fct_req_types rtp on req.req_rtp_id = rtp.rtp_id;',
+'  from fsm_object fsm',
+'  join fsm_req_object req on fsm.fsm_id = req.req_id',
+'  join fsm_status fst on fsm.fsm_fst_id = fst.fst_id',
+'  join fsm_req_requestor rre on req.req_rre_id = rre.rre_id',
+'  join fsm_req_types rtp on req.req_rtp_id = rtp.rtp_id;',
 '',
 '',
-'create or replace view ui_fct_test_log as',
-'select max(fsl_id) fsl_id, fsl_fct_id, trunc(fsl_log_date, ''MI'') log_date, to_char(fsl_msg_text) fsl_msg_text,',
+'create or replace view ui_fsm_test_log as',
+'select max(fsl_id) fsl_id, fsl_fsm_id, trunc(fsl_log_date, ''MI'') log_date, to_char(fsl_msg_text) fsl_msg_text,',
 '       fss.fss_html severity, fsl_severity, fsl_user_name',
-'  from fct_log fsl',
-'  join fct_status_severity fss',
+'  from fsm_log fsl',
+'  join fsm_status_severity fss',
 '    on fsl.fsl_severity = fss.fss_id',
-' group by fsl_fct_id, trunc(fsl_log_date, ''MI''), to_char(fsl_msg_text),',
+' group by fsl_fsm_id, trunc(fsl_log_date, ''MI''), to_char(fsl_msg_text),',
 '       fss.fss_html, fsl_severity, fsl_user_name;',
 ' ',
-'create or replace view ui_lov_fct_severity as ',
+'create or replace view ui_lov_fsm_severity as ',
 'select fss_name d, fss_id r',
-'  from fct_status_severity',
+'  from fsm_status_severity',
 ' order by r;',
 '',
 '',
-'create or replace view ui_fct_next_commands as',
+'create or replace view ui_fsm_next_commands as',
 'with user_roles as ',
 '       (select usr_role',
 '          from demo_user',
 '         where usr_id = (select v(''P2_USR_ID'') from dual)),',
 '       next_events as',
-'       (select fct_id, fev_id, fev_command, fev_description, ftr_required_role, fev_button_highlight, fev_button_icon, fev_confirm_message',
-'          from fct_object fct',
-'          join fct_event fev',
-'            on instr(fct.fct_fev_list, fev.fev_id) > 0',
-'           and fct.fct_fcl_id = fev.fev_fcl_id',
-'          join fct_transition ftr',
-'            on fct.fct_fcl_id = ftr.ftr_fcl_id',
-'           and fct.fct_fst_id = ftr.ftr_fst_id',
+'       (select fsm_id, fev_id, fev_command, fev_description, ftr_required_role, fev_button_highlight, fev_button_icon, fev_confirm_message',
+'          from fsm_object fsm',
+'          join fsm_event fev',
+'            on instr(fsm.fsm_fev_list, fev.fev_id) > 0',
+'           and fsm.fsm_fcl_id = fev.fev_fcl_id',
+'          join fsm_transition ftr',
+'            on fsm.fsm_fcl_id = ftr.ftr_fcl_id',
+'           and fsm.fsm_fst_id = ftr.ftr_fst_id',
 '           and fev.fev_id = ftr.ftr_fev_id',
 '         where fev.fev_raised_by_user = ''Y''',
 '       )',
-'select distinct fct_id,',
+'select distinct fsm_id,',
 '       null lvl,',
 '       fev_command label,',
 '       case',
@@ -8574,20 +8574,20 @@ wwv_flow_api.create_install_script(
 ' where ev.fev_id not in (''NIL'');',
 ' ',
 ' ',
-'create or replace view lov_fct_severity as',
+'create or replace view lov_fsm_severity as',
 'select fss_name d, fss_id r',
-'  from fct_status_severity',
+'  from fsm_status_severity',
 ' order by r;',
 '',
 '',
 'create or replace view lov_req_requestor as',
 'select rre_name d, rre_id r',
-'  from fct_req_requestor;',
+'  from fsm_req_requestor;',
 '  ',
 '  ',
 'create or replace view lov_req_types as',
 'select rtp_name d, rtp_id r',
-'  from fct_req_types rtp',
+'  from fsm_req_types rtp',
 ' where rtp_active = ''Y'';',
 ' ',
 '',
@@ -8605,7 +8605,7 @@ wwv_flow_api.create_install_script(
 ,p_sequence=>20
 ,p_script_type=>'INSTALL'
 ,p_script_clob=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'create or replace package ui_test_fct_pkg',
+'create or replace package ui_test_fsm_pkg',
 'as',
 '  ',
 '  procedure persist_request(',
@@ -8621,10 +8621,10 @@ wwv_flow_api.create_install_script(
 '    p_req_id in number,',
 '    p_fev_id in varchar2);',
 '  ',
-'end ui_test_fct_pkg;',
+'end ui_test_fsm_pkg;',
 '/',
 '',
-'create or replace package body ui_test_fct_pkg',
+'create or replace package body ui_test_fsm_pkg',
 'as',
 '  ',
 '  procedure persist_request(',
@@ -8633,15 +8633,15 @@ wwv_flow_api.create_install_script(
 '    p_req_rre_id in varchar2,',
 '    p_req_text in varchar2)',
 '  as',
-'    l_req fct_req_type;',
+'    l_req fsm_req_type;',
 '  begin',
 '    if p_req_id is null then',
-'      l_req := fct_req_type(',
+'      l_req := fsm_req_type(',
 '        p_req_rtp_id => p_req_rtp_id,',
 '        p_req_rre_id => p_req_rre_id,',
 '        p_req_text => p_req_text);',
 '    else',
-'      update fct_req_object',
+'      update fsm_req_object',
 '         set req_text = p_req_text',
 '       where req_id = p_req_id;',
 '    end if;',
@@ -8652,8 +8652,8 @@ wwv_flow_api.create_install_script(
 '    p_req_id in number)',
 '  as',
 '  begin',
-'    delete from fct_object',
-'     where fct_id = p_req_id;',
+'    delete from fsm_object',
+'     where fsm_id = p_req_id;',
 '  end delete_request;',
 '  ',
 '    ',
@@ -8661,14 +8661,14 @@ wwv_flow_api.create_install_script(
 '    p_req_id in number,',
 '    p_fev_id in varchar2)',
 '  as',
-'    l_req fct_req_type;',
+'    l_req fsm_req_type;',
 '    l_result number;',
 '  begin',
-'    l_req := fct_req_type(p_req_id);',
+'    l_req := fsm_req_type(p_req_id);',
 '    l_result := l_req.raise_event(p_fev_id);',
 '  end raise_event;',
 '  ',
-'end ui_test_fct_pkg;',
+'end ui_test_fsm_pkg;',
 '/'))
 );
 end;
