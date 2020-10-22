@@ -6,6 +6,7 @@ create table &TOOLKIT._object(
 	&TOOLKIT._retry_schedule varchar2(30 byte), 
 	&TOOLKIT._validity number, 
 	&TOOLKIT._fev_list varchar2(500 char), 
+	&TOOLKIT._last_change_date date, 
 	constraint pk_&TOOLKIT._object primary key (&TOOLKIT._id),
   constraint fk_&TOOLKIT._fcl_id foreign key (&TOOLKIT._fcl_id)
 	  references &TOOLKIT._class (fcl_id),
@@ -23,6 +24,7 @@ comment on column &TOOLKIT._object.&TOOLKIT._fev_id is 'Optionaler Event, der au
 comment on column &TOOLKIT._object.&TOOLKIT._retry_schedule is 'Optionaler Name eines Schedule, der plant, wann ein erneutes Auslösen von &TOOLKIT._FEV_ID erfolgen soll';
 comment on column &TOOLKIT._object.&TOOLKIT._validity is 'Aktuelle Gültigkeit der &TOOLKIT. 0 = OK, 1 = Fehler, >1 = Fehler, [&TOOLKIT._VALIDITY - 1] weitere Versuche folgen';
 comment on column &TOOLKIT._object.&TOOLKIT._fev_list is 'Liste der aktuell erlaubten, nächsten Events';
+comment on column &TOOLKIT._object.&TOOLKIT._last_change_date is 'Datum der letzten Änderung des Objekts';
 
 
 create index idx_fk_&TOOLKIT._fcl_id on &TOOLKIT._object (&TOOLKIT._fcl_id);

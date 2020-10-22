@@ -10,6 +10,8 @@ create table &TOOLKIT._status(
 	fst_retries_on_error number default 0, 
 	fst_retry_schedule varchar2(30 byte), 
 	fst_retry_time number,  
+	fst_icon_css varchar2(50 char), 
+	fst_name_css varchar2(50 char), 
 	constraint pk_&TOOLKIT._status primary key (fst_id, fst_fcl_id),
   constraint fk_fst_fcl_id foreign key (fst_fcl_id)
 	  references &TOOLKIT._class (fcl_id),
@@ -42,6 +44,8 @@ comment on column &TOOLKIT._status.fst_active is 'Flag, das anzeigt, ob die Klas
 comment on column &TOOLKIT._status.fst_retries_on_error is 'Wie viele erneute Versuche sollen im Fehlerfall unternommen werden? Default: 0';
 comment on column &TOOLKIT._status.fst_retry_schedule is 'Optionale Einstellung: Falls FST_RETRIES_ON_ERROR > 0: Welcher Schedule soll verwendet werden, um einen erneuten Versuch zu unternehmen';
 comment on column &TOOLKIT._status.fst_retry_time is 'Optionale Einstellung: Falls FST_RETRIES_ON_ERROR > 0: Wie lange soll vor einem erneuten Versuch gewartet werden?';
+comment on column &TOOLKIT._status.fst_icon_css is 'Optionales Icon zur Steuerung der Darstellung in Berichten';
+comment on column &TOOLKIT._status.fst_name_css is 'Optionale CSS-Klasse zur Steuerung der Darstellung in Berichten';
 
 create index idx_fk_fst_fsg_id on &TOOLKIT._status (fst_fsg_id);
 create index idx_fk_fst_fcl_id on &TOOLKIT._status (fst_fcl_id, fst_id);

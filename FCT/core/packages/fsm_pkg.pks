@@ -1,5 +1,5 @@
 create or replace package &TOOLKIT._pkg
-  authid current_user -- Für Leserecht auf USER_IDENTIFIERS
+  authid definer
 as
   /* Package zur generischen Verwaltung einer Finite State Machine (&TOOLKIT.)
    * %usage: Das Package beinhaltet die Implementierung der abstrakten Klasse

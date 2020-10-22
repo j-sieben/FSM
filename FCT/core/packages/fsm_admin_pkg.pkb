@@ -1,7 +1,5 @@
 create or replace package body &TOOLKIT._admin_pkg
 as
-
-  C_PKG constant utl_&TOOLKIT..ora_name_type := $$PLSQL_UNIT;  
   
   /* Helper */
   function bool_to_char(
@@ -28,14 +26,14 @@ as
                   p_fcl_name fcl_name,
                   p_fcl_description fcl_description,
                   l_active fcl_active
-             from dual) v
-       on (c.fcl_id = v.fcl_id)
+             from dual) s
+       on (c.fcl_id = s.fcl_id)
      when matched then update set
-          fcl_name = v.fcl_name,
-          fcl_description = v.fcl_description,
-          fcl_active = v.fcl_active
+          fcl_name = s.fcl_name,
+          fcl_description = s.fcl_description,
+          fcl_active = s.fcl_active
      when not matched then insert (fcl_id, fcl_name, fcl_description, fcl_active)
-          values (v.fcl_id, v.fcl_name, v.fcl_description, v.fcl_active);
+          values (s.fcl_id, s.fcl_name, s.fcl_description, s.fcl_active);
   end merge_class;
   
   
@@ -59,7 +57,7 @@ as
     l_active := bool_to_char(p_fev_active);
     l_raised_by_user := bool_to_char(p_fev_raised_by_user);
     l_button_highlight := bool_to_char(p_fev_button_highlight);
-    merge into &TOOLKIT._event e
+    merge into &TOOLKIT._event t
     using (select p_fev_id fev_id,
                   p_fev_fcl_id fev_fcl_id,
                   p_fev_msg_id fev_msg_id,
@@ -71,66 +69,107 @@ as
                   p_fev_button_icon fev_button_icon,
                   l_button_highlight fev_button_highlight,
                   p_fev_confirm_message fev_confirm_message
-             from dual) v
-       on (e.fev_id = v.fev_id and e.fev_fcl_id = v.fev_fcl_id)
+             from dual) s
+       on (t.fev_id = s.fev_id and t.fev_fcl_id = s.fev_fcl_id)
      when matched then update set
-          fev_name = v.Fev_name,
-          fev_description = v.fev_description,
-          fev_command = v.fev_command,
-          fev_active = v.fev_active,
-          fev_raised_by_user = v.fev_raised_by_user,
-          fev_button_icon = v.fev_button_icon,
-          fev_button_highlight = v.fev_button_highlight,
-          fev_confirm_message = v.fev_confirm_message
+          fev_name = s.Fev_name,
+          fev_description = s.fev_description,
+          fev_command = s.fev_command,
+          fev_active = s.fev_active,
+          fev_raised_by_user = s.fev_raised_by_user,
+          fev_button_icon = s.fev_button_icon,
+          fev_button_highlight = s.fev_button_highlight,
+          fev_confirm_message = s.fev_confirm_message
      when not matched then insert 
           (fev_id, fev_fcl_id, fev_msg_id, fev_name, fev_description, fev_command, fev_active,
            fev_raised_by_user, fev_button_icon, fev_button_highlight, fev_confirm_message)
           values  
-          (v.fev_id, v.fev_fcl_id, v.fev_msg_id, v.fev_name, v.fev_description, v.fev_command, v.fev_active,
-           v.fev_raised_by_user, v.fev_button_icon, v.fev_button_highlight, v.fev_confirm_message);
+          (s.fev_id, s.fev_fcl_id, s.fev_msg_id, s.fev_name, s.fev_description, s.fev_command, s.fev_active,
+           s.fev_raised_by_user, s.fev_button_icon, s.fev_button_highlight, s.fev_confirm_message);
   end merge_event;
     
     
   procedure merge_status(
     p_fst_id in &TOOLKIT._status.fst_id%type,
     p_fst_fcl_id in &TOOLKIT._status.fst_fcl_id%type,
+    p_fst_fsg_id in &TOOLKIT._status.fst_fsg_id%type,
     p_fst_msg_id in &TOOLKIT._status.fst_msg_id%type,
     p_fst_name in &TOOLKIT._status.fst_name%type,
     p_fst_description in &TOOLKIT._status.fst_description%type,
     p_fst_active in boolean default true,
     p_fst_retries_on_error in &TOOLKIT._status.fst_retries_on_error%type default 0,
     p_fst_retry_schedule in &TOOLKIT._status.fst_retry_schedule%type default null,
-    p_fst_retry_time in &TOOLKIT._status.fst_retry_time%type default null)
+    p_fst_retry_time in &TOOLKIT._status.fst_retry_time%type default null,
+    p_fst_icon_css in &TOOLKIT._status.fst_icon_css%type default null,
+    p_fst_name_css in &TOOLKIT._status.fst_name_css%type default null)
   as
     l_active utl_&TOOLKIT..flag_type;
   begin
     l_active := bool_to_char(p_fst_active);
-    merge into &TOOLKIT._status s
+    merge into &TOOLKIT._status t
     using (select p_fst_id fst_id,
                   p_fst_fcl_id fst_fcl_id,
+                  p_fst_fsg_id fst_fsg_id,
                   p_fst_msg_id fst_msg_id, 
                   p_fst_name fst_name,
                   p_fst_description fst_description,
                   l_active fst_active,
                   p_fst_retries_on_error fst_retries_on_error,
                   p_fst_retry_schedule fst_retry_schedule,
-                  p_fst_retry_time fst_retry_time
-             from dual) v
-       on (s.fst_id = v.fst_id and s.fst_fcl_id = v.fst_fcl_id)
+                  p_fst_retry_time fst_retry_time,
+                  p_fst_icon_css fst_icon_css,
+                  p_fst_name_css fst_name_css
+             from dual) s
+       on (t.fst_id = s.fst_id and t.fst_fcl_id = s.fst_fcl_id)
      when matched then update set
-          fst_msg_id = v.fst_msg_id,
-          fst_description = v.fst_description,
-          fst_active = v.fst_active,
-          fst_retries_on_error = v.fst_retries_on_error,
-          fst_retry_schedule = v.fst_retry_schedule,
-          fst_retry_time = v.fst_retry_time
+          t.fst_fsg_id = s.fst_fsg_id,
+          t.fst_msg_id = s.fst_msg_id,
+          t.fst_name = s.fst_name,
+          t.fst_description = s.fst_description,
+          t.fst_active = s.fst_active,
+          t.fst_retries_on_error = s.fst_retries_on_error,
+          t.fst_retry_schedule = s.fst_retry_schedule,
+          t.fst_retry_time = s.fst_retry_time,
+          t.fst_icon_css = s.fst_icon_css,
+          t.fst_name_css = s.fst_name_css
      when not matched then insert
-          (fst_id, fst_fcl_id, fst_msg_id, fst_name, fst_description, fst_active,
-           fst_retries_on_error, fst_retry_schedule, fst_retry_time)
+          (fst_id, fst_fcl_id, fst_fsg_id, fst_msg_id, fst_name, fst_description, fst_active,
+           fst_retries_on_error, fst_retry_schedule, fst_retry_time, fst_icon_css, fst_name_css)
           values
-          (v.fst_id, v.fst_fcl_id, v.fst_msg_id, v.fst_name, v.fst_description, v.fst_active,
-           v.fst_retries_on_error, v.fst_retry_schedule, v.fst_retry_time);
+          (s.fst_id, s.fst_fcl_id, s.fst_fsg_id, s.fst_msg_id, s.fst_name, s.fst_description, s.fst_active,
+           s.fst_retries_on_error, s.fst_retry_schedule, s.fst_retry_time, s.fst_icon_css, s.fst_name_css);
   end merge_status;    
+    
+    
+  procedure merge_status_group(
+    p_fsg_id in &TOOLKIT._status_group.fsg_id%type,
+    p_fsg_name in &TOOLKIT._status_group.fsg_name%type,
+    p_fsg_description in &TOOLKIT._status_group.fsg_description%type,
+    p_fsg_icon_css in &TOOLKIT._status_group.fsg_icon_css%type,
+    p_fsg_name_css in &TOOLKIT._status_group.fsg_name_css%type,
+    p_fst_active in boolean default true)
+  as
+    l_active utl_&TOOLKIT..flag_type;
+  begin
+    l_active := bool_to_char(p_fsg_active);
+    merge into &TOOLKIT._status_group t
+    using (select p_fsg_id fsg_id,
+                  p_fsg_name fsg_name,
+                  p_fsg_description fsg_description,
+                  p_fsg_icon_css fsg_icon_css,
+                  p_fsg_name_css fsg_name_css,
+                  l_active fsg_active
+             from dual) s
+       on (t.fsg_id = s.fsg_id)
+     when matched then update set
+          t.fsg_name = s.fsg_name,
+          t.fsg_description = s.fsg_description,
+          t.fsg_icon_css = s.fsg_icon_css,
+          t.fsg_name_css = s.fsg_name_css,
+          t.fsg_active = s.fsg_active
+     when not matched then insert(fsg_id, fsg_name, fsg_description, fsg_icon_css, fsg_name_css, fsg_active)
+          values(s.fsg_id, s.fsg_name, s.fsg_description, s.fsg_icon_css, s.fsg_name_css, s.fsg_active);
+  end merge_status_group;
     
     
   procedure merge_transition(
@@ -157,22 +196,22 @@ as
                   l_raise_automatically ftr_raise_automatically,
                   p_ftr_raise_on_status ftr_raise_on_status,
                   p_ftr_required_role ftr_required_role
-             from dual) v
-       on (t.ftr_fst_id = v.ftr_fst_id
-           and t.ftr_fev_id = v.ftr_fev_id
-           and t.ftr_fcl_id = v.ftr_fcl_id)
+             from dual) s
+       on (t.ftr_fst_id = s.ftr_fst_id
+           and t.ftr_fev_id = s.ftr_fev_id
+           and t.ftr_fcl_id = s.ftr_fcl_id)
      when matched then update set
-          ftr_fst_list = v.ftr_fst_list,
-          ftr_active = v.ftr_active,
-          ftr_raise_automatically = v.ftr_raise_automatically,
-          ftr_raise_on_status = v.ftr_raise_on_status,
-          ftr_required_role = v.ftr_required_role
+          ftr_fst_list = s.ftr_fst_list,
+          ftr_active = s.ftr_active,
+          ftr_raise_automatically = s.ftr_raise_automatically,
+          ftr_raise_on_status = s.ftr_raise_on_status,
+          ftr_required_role = s.ftr_required_role
      when not matched then insert
           (ftr_fst_id, ftr_fev_id, ftr_fcl_id, ftr_fst_list, ftr_active, 
            ftr_raise_automatically, ftr_raise_on_status, ftr_required_role)
           values
-          (v.ftr_fst_id, v.ftr_fev_id, v.ftr_fcl_id, v.ftr_fst_list, v.ftr_active, 
-           v.ftr_raise_automatically, v.ftr_raise_on_status, v.ftr_required_role);
+          (s.ftr_fst_id, s.ftr_fev_id, s.ftr_fcl_id, s.ftr_fst_list, s.ftr_active, 
+           s.ftr_raise_automatically, s.ftr_raise_on_status, s.ftr_required_role);
   end merge_transition;
   
 

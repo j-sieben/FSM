@@ -5,6 +5,7 @@ define type_dir=&CORE_DIR.types/
 define view_dir=&CORE_DIR.views/
 define sequence_dir=&CORE_DIR.sequences/
 define pkg_dir=&CORE_DIR.packages/
+define script_dir=&CORE_DIR.scripts/
 
 prompt - cleaning up installation
 @&CORE_DIR.clean_up.sql
@@ -54,6 +55,9 @@ prompt . - view BL_&TOOLKIT._ACTIVE_STATUS_EVENT
 --prompt . - view &TOOLKIT._NEXT_COMMANDS_VW
 @&view_dir.fsm_next_commands_vw.vw
 
+--prompt . - view &TOOLKIT._OBJECT_VW
+@&view_dir.fsm_object_vw.vw
+
 prompt - sequences
 prompt . - sequence &TOOLKIT._seq
 @&sequence_dir.fsm_seq.seq
@@ -65,11 +69,11 @@ prompt - create package specifications
 prompt . - package &TOOLKIT._ADMIN_PKG
 @&pkg_dir.fsm_admin_pkg.pks
 
-prompt . - package &TOOLKIT._PKG
-@&pkg_dir.fsm_pkg.pks
-
 prompt . - package &TOOLKIT._UTIL
 @&pkg_dir.utl_fsm.pks
+
+prompt . - package &TOOLKIT._PKG
+@&pkg_dir.fsm_pkg.pks
 
 
 prompt - create type implementations
@@ -91,6 +95,9 @@ begin
   &TOOLKIT._admin_pkg.create_status_package;
 end;
 /
+
+prompt - create parameters
+@&script_dir.ParameterGroup_PIT.sql
 
 prompt . - package &TOOLKIT._PKG
 @&pkg_dir.fsm_pkg.pkb

@@ -27,13 +27,25 @@ as
   procedure merge_status(
     p_fst_id in &TOOLKIT._status.fst_id%type,
     p_fst_fcl_id in &TOOLKIT._status.fst_fcl_id%type,
+    p_fst_fsg_id in &TOOLKIT._status.fst_fsg_id%type,
     p_fst_msg_id in &TOOLKIT._status.fst_msg_id%type,
     p_fst_name in &TOOLKIT._status.fst_name%type,
     p_fst_description in &TOOLKIT._status.fst_description%type,
     p_fst_active in boolean default true,
     p_fst_retries_on_error in &TOOLKIT._status.fst_retries_on_error%type default 0,
     p_fst_retry_schedule in &TOOLKIT._status.fst_retry_schedule%type default null,
-    p_fst_retry_time in &TOOLKIT._status.fst_retry_time%type default null);
+    p_fst_retry_time in &TOOLKIT._status.fst_retry_time%type default null,
+    p_fst_icon_css in &TOOLKIT._status.fst_icon_css%type default null,
+    p_fst_name_css in &TOOLKIT._status.fst_name_css%type default null);
+    
+    
+  procedure merge_status_group(
+    p_fsg_id in &TOOLKIT._status_group.fsg_id%type,
+    p_fsg_name in &TOOLKIT._status_group.fsg_name%type,
+    p_fsg_description in &TOOLKIT._status_group.fsg_description%type,
+    p_fsg_icon_css in &TOOLKIT._status_group.fsg_icon_css%type,
+    p_fsg_name_css in &TOOLKIT._status_group.fsg_name_css%type,
+    p_fst_active in boolean default true);
     
     
  procedure  merge_transition(

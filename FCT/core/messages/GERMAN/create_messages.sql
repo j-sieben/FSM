@@ -28,7 +28,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._NEXT_STATUS_NU',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'~Nächster Status nach #1# konnte nicht ermittelt werden, da er nicht eindeutig ist.~',
+    p_pms_text => q'~Nächster Status nach "#1#" konnte nicht ermittelt werden, da er nicht eindeutig ist.~',
     p_pms_description => q'^Wird der nächste Status automatisch berechnet, muss sichergestellt sein, dass nur ein resultierender Status ermittelt wird, die Berechnung muss deterministisch sein.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -38,7 +38,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._EVENT_NOT_ALLOWED',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Ereignis #1# ist im aktuellen Status #2# nicht erlaubt.^',
+    p_pms_text => q'^Ereignis "#1#" ist im aktuellen Status "#2#" nicht erlaubt.^',
     p_pms_description => q'^Das angeforderte Ereignis ist laut Transistionstabelle nicht erlaubt. Stellen Sie sicher, dass alle erlaubten Transitionen erfasst wurden oder vermeiden Sie, ein nicht zugewiesenes Ereigenis auszulösen.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -48,7 +48,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._EVENT_RAISED',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Ereignis #1# erkannt.^',
+    p_pms_text => q'^Ereignis "#1#" erkannt.^',
     p_pms_description => q'^^',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
@@ -58,7 +58,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._HAS_AUTO_EVENT',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Status #1# hat bereits einen automatischen Ereignis und erlaubt keine manuellen Ereigniss.^',
+    p_pms_text => q'^Status "#1#" hat bereits einen automatischen Ereignis und erlaubt keine manuellen Ereigniss.^',
     p_pms_description => q'^Wird einem Status ein automatisch auslösendes Ereignis zugeordnet, dürfen nicht parallel auch manuell auslösende Ereignisse zugeordnet werden.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -78,7 +78,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._INVALID_EVENT',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Handler für das &TOOLKIT.-Ereignis #1# ist in Status #2# nicht erlaubt.^',
+    p_pms_text => q'^Handler für das &TOOLKIT.-Ereignis "#1#" ist in Status "#2#" nicht erlaubt.^',
     p_pms_description => q'^Das angeforderte Ereignis ist im aktuellen Status der Instanz nicht erlaubt. Stellen Sie sicher, dass alle erforderlichen Ereignisse in den Transitionen erfasst sind oder vermeiden Sie das auslösen nicht erlaubter Ereignisse.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -88,7 +88,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._MANUAL_AUTO_EVENT',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Status #1# hat sowohl automatische als auch manuelle Ereigniss.^',
+    p_pms_text => q'^Status "#1#" hat sowohl automatische als auch manuelle Ereignisse.^',
     p_pms_description => q'^Ein Status mit einem automatisch auslösenden Ereignis farf keine manuell ausgelösten Ereignisse besitzen.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -108,7 +108,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._MULTI_AUTO_EVENT',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Status #1# hat mehrere automatische Ereigniss.^',
+    p_pms_text => q'^Status "#1#" hat mehrere automatische Ereignisse.^',
     p_pms_description => q'^Ein Status darf nur maximal ein automatisch auslösendes Ereignis besitzen. Entfernen Sie die zusätzlichen Ereignisse.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -118,7 +118,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._NEXT_EVENTS',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Nächste erlaubte Ereignisse: #1#, automatisch auslösen: #2#.^',
+    p_pms_text => q'^Nächste erlaubte Ereignisse: "#1#", automatisch auslösen: #2#.^',
     p_pms_description => q'^^',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
@@ -128,7 +128,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._NEXT_STATUS',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'~Nächster Status #1# wurde ermittelt.~',
+    p_pms_text => q'~Nächster Status "#1#" wurde ermittelt.~',
     p_pms_description => q'^^',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
@@ -138,7 +138,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._NEXT_STATUS_NU',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'~Nächster Status nach #1# konnte nicht ermittelt werden, da er nicht eindeutig ist.~',
+    p_pms_text => q'~Nächster Status nach "#1#" konnte nicht ermittelt werden, da er nicht eindeutig ist.~',
     p_pms_description => q'^Die Transition erlaubt nicht die automatische Ermittlung des nächsten Status. Stellen Sie sicher, dass die Auswertung deterministisch ist, wenn Sie den nächsten Status automatisiert ermitteln lassen.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -158,7 +158,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._PACKAGE_MISSING',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Ereignis-Handler-Package für die Klasse #1# fehlt.^',
+    p_pms_text => q'^Ereignis-Handler-Package für die Klasse "#1#" fehlt.^',
     p_pms_description => q'^Eine &TOOLKIT.-Klasse erfordert immer auch ein Package, das die Ereignis-HGandler implementiert.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -188,7 +188,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._RETRYING',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Ein Fehler trat bei Ereignis #1# in Status #2# im Übergang zu Status #3# auf, #4#. Wiederholung.^',
+    p_pms_text => q'^Ein Fehler trat bei Ereignis "#1#" in Status "#2#" im Übergang zu Status "#3#" auf, #4#. Wiederholung.^',
     p_pms_description => q'^^',
     p_pms_pse_id => 50,
     p_pms_pml_name => 'GERMAN',
@@ -198,7 +198,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._RETRY_REQUESTED',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Wiederholung von Ereignis #1# angefordert. Status: #2#, Wdhlg. möglich: #3#.^',
+    p_pms_text => q'^Wiederholung von Ereignis "#1#" angefordert. Status: "#2#", Wdhlg. möglich: #3#.^',
     p_pms_description => q'^^',
     p_pms_pse_id => 60,
     p_pms_pml_name => 'GERMAN',
@@ -218,7 +218,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._STATUS_CHANGED',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^&TOOLKIT.-Status auf #1# geändert.^',
+    p_pms_text => q'^&TOOLKIT.-Status auf "#1#" geändert.^',
     p_pms_description => q'^^',
     p_pms_pse_id => 60,
     p_pms_pml_name => 'GERMAN',
@@ -248,7 +248,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._THROW_ERROR_EVENT',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Werfe Fehler-Ereignis: #1#.^',
+    p_pms_text => q'^Werfe Fehler-Ereignis: "#1#".^',
     p_pms_description => q'^^',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
@@ -268,7 +268,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => 'UNABLE_TO_ACHIEVE_STATUS',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^Aufgrund eines Fehlers konnte Status #1# nicht erreicht werden.^',
+    p_pms_text => q'^Aufgrund eines Fehlers konnte Status "#1#" nicht erreicht werden.^',
     p_pms_description => q'^Tritt ein Fehler auf, kann &TOOLKIT. den nächsten Status nicht erreichen. Stattdessen geht das Objekt in einen Fehlerstatus.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -279,7 +279,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._SQL_ERROR',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^FSM #1#, ID: #2#, Ereignis: #3#^',
+    p_pms_text => q'^FSM #1#, ID: #2#, Ereignis: "#3#"^',
     p_pms_description => q'^Generische Nachricht für SQL-Fehlermeldung während der &TOOLKIT.-Verarbeitung.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -298,7 +298,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => '&TOOLKIT._EVENT_NOT_AUTHORIZED',
     p_pms_pmg_name => '&TOOLKIT.',
-    p_pms_text => q'^&TOOLKIT.-Ereignis #1# wurde angefordert, ist für diesen Benutzer aber nicht autorisiert.^',
+    p_pms_text => q'^&TOOLKIT.-Ereignis "#1#" wurde angefordert, ist für diesen Benutzer aber nicht autorisiert.^',
     p_pms_description => q'^Ein Ereignis mit einer Anwenderrolle wurde durch einen Benutzer angefordert, der diese Berechtigung nicht besitzt.^',
     p_pms_pse_id => 40,
     p_pms_pml_name => 'GERMAN',

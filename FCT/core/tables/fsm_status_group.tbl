@@ -2,6 +2,8 @@ create table &TOOLKIT._status_group(
   fsg_id varchar2(26 char), 
 	fsg_name varchar2(50 char), 
 	fsg_description varchar2(200 char), 
+  fsg_icon_css varchar2(50 char),
+  fsg_name_css varchar2(50 char),
 	fsg_active char(1 byte) default 'Y', 
 	constraint pk_&TOOLKIT._status_group primary key (fsg_id),
   constraint chk_fsg_active check (fsg_active in ('Y', 'N'))
@@ -11,6 +13,8 @@ comment on table &TOOLKIT._status_group  is 'Tabelle zur Zusammenfassung von Sta
 comment on column &TOOLKIT._status_group.fsg_id is 'Primärschlüssel';
 comment on column &TOOLKIT._status_group.fsg_name is 'Name der Statusgruppe';
 comment on column &TOOLKIT._status_group.fsg_description is 'Optionale Beschreibung der Statusgruppe';
+comment on column &TOOLKIT._status_group.fsg_icon_css is 'Optionales Icon zur Steuerung der Darstellung in Berichten';
+comment on column &TOOLKIT._status_group.fsg_icon_css is 'Optionale CSS-Klasse zur Steuerung der Darstellung in Berichten';
 comment on column &TOOLKIT._status_group.fsg_active is 'Flag, das anzeigt, ob die Statusgruppe aktiv ist oder nicht';
 
 merge into &TOOLKIT._status_group g

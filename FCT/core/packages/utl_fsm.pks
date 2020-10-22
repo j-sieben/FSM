@@ -1,5 +1,5 @@
 create or replace package utl_&TOOLKIT.
-  authid current_user
+  authid definer
 as
 
   subtype ora_name_type is &ORA_NAME_TYPE.;
