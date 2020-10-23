@@ -1,0 +1,37 @@
+create table fsm_status_change_log(
+  fsl_id number, 
+	fsl_fsm_id number, 
+	fsl_fst_id varchar2(50 char), 
+	fsl_fev_id varchar2(50 char), 
+	fsl_fcl_id varchar2(50 char), 
+	fsl_fsm_validity number, 
+	fsl_timestamp timestamp (6) with time zone default systimestamp, 
+	constraint pk_fsm_status_change_log primary key (fsl_id),
+  constraint fk_fsl_fcl_id foreign key (fsl_fcl_id)
+	  references fsm_class (fcl_id) on delete cascade,
+  constraint fk_fsl_fev_id foreign key (fsl_fev_id, fsl_fcl_id)
+	  references fsm_event (fev_id, fev_fcl_id) on delete cascade,
+  constraint fk_fsl_fsm_id foreign key (fsl_fsm_id)
+	  references fsm_object (fsm_id) on delete cascade,
+  constraint fk_fsl_fst_id foreign key (fsl_fst_id, fsl_fcl_id)
+	  references fsm_status (fst_id, fst_fcl_id) on delete cascade,
+  constraint nn_fsl_fsm_validity check (fsl_fsm_validity is not null),
+  constraint nn_fsl_fsm_id check (fsl_fsm_id is not null),
+  constraint nn_fsl_fcl_id check (fsl_fcl_id is not null)
+) organization index;
+
+comment on table fsm_status_change_log  is 'Logtabelle für die Statusübergänge von fsm';
+comment on column fsm_status_change_log.fsl_id is 'Technischer Schlüssel, Primärschlüssel, ermittelt aus ordered Sequence fsm_LOG_SEQ';
+comment on column fsm_status_change_log.fsl_fsm_id is 'ID des fsm-Objekts, sollte aus Sequenz fsm_SEQ gewonnen werden';
+comment on column fsm_status_change_log.fsl_fst_id is 'Neuer Status des fsm-Objekts, Referenz auf Tabelle fsm_STATUS';
+comment on column fsm_status_change_log.fsl_fev_id is 'Ausgelöster Event, Referenz auf Tabelle fsm_EVENT';
+comment on column fsm_status_change_log.fsl_fcl_id is 'Typ der fsm, Referenz auf Tabelle fsm_CLASS';
+comment on column fsm_status_change_log.fsl_fsm_validity is 'Ergebnis der Zuordnung des neuen Status. 0 = Fehler, 1 = OK';
+comment on column fsm_status_change_log.fsl_timestamp is 'Zeitstempel, zu dem der Statuswechsel erfolgt ist';
+
+
+create index idx_fk_fsl_fev_id on fsm_status_change_log (fsl_fev_id, fsl_fcl_id);
+create index idx_fk_fsl_fst_id on fsm_status_change_log (fsl_fst_id, fsl_fcl_id);
+create index idx_fk_fsl_fcl_id on fsm_status_change_log (fsl_fcl_id);
+create index idx_fk_fsl_fsm_id on fsm_status_change_log (fsl_fsm_id);
+

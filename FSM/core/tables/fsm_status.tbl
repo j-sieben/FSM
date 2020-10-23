@@ -1,0 +1,52 @@
+create table fsm_status(
+  fst_id varchar2(26 char), 
+	fst_fcl_id varchar2(50 char), 
+	fst_fsg_id varchar2(26 char),
+	fst_msg_id varchar2(50 char), 
+  fst_msg_language varchar2(30 byte) default '&DEFAULT_LANGUAGE.',
+	fst_name varchar2(50 char), 
+	fst_description varchar2(200 char), 
+	fst_active char(1 byte) default 'Y', 
+	fst_retries_on_error number default 0, 
+	fst_retry_schedule varchar2(30 byte), 
+	fst_retry_time number,  
+	fst_icon_css varchar2(50 char), 
+	fst_name_css varchar2(50 char), 
+	constraint pk_fsm_status primary key (fst_id, fst_fcl_id),
+  constraint fk_fst_fcl_id foreign key (fst_fcl_id)
+	  references fsm_class (fcl_id),
+  constraint fk_fst_fsg_id foreign key (fst_fsg_id)
+	  references fsm_status_group (fsg_id),
+  constraint fk_fst_msg_id foreign key (fst_msg_id, fst_msg_language)
+	  references pit_message (pms_name, pms_pml_name),
+  constraint nn_fst_active check (fst_active is not null),
+  constraint nn_fst_msg_id check (fst_msg_id is not null),
+  constraint chk_fst_active check (fst_active in ('Y', 'N')),
+  constraint nn_fst_retries_on_error check (fst_retries_on_error is not null),
+  constraint chk_retry check (
+       (fst_retries_on_error = 0 and fst_retry_schedule is null and fst_retry_time is null)
+    or (    (fst_retries_on_error > 0 and (fst_retry_schedule is not null or fst_retry_time is not null))
+        and (fst_retries_on_error > 0 and (fst_retry_schedule is null or fst_retry_time is null))
+       )
+    ),
+  constraint nn_fst_name check (fst_name is not null),
+  constraint chk_fst_retry_time check (fst_retry_time between 0 and 60)
+) organization index;
+
+comment on table fsm_status  is 'Tabelle zur Speicherung von fsm-Status pro Typ';
+comment on column fsm_status.fst_id is 'Primärschlüssel';
+comment on column fsm_status.fst_fcl_id is 'Primärschlüssel, Referenz auf fsm_CLASS';
+comment on column fsm_status.fst_fsg_id is 'Gruppierungskriterium';
+comment on column fsm_status.fst_msg_id is 'Name der Message, die zum Logging genutzt werden soll, Referenz auf MESSAGE';
+comment on column fsm_status.fst_name is 'Klartextbezeichnung für LOV';
+comment on column fsm_status.fst_description is 'Optionale Beschreibung';
+comment on column fsm_status.fst_active is 'Flag, das anzeigt, ob die Klasse aktuell verwendet wird';
+comment on column fsm_status.fst_retries_on_error is 'Wie viele erneute Versuche sollen im Fehlerfall unternommen werden? Default: 0';
+comment on column fsm_status.fst_retry_schedule is 'Optionale Einstellung: Falls FST_RETRIES_ON_ERROR > 0: Welcher Schedule soll verwendet werden, um einen erneuten Versuch zu unternehmen';
+comment on column fsm_status.fst_retry_time is 'Optionale Einstellung: Falls FST_RETRIES_ON_ERROR > 0: Wie lange soll vor einem erneuten Versuch gewartet werden?';
+comment on column fsm_status.fst_icon_css is 'Optionales Icon zur Steuerung der Darstellung in Berichten';
+comment on column fsm_status.fst_name_css is 'Optionale CSS-Klasse zur Steuerung der Darstellung in Berichten';
+
+create index idx_fk_fst_fsg_id on fsm_status (fst_fsg_id);
+create index idx_fk_fst_fcl_id on fsm_status (fst_fcl_id, fst_id);
+create index idx_fk_fst_msg_id on fsm_status (fst_msg_id);
