@@ -1,4 +1,4 @@
-# FSM Flow Control Toolkit
+# FSM Finite State Machine
 
 Light weight Finite-State machine implementation to dynamically control Business Flows
 
