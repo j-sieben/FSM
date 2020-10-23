@@ -64,7 +64,7 @@ as
   begin
     pit.enter_optional('raise_check');
     
-    g_result := util_fsm.C_OK;
+    g_result := fsm_pkg.C_OK;
     -- Logic goes here
     case 
     when p_req.req_rtp_id = C_OBJECT_PRIV and p_req.req_rre_id = 'PATABALLA' then
@@ -89,7 +89,7 @@ as
   begin
     pit.enter_optional('raise_grant');
     
-    g_result := util_fsm.C_OK;
+    g_result := fsm_pkg.C_OK;
     -- Logic goes here
     p_req.fsm_validity := g_result;
     
@@ -105,7 +105,7 @@ as
   begin
     pit.enter_optional('raise_reject');
     
-    g_result := util_fsm.C_OK;
+    g_result := fsm_pkg.C_OK;
     -- Logic goes here
     p_req.fsm_validity := g_result;
     
