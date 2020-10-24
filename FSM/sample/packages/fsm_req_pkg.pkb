@@ -175,14 +175,12 @@ as
       from fsm_req_object_vw
      where fsm_id = p_req_id;
      
-    create_fsm_req(
-      p_req => p_req,
-      p_req_id => l_req.fsm_id,
-      p_req_fst_id => l_req.fsm_fst_id,
-      p_req_fev_list => l_req.fsm_fev_list,
-      p_req_rtp_id => l_req.req_rtp_id,
-      p_req_rre_id => l_req.req_rre_id,
-      p_req_text => l_req.req_text);      
+    p_req_id := l_req.fsm_id;
+    p_req_fst_id := l_req.fsm_fst_id;
+    p_req_fev_list := l_req.fsm_fev_list;
+    p_req_rtp_id := l_req.req_rtp_id;
+    p_req_rre_id := l_req.req_rre_id;
+    p_req_text := l_req.req_text;      
   end create_fsm_req;
     
 
