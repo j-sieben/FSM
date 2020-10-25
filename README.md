@@ -139,7 +139,9 @@ Here is a simple example of such an event handler:
   end raise_initialize;
 ```
 
-You will find that most of the time only trivial logic is required. Should the logic become more complex, it is advisable to extract this logic into a business logic package and call the respective methods from here. The shown method is a private message that is called internally from a generic event handler method. It's core is a simple `CASE` switch that points the incoming event to the right helper method:
+You will find that most of the time only trivial logic is required. This sounds funny at first thought, but the reason for this is that being in a specific status by itself is valuable information. Think about a view that tries to find finalized requests. It's very easy to tell the finalized requests from the requests in work by simply looking at their status. No additional work is required for this. In normal programming style, this information needs to be stored separately or decided by additional logic.
+
+Should the logic become more complex, it is advisable to extract this logic into a business logic package and call the respective methods from here. The shown method is a private message that is called internally from a generic event handler method. It's core is a simple `CASE` switch that points the incoming event to the right helper method:
 
 ```
     ...
