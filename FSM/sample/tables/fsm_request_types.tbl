@@ -1,0 +1,12 @@
+create table fsm_request_types(
+  rtp_id varchar2(50 char), 
+	rtp_pti_id varchar2(128 byte), 
+	rtp_active char(1 byte) default 'Y', 
+  constraint pk_fsm_request_types primary key (rtp_id),
+  constraint chk_rtp_active check (rtp_active in ('Y', 'N'))
+) organization;
+
+comment on table fsm_request_types  is 'Request type';
+comment on column fsm_request_types.rtp_id is 'Primary key';
+comment on column fsm_request_types.rtp_pti_id is 'Reference to a translatable item';
+comment on column fsm_request_types.rtp_active is 'flag to indicate whether req_type is in use actually';

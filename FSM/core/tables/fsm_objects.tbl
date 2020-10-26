@@ -1,0 +1,34 @@
+create table fsm_objects(
+  fsm_id number, 
+	fsm_fcl_id varchar2(50 char), 
+	fsm_fst_id varchar2(50 char), 
+	fsm_fev_id varchar2(50 char), 
+	fsm_retry_schedule varchar2(30 byte), 
+	fsm_validity number, 
+	fsm_fev_list varchar2(500 char), 
+	fsm_last_change_date date, 
+	constraint pk_fsm_objects primary key (fsm_id),
+  constraint fk_fsm_fcl_id foreign key (fsm_fcl_id)
+	  references fsm_classes (fcl_id),
+  constraint fk_fsm_fev_id foreign key (fsm_fev_id, fsm_fcl_id)
+	  references fsm_events (fev_id, fev_fcl_id),
+  constraint fk_fsm_fst_id foreign key (fsm_fst_id, fsm_fcl_id)
+	  references fsm_status (fst_id, fst_fcl_id)
+) organization index;
+
+comment on table fsm_objects is 'Table for storing abstract FSM instances (table per class, central reference to all FSM classes)';
+comment on column fsm_objects.fsm_id is 'Technical key, generated from FSM_SEQ, primary key';
+comment on column fsm_objects.fsm_fcl_id is 'Document class, reference to FSM_CLASSES';
+comment on column fsm_objects.fsm_fst_id is 'Current document status, reference to FSM_STATUS';
+comment on column fsm_objects.fsm_fev_id is 'Optional event to retrigger due to an error, reference to FSM_EVENTS';
+comment on column fsm_objects.fsm_retry_schedule is 'Optional name of a schedule that plans when to retrigger FSM_FEV_ID';
+comment on column fsm_objects.fsm_validity is 'Current validity of fsm 0 = OK, 1 = Error, >1 = Error, [FSM_VALIDITY - 1] further attempts will follow';
+comment on column fsm_objects.fsm_fev_list is 'List of currently allowed next events';
+comment on column fsm_objects.fsm_last_change_date is 'Date of the last change of the object';
+
+
+create index idx_fk_fsm_fcl_id on fsm_objects (fsm_fcl_id);
+create index idx_fk_fsm_fst_id on fsm_objects (fsm_fst_id);
+create index idx_fk_fsm_fev_id on fsm_objects (fsm_fev_id);
+
+

@@ -13,8 +13,8 @@ declare
            where object_name in (
                  'FSM_REQ_TYPE', -- Typen
                  'FSM_REQ_PKG', -- Packages
-                 'FSM_REQ_OBJECT_VW', -- Views
-                 'FSM_REQ_OBJECT', 'FSM_REQ_TYPES', 'FSM_REQ_REQUESTOR', 'DEMO_USER',  -- Tabellen
+                 'FSM_REQUESTS_VW', 'FSM_REQUEST_TYPES_VW', -- Views
+                 'FSM_REQUESTS', 'FSM_REQUEST_TYPES', 'FSM_REQUESTORS', 'DEMO_USER',  -- Tabellen
                  '',  -- Synonyme
                  '' -- Sequenzen
                  )

@@ -12,10 +12,11 @@ declare
             from all_objects
            where object_name in (
                  'FSM_TYPE', -- Typen
-                 'FSM_ADMIN_PKG', 'FSM_PKG', 'FSM_FST', 'FSM_FEV', -- Packages
-                 'BL_FSM_ACTIVE_STATUS_EVENT', 'FSM_FSL_LOG_VW', 'FSM_HIERARCHY_VW', 'FSM_NEXT_COMMANDS_VW', 'FSM_OBJECT_VW', -- Views
-                 'FSM_CLASS', 'FSM_EVENT', 'FSM_LOG', 'FSM_OBJECT', 'FSM_STATUS', 'FSM_STATUS_GROUP',
-                 'FSM_STATUS_SEVERITY', 'FSM_TRANSITION', -- Tabellen
+                 'FSM_ADMIN', 'FSM', 'FSM_FST', 'FSM_FEV', -- Packages
+                 'BL_FSM_ACTIVE_STATUS_EVENT', 'FSM_FSL_LOG_V', 'BL_FSM_HIERARCHY', 'BL_FSM_NEXT_COMMANDS', 'FSM_OBJECTS_V', 
+                 'FSM_CLASSES_V', 'FSM_EVENTS_V', 'FSM_STATUS_GROUPS_V', 'FSM_STATUS_V', 'FSM_TRANSITIONS_V', -- Views
+                 'FSM_CLASSES', 'FSM_EVENTS', 'FSM_LOG', 'FSM_OBJECTS', 'FSM_STATUS', 'FSM_STATUS_GROUPS',
+                 'FSM_STATUS_SEVERITIES', 'FSM_TRANSITIONS', -- Tabellen
                  '',  -- Synonyme
                  'FSM_SEQ', 'FSM_LOG_SEQ' -- Sequenzen
                  )
@@ -39,5 +40,8 @@ begin
         raise;
     end;
   end loop;
+  
+  pit_admin.delete_message_group('FSM', true);
+  
 end;
 /

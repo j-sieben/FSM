@@ -1,0 +1,11 @@
+create table fsm_requestors(
+  rre_id varchar2(50 char), 
+	rre_name varchar2(100 char), 
+	rre_description varchar2(200 char), 
+	constraint pk_fsm_requestor primary key (rre_id) enable
+) organization index;
+
+comment on table fsm_requestors  is 'table for dummy requestors';
+comment on column fsm_requestor.rre_id is 'primary key';
+comment on column fsm_requestor.rre_name is 'display_name';
+comment on column fsm_requestor.rre_description is 'optional description';

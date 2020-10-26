@@ -6,7 +6,7 @@ create or replace type body fsm_type as
     return number
   as
   begin
-    return fsm_pkg.raise_event(self, p_fev_id);
+    return fsm.raise_event(self, p_fev_id);
   end raise_event;
 
   member procedure retry(
@@ -14,7 +14,7 @@ create or replace type body fsm_type as
     p_fev_id in varchar2)
   as
   begin
-    fsm_pkg.retry(self, p_fev_id);
+    fsm.retry(self, p_fev_id);
   end retry;
 
   member function get_actual_status
@@ -46,7 +46,7 @@ create or replace type body fsm_type as
     l_result binary_integer;
   begin
     self.fsm_fst_id := p_fst_id;
-    l_result := fsm_pkg.set_status(self);
+    l_result := fsm.set_status(self);
     return l_result;
   end set_status;
 
@@ -57,7 +57,7 @@ create or replace type body fsm_type as
     p_msg_args in msg_args default null)
   as
   begin
-    fsm_pkg.notify(
+    fsm.notify(
       p_fsm => self,
       p_msg => p_msg,
       p_msg_args => p_msg_args);
@@ -67,14 +67,14 @@ create or replace type body fsm_type as
     return varchar2
   as
   begin
-    return fsm_pkg.to_string(self);
+    return fsm.to_string(self);
   end to_string;
 
   member procedure finalize(
     self in out nocopy fsm_type)
   as
   begin
-    fsm_pkg.finalize(self);
+    fsm.finalize(self);
   end finalize;
 
 end;

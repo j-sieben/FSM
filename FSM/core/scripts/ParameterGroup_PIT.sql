@@ -6,9 +6,9 @@ begin
   );
 
   param_admin.edit_parameter(
-    p_par_id => 'PIT_fsm_DEFAULT_LOG_LEVEL'
+    p_par_id => 'PIT_FSM_DEFAULT_LOG_LEVEL'
    ,p_par_pgr_id => 'PIT'
-   ,p_par_description => 'Default threeeshold for the PIT_fsm output module'
+   ,p_par_description => 'Default threeeshold for the PIT_FSM output module'
    ,p_par_integer_value => 70
   );
 

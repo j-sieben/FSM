@@ -10,13 +10,13 @@ define tool_dir=tools/
 
 -- Tables
 @&tool_dir.grant_access_with_grant_option.sql read fsm_log
-@&tool_dir.grant_access_with_grant_option.sql read fsm_event
-@&tool_dir.grant_access_with_grant_option.sql read fsm_status
-@&tool_dir.grant_access_with_grant_option.sql read fsm_transition
-@&tool_dir.grant_access_with_grant_option.sql "select, references" fsm_object
+@&tool_dir.grant_access_with_grant_option.sql read fsm_transitions
+@&tool_dir.grant_access_with_grant_option.sql "select, references" fsm_objects
 
 -- Views
-@&tool_dir.grant_access_with_grant_option.sql select fsm_object_vw
+@&tool_dir.grant_access_with_grant_option.sql select fsm_objects_v
+@&tool_dir.grant_access_with_grant_option.sql select fsm_events_v
+@&tool_dir.grant_access_with_grant_option.sql read fsm_status_v
 
 -- Sequence
 @&tool_dir.grant_access.sql select fsm_seq

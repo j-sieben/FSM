@@ -13,7 +13,7 @@ create table fsm_log(
 	fsl_msg_args msg_args_char,
   constraint pk_fsm_log primary key (fsl_id),
   constraint fsl_fsm_id foreign key (fsl_fsm_id)
-	  references fsm_object (fsm_id) on delete cascade
+	  references fsm_objects (fsm_id) on delete cascade
 );
 
 

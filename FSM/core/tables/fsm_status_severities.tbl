@@ -1,0 +1,13 @@
+create table fsm_status_severities(
+  fss_id number, 
+	fss_name varchar2(50 char), 
+	fss_html varchar2(200 char), 
+	fss_status varchar2(200 char), 
+  constraint pk_fsm_status_severities primary key (fss_id) enable
+) organization index;
+
+comment on table fsm_status_severities is 'Table for storing GUI information for severity filtering';
+comment on column fsm_status_severities.fss_id is 'Technical key, equivalent to MESSAGE_SEVERITY';
+comment on column fsm_status_severities.fss_name is 'Severity name';
+comment on column fsm_status_severities.fss_html is 'HTML snippet, long form';
+comment on column fsm_status_severities.fss_status is 'HTML snippet, status icon';

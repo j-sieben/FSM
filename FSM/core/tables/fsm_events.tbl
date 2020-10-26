@@ -1,0 +1,34 @@
+create table fsm_events (
+  fev_id varchar2(26 char), 
+	fev_fcl_id varchar2(50 char), 
+	fev_msg_id varchar2(50 char),
+	fev_pti_id &ORA_NAME_TYPE., 
+  fev_raised_by_user &FLAG_TYPE. default &C_FALSE.,
+  fev_button_highlight &FLAG_TYPE. default &C_FALSE.,
+  fev_confirm_message varchar2(200 char),
+  fev_button_icon varchar2(50 char),
+	fev_active &FLAG_TYPE. default &C_TRUE.,
+  constraint pk_fsm_events primary key (fev_id, fev_fcl_id) enable,
+  constraint fk_fev_fcl_id foreign key (fev_fcl_id)
+	  references fsm_classes (fcl_id),
+  constraint fk_fev_msg_id foreign key (fev_msg_id)
+	  references pit_message (pms_id),
+  constraint nn_fev_msg_id check (fev_msg_id is not null),
+  constraint chk_fev_raised_by_user check (fev_raised_by_user in (&C_TRUE., &C_FALSE.)),
+  constraint chk_fev_button_highlight check (fev_button_highlight in (&C_TRUE., &C_FALSE.))
+) organization index;
+
+comment on table fsm_events  is 'Table to store fsm status definitions per class type';
+comment on column fsm_events.fev_id is 'Primary key';
+comment on column fsm_events.fev_fcl_id is 'Primary key, reference to FSM_CLASSES';
+comment on column fsm_events.fev_msg_id is 'Name of a message to be used for logging, reference to PIT_MESSAGE';
+comment on column fsm_events.fev_pti_id is 'Translatable item, reference to PIT_TRANSLATABLE_ITEM';
+comment on column fsm_events.fev_raised_by_user is 'Flag to indicate whether command is raisable by user (in contrast to events which are raised by jobs only).';
+comment on column fsm_events.fev_button_highlight is 'Flag to indicate whether command button shall be highlighted.';
+comment on column fsm_events.fev_confirm_message is 'Optional message that is shown before action takes place.';
+comment on column fsm_events.fev_button_icon is 'Optional css class resp. url to an icon.';
+comment on column fsm_events.fev_active is 'Flag to indicate whether status is in use actually.';
+
+
+create index idx_fk_fev_fcl_id on fsm_events (fev_fcl_id, fev_id);
+create index idx_fk_fev_msg_id on fsm_events (fev_msg_id);

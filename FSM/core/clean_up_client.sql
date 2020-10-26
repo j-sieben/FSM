@@ -9,13 +9,13 @@ alter session set current_schema=&INSTALL_USER.;
 
 -- Tables
 @&tool_dir.revoke_access.sql all fsm_log
-@&tool_dir.revoke_access.sql all fsm_event
 @&tool_dir.revoke_access.sql all fsm_status
-@&tool_dir.revoke_access.sql all fsm_transition
-@&tool_dir.revoke_access.sql all fsm_object
+@&tool_dir.revoke_access.sql all fsm_transitions
+@&tool_dir.revoke_access.sql all fsm_objects
 
 -- Views
-@&tool_dir.revoke_access.sql all fsm_object_vw
+@&tool_dir.revoke_access.sql all fsm_objects_v
+@&tool_dir.revoke_access.sql all fsm_events_v
 
 -- Sequence
 @&tool_dir.revoke_access.sql select fsm_seq

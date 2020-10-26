@@ -280,7 +280,7 @@ begin
     p_pms_name => 'FSM_SQL_ERROR',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^FSM #1#, ID: #2#, Event: #3#^',
-    p_pms_description => q'^Generic message for SQL errors occuring during &TOOLKI. processing.^',
+    p_pms_description => q'^Generic message for SQL errors occuring during FSM processing.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'AMERICAN',
     p_error_number => -20000

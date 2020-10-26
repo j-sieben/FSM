@@ -1,0 +1,22 @@
+create table fsm_requests(
+  req_id number, 
+	req_rtp_id varchar2(50 char), 
+	req_rre_id varchar2(50 char), 
+	req_text varchar2(1000 char),
+  constraint pk_fsm_requests primary key (req_id),
+  constraint fk_req_id foreign key (req_id)
+	  references fsm_object (fsm_id) on delete cascade,
+  constraint fk_req_rre_id foreign key (req_rre_id)
+	  references fsm_req_requestor (rre_id),
+  constraint fk_req_rtp_id foreign key (req_rtp_id)
+	  references fsm_req_types (rtp_id)
+);
+
+comment on table fsm_requests  is 'table to store concrete attributes for type FSM_REQ';
+comment on column fsm_requests.req_id is 'primary key, reference to FSM_OBJECT';
+comment on column fsm_requests.req_rtp_id is 'Request type, reference to FSM_REQUEST_TYPES';
+comment on column fsm_requests.req_rre_id is 'Requesting person, reference to FSM_REQUESTORS';
+comment on column fsm_requests.req_text is 'Text the requestor has entered for her request';
+
+create index idx_req_rtp_id on fsm_requests (req_rtp_id);
+create index idx_req_rre_id on fsm_requests (req_rre_id);

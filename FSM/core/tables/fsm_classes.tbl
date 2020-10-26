@@ -1,0 +1,13 @@
+create table fsm_classes(
+  fcl_id varchar2(3 char), 
+	fcl_pti_id &ORA_NAME_TYPE., 
+	fcl_active &FLAG_TYPE. default &C_TRUE., 
+	constraint pk_fsm_classes primary key (fcl_id),
+  constraint nn_fcl_active check (fcl_active is not null),
+  constraint chk_fcl_active check (fcl_active in (&C_TRUE., &C_FALSE.))
+) organization index;
+
+comment on table fsm_classes is 'Table for storing fsm classes';
+comment on column fsm_classes.fcl_id is 'primary key';
+comment on column fsm_classes.fcl_pti_id is 'Translatable item, reference to PIT_TRANSLATABLE_ITEM';
+comment on column fsm_classes.fcl_active is 'Flag indicating whether the class is currently used';

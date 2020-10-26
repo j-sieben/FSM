@@ -1,0 +1,28 @@
+create table fsm_transitions(
+  ftr_fst_id varchar2(50 char), 
+	ftr_fev_id varchar2(50 char), 
+	ftr_fcl_id varchar2(50 char), 
+	ftr_fst_list varchar2(1000 char), 
+	ftr_active char(1 byte) default 'Y',  
+	ftr_required_role varchar2(50 char), 
+	ftr_raise_automatically char(1 byte) default 'N',
+	ftr_raise_on_status number default 0,
+  constraint pk_fsm_transitions primary key (ftr_fst_id, ftr_fev_id, ftr_fcl_id),
+  constraint fk_ftr_fev_id foreign key (ftr_fev_id, ftr_fcl_id)
+	  references fsm_events (fev_id, fev_fcl_id),
+  constraint fk_ftr_fst_id foreign key (ftr_fst_id, ftr_fcl_id)
+	  references fsm_status (fst_id, fst_fcl_id),
+  constraint chk_ftr_raise_on_status check (ftr_raise_on_status in (0, 1))
+);
+
+comment on table fsm_transitions  is 'Assignment of the allowed events for a FSM state';
+comment on column fsm_transitions.ftr_fst_id is 'Primary key, reference to FSM_STATUS';
+comment on column fsm_transitions.ftr_fev_id is 'Primary key, reference to FSM_EVENTS';
+comment on column fsm_transitions.ftr_fst_list is 'List of possible result states, :-separated list of FSM_STATUS.FST_ID.';
+comment on column fsm_transitions.ftr_active is 'Flag indicating whether an assignment should be used or not';
+comment on column fsm_transitions.ftr_required_role is 'Optional role restriction for an event, may only be thrown if user has role permission';
+comment on column fsm_transitions.ftr_raise_automatically is 'Flag indicating whether the event is automatically triggered immediately after a status is reached';
+comment on column fsm_transitions.ftr_raise_on_status is 'Defines a result state that triggers the following event. Allowed values: 0 = normal processing, 1 = event in case of error';
+
+create index idx_ftr_fev_id on fsm_transitions (ftr_fev_id, ftr_fst_id, ftr_fcl_id) ;
+

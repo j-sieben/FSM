@@ -7,11 +7,15 @@ echo -n "Enter username where the software shall be installed at: [ENTER] "
 read USER
 echo ${USER}
 
+echo -n "Enter default language to install (GERMAN|AMERICAN): [ENTER] "
+read LANGUAGE
+echo ${LANGUAGE}
+
 NLS_LANG=GERMAN_GERMANY.AL32UTF8
 export NLS_LANG
 sqlplus /nolog<<EOF
 connect ${SYSPWD} as sysdba 
-@uninstall ${USER}
+@fsm_install ${USER} ${LANGUAGE}
 pause
 EOF
 
