@@ -298,7 +298,7 @@ as
     return C_OK;
   exception
     when others then
-      pit.sql_exception(msg.fsm_SQL_ERROR, msg_args(p_fsm.fsm_fcl_id, to_char(p_fsm.fsm_id), p_fev_id));
+      pit.handle_exception(msg.fsm_SQL_ERROR, msg_args(p_fsm.fsm_fcl_id, to_char(p_fsm.fsm_id), p_fev_id));
       return C_ERROR;
   end raise_event;
     
@@ -449,7 +449,7 @@ as
         return C_ERROR;
       end if;
     when others then
-      pit.sql_exception(msg.SQL_ERROR);
+      pit.handle_exception(msg.SQL_ERROR);
       if p_fsm.fsm_fst_id != fsm_fst.fsm_ERROR then
         p_fsm.fsm_fst_id := fsm_fst.fsm_ERROR;
         return set_status(p_fsm);

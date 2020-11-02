@@ -163,7 +163,7 @@ as
     pit.leave_mandatory;
   exception
     when NO_DATA_FOUND then
-      pit.sql_exception;
+      pit.handle_exception;
   end create_fsm_req;
     
 
@@ -214,7 +214,7 @@ as
     return fsm_pkg.C_OK;
   exception
     when others then
-      pit.sql_exception;
+      pit.handle_exception;
       return fsm_pkg.C_ERROR;
   end set_status;
 
