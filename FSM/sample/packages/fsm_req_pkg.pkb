@@ -30,22 +30,33 @@ as
   
   
   /* EVENT HANDLER */
-  function raise_initialize(
-    p_req in out nocopy fsm_req_type)
+  /** Generic event handler
+   * @param  p_req    REQ instance
+   * @param  p_event  Event to throw
+   * @usage  Default event handler, just proceeds to the next possible event.
+   * @throws msg.FSM_NEXT_STATUS_NU_ERR if more than one next status is possible.
+   *         This error must be circumvented by creating a separate event handler
+   *         which deterministically decides on the next status
+   */
+  function raise_event(
+    p_req in out nocopy fsm_req_type,
+    p_fev_id in varchar2)
     return binary_integer
   as
   begin
-    pit.enter_optional('raise_initialize');
+    pit.enter_optional('raise_event',
+      p_params => msg_params(msg_param('p_fev_id', p_fev_id)));
     
-    g_result := fsm_pkg.C_OK;
-    -- Logic goes here
-    p_req.fsm_validity := g_result;
+    p_req.fsm_validity := fsm_pkg.C_OK;
     
     pit.leave_optional;
-    return p_req.set_status(fsm_pkg.get_next_status(p_req, fsm_fev.REQ_INITIALIZE));
-  end raise_initialize;
+    return p_req.set_status(fsm_pkg.get_next_status(p_req, p_fev_id));
+  end raise_event;
   
   
+  /** Event handler for event CHECK
+   * @usage  Decides how the decision on granting rights must be made
+   */
   function raise_check(
     p_req in out nocopy fsm_req_type)
     return binary_integer
@@ -75,38 +86,6 @@ as
     pit.leave_optional;
     return p_req.set_status(l_new_status);
   end raise_check;
-  
-  
-  function raise_grant(
-    p_req in out nocopy fsm_req_type)
-    return binary_integer
-  as
-  begin
-    pit.enter_optional('raise_grant');
-    
-    g_result := fsm_pkg.C_OK;
-    -- Logic goes here
-    p_req.fsm_validity := g_result;
-    
-    pit.leave_optional;
-    return p_req.set_status(fsm_pkg.get_next_status(p_req, fsm_fev.REQ_GRANT));
-  end raise_grant;
-  
-  
-  function raise_reject(
-    p_req in out nocopy fsm_req_type)
-    return binary_integer
-  as
-  begin
-    pit.enter_optional('raise_reject');
-    
-    g_result := fsm_pkg.C_OK;
-    -- Logic goes here
-    p_req.fsm_validity := g_result;
-    
-    pit.leave_optional;
-    return p_req.set_status(fsm_pkg.get_next_status(p_req, fsm_fev.REQ_REJECT));
-  end raise_reject;
 
 
   function raise_nil(
@@ -203,18 +182,14 @@ as
     if instr(':' || p_req.fsm_fev_list || ':', ':' || p_fev_id || ':') > 0 then
       -- event switch
       case p_fev_id
-      when fsm_fev.REQ_INITIALIZE then
-        g_result := raise_initialize(p_req);
+      -- explicit event handlers
       when fsm_fev.REQ_CHECK then
         g_result := raise_check(p_req);
-      when fsm_fev.REQ_GRANT then
-        g_result := raise_grant(p_req);
-      when fsm_fev.REQ_REJECT then
-        g_result := raise_reject(p_req);
       when fsm_fev.fsm_NIL then
         g_result := raise_nil(p_req);
       else
-        pit.warn(msg.fsm_INVALID_EVENT, msg_args(p_fev_id), p_req.fsm_id);
+        -- default event handler
+        g_result := raise_event(p_req, p_fev_id);
       end case;
     else
       pit.warn(msg.fsm_EVENT_NOT_ALLOWED, msg_args(p_fev_id, p_req.fsm_fst_id), p_req.fsm_id);
