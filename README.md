@@ -130,36 +130,63 @@ Here is a simple example of such an event handler:
   begin
     pit.enter_optional('raise_initialize');
     
-    g_result := fsm_pkg.C_OK;
-    -- Logic goes here
-    p_req.fsm_validity := g_result;
+    -- Start by setting the validity of the FSM instance to TRUE
+    p_req.fsm_validity := fsm_pkg.C_OK;
+    
+    -- Logic goes here:
+    -- - Things that have to be done for this status change (fi send a mail etc.), normally implemented as calls to a business layer package
+    -- - Logic to decide on the next status to achieve
+    g_result := p_req.set_status(fsm_fst.REQ_IN_PROCESS);
     
     pit.leave_optional;
-    return p_req.set_status(fsm_fst.REQ_IN_PROCESS); -- or p_req.set_status(fsm_pkg.get_next_status(fsm_fev.REQ_INITIALIZE) if only one state is possible
+    return g_result;
   end raise_initialize;
 ```
 
-You will find that most of the time only trivial logic is required. This sounds funny at first thought, but the reason for this is that being in a specific status by itself is valuable information. Think about a view that tries to find finalized requests. It's very easy to tell the finalized requests from the requests in work by simply looking at their status. No additional work is required for this. In normal programming style, this information needs to be stored separately or decided by additional logic. Metadata adds another important piece of information as it tells you without further logic which events may come next.
+You will find that most of the time only trivial logic is required. This sounds funny at first thought, but the reason for this is that being in a specific status by itself is valuable information. Think about a SQL query that tries to find finalized requests. It's very easy to tell the finalized requests from the requests in work by simply looking at their status. No additional work is required for this. In normal programming style, this information needs to be stored separately or decided by additional logic. Plus, metadata adds important knowledge, such as which events are allowed next.
 
-Should the logic become more complex, it is advisable to extract this logic into a business logic package and call the respective methods from here. The goal of the separation is not to keep any logic in the `FSM` packages that you would need even without the use of the `FSM`. In this way, the business logic remains separated from the state control. The shown method is a private message that is called internally from a generic event handler method. It's core is a simple `CASE` switch that points the incoming event to the right helper method:
+To start, you may even create a default event handler for all transitions that have only one status as the target status (only if you have a choice of target status, you are required to provide the respective decision logic). To allow for that, `FSM_PKG` provides a method called `fsm_pkg.get_next_status(<event>, <FSM>)` that calculates the next status the `FSM` can go to. Here's an example of such a default event handler:
+
+```
+  function raise_default(
+    p_req in out nocopy fsm_req_type,
+    p_fev_id in fsm_event.fev_id%type)
+    return binary_integer
+  as
+  begin
+    pit.enter_optional('raise_default',
+      p_params => msg_params(msg_param('p_fev_id', p_fev_id)));
+      
+    p_req.fsm_validity := fsm_pkg.C_OK;
+    g_result := p_req.set_status(fsm_pkg.get_next_status(p_fev_id);
+    
+    pit.leave_optional;
+    return g_result;
+  end raise_default;
+```
+
+Should the logic become more complex, it is advisable to extract this logic into a business logic package and call the respective methods from here. The goal of the separation is to keep any logic that you would need even without the use of the `FSM` away from the `FSM` packages. This way, the business logic remains separated from the state control. To handle the events raised, method `RAISE_EVENT` in your `FSM` package contains a simple `CASE` switch that points the incoming event to the right helper method:
 
 ```
     ...
     -- process event
     if instr(':' || p_req.fsm_fev_list || ':', ':' || p_fev_id || ':') > 0 then
-      -- Eventweiche
+      -- Event switch
       case p_fev_id
       when fsm_fev.REQ_INITIALIZE then
         g_result := raise_initialize(p_req);
       < other events >
       else
-        pit.warn(msg.fsm_INVALID_EVENT, msg_args(p_fev_id), p_req.fsm_id);
+        -- fallback to default handler
+        raise_default(p_fev_id, p_req);
       end case;
     else
       pit.warn(msg.fsm_EVENT_NOT_ALLOWED, msg_args(p_fev_id, p_req.fsm_fst_id), p_req.fsm_id);
       g_result := fsm_pkg.C_OK;
     end if;
 ```
+
+If you examine the code, you will find out that the `FSM` »knows« which events are allowed to be raised. This information is taken from the meta data your provide (It's a list of all events referenced at the transition entries for the actual status) and it is updated with every status change. Therefore it is easy to tell allowed events from the invalid events.
 
 That's about it. You now can run your code and it will follow the guided tours you set up with your transitions. Happy coding!
 
