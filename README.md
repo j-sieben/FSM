@@ -165,7 +165,7 @@ To start, you may even create a default event handler for all transitions that h
   end raise_default;
 ```
 
-Should the logic become more complex, it is advisable to extract this logic into a business logic package and call the respective methods from here. The goal of the separation is to keep any logic that you would need even without the use of the `FSM` away from the `FSM` packages. This way, the business logic remains separated from the state control. To handle the events raised, method `RAISE_EVENT` in your `FSM` package contains a simple `CASE` switch that points the incoming event to the right helper method:
+Should the logic become more complex, it is advisable to extract this logic into a business logic package and call the respective methods from here. The goal of the separation is to keep any logic that you would need even without the use of the `FSM` away from the `FSM` packages. This way, the business logic remains separated from the state control. To handle the events raised, method `fsm_req_pkg.raise_event` contains a simple `CASE` switch that points the incoming event to the right helper method:
 
 ```
     ...
