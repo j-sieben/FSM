@@ -145,7 +145,7 @@ Here is a simple example of such an event handler:
 
 You will find that most of the time only trivial logic is required. This sounds funny at first thought, but the reason for this is that being in a specific status by itself is valuable information. Think about a SQL query that tries to find finalized requests. It's very easy to tell the finalized requests from the requests in work by simply looking at their status. No additional work is required for this. In normal programming style, this information needs to be stored separately or decided by additional logic. Plus, metadata adds important knowledge, such as which events are allowed next.
 
-To start, you may even create a default event handler for all transitions that have only one status as the target status (only if you have a choice of target status, you are required to provide the respective decision logic). To allow for that, `FSM_PKG` provides a method called `fsm_pkg.get_next_status(<event>, <FSM>)` that calculates the next status the `FSM` can go to. Here's an example of such a default event handler:
+To start, you may even create a default event handler for all transitions that have only one status as the target status (only if you have a choice of target status, you are required to provide the respective decision logic). To allow for that, `FSM_PKG` provides a method called `fsm_pkg.get_next_status(<FSM instance>, <event>)` that calculates the next status the `FSM` can go to. Here's an example of such a default event handler:
 
 ```
   function raise_default(
