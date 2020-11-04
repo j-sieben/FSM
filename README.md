@@ -181,7 +181,9 @@ Should the logic become more complex, it is advisable to extract this logic into
       < other events >
       else
         -- fallback to default handler
-        raise_default(p_fev_id, p_req);
+        raise_default(
+          p_req => p_req,
+          p_fev_id => p_fev_id);
       end case;
     else
       pit.warn(msg.fsm_EVENT_NOT_ALLOWED, msg_args(p_fev_id, p_req.fsm_fst_id), p_req.fsm_id);
