@@ -158,7 +158,10 @@ To start, you may even create a default event handler for all transitions that h
       p_params => msg_params(msg_param('p_fev_id', p_fev_id)));
       
     p_req.fsm_validity := fsm_pkg.C_OK;
-    g_result := p_req.set_status(fsm_pkg.get_next_status(p_fev_id);
+    g_result := p_req.set_status(
+                  fsm_pkg.get_next_status(
+                    p_fsm => p_req, 
+                    p_fev_id => p_fev_id);
     
     pit.leave_optional;
     return g_result;
