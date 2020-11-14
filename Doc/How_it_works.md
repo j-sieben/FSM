@@ -43,7 +43,7 @@ The tables obviously need columns for all order attributes you want to store plu
 Add a line at table `FSM_CLASS` with the value `REQ` for the internal name of the new `FSM` machine.
 
 ## Define Status, Events and Transitions
-No comes the core part. Our order has defined some status (`CREATED|GRANTED|IN_PRCESS`), each of which have to be inserted into table `FSM_STATUS`. Make sure to reference class `REQ` with each status and event. This later defines the constants that get created upon (re-)creation of the status and event packages. You may want to review the sample code, file `create_initial_data.sql` to review how this is done.
+Now follows the central part. Our order has defined some status (`CREATED|GRANTED|IN_PRCESS`), each of which have to be inserted into table `FSM_STATUS`. Make sure to reference class `REQ` with each status and event. This later defines the constants that get created upon (re-)creation of the status and event packages. You may want to review the sample code, file `create_initial_data.sql` to review how this is done.
 
 In table `FSM_TRANSITIONS` you define the transitions by combining the status and the events which are allowed to be raised within that specific status. For the sake of our example, say that status `CREATED` is the default status the `FSM` sets after creation. So in the constructor method you either set the latest status the `FSM` had (if you re-create it from the persistence layer) or you set the initial status by calling the newly created instance's `SET_STATUS` method.
 
