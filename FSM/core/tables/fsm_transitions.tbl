@@ -9,9 +9,9 @@ create table fsm_transitions(
 	ftr_raise_on_status number default 0,
   constraint pk_fsm_transitions primary key (ftr_fst_id, ftr_fev_id, ftr_fcl_id),
   constraint fk_ftr_fev_id foreign key (ftr_fev_id, ftr_fcl_id)
-	  references fsm_events (fev_id, fev_fcl_id),
+	  references fsm_events (fev_id, fev_fcl_id) on delete cascade,
   constraint fk_ftr_fst_id foreign key (ftr_fst_id, ftr_fcl_id)
-	  references fsm_status (fst_id, fst_fcl_id),
+	  references fsm_status (fst_id, fst_fcl_id) on delete cascade,
   constraint chk_ftr_raise_on_status check (ftr_raise_on_status in (0, 1))
 );
 

@@ -1,22 +1,24 @@
 create table fsm_status(
-  fst_id varchar2(26 char), 
-	fst_fcl_id varchar2(50 char), 
-	fst_fsg_id varchar2(26 char),
-	fst_msg_id varchar2(50 char), 
+  fst_id &ORA_NAME_TYPE., 
+	fst_fcl_id &ORA_NAME_TYPE., 
+	fst_fsg_id &ORA_NAME_TYPE.,
+	fst_msg_id &ORA_NAME_TYPE., 
 	fst_pti_id &ORA_NAME_TYPE., 
 	fst_retries_on_error number default 0, 
-	fst_retry_schedule varchar2(30 byte), 
+	fst_retry_schedule &ORA_NAME_TYPE., 
 	fst_retry_time number,  
 	fst_icon_css varchar2(50 char), 
 	fst_name_css varchar2(50 char), 
 	fst_active &FLAG_TYPE. default &C_TRUE., 
 	constraint pk_fsm_status primary key (fst_id, fst_fcl_id),
   constraint fk_fst_fcl_id foreign key (fst_fcl_id)
-	  references fsm_classes (fcl_id),
+	  references fsm_classes (fcl_id) on delete cascade,
   constraint fk_fst_fsg_id foreign key (fst_fsg_id, fst_fcl_id)
-	  references fsm_status_groups (fsg_id, fsg_fcl_id),
+	  references fsm_status_groups (fsg_id, fsg_fcl_id) on delete cascade,
   constraint fk_fst_msg_id foreign key (fst_msg_id)
 	  references pit_message (pms_id),
+  constraint fk_fst_pti_id foreign key(fst_pti_id, fst_fcl_id)
+    references pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_fst_active check (fst_active is not null),
   constraint nn_fst_msg_id check (fst_msg_id is not null),
   constraint chk_fst_active check (fst_active in ('Y', 'N')),

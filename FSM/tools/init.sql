@@ -5,36 +5,34 @@ set feedback off
 set lines 120
 set pages 9999
 whenever sqlerror exit
-clear screen
 set termout off
-col sys_user new_val SYS_USER format a30
-col install_user new_val INSTALL_USER format a30
-col default_language new_val DEFAULT_LANGUAGE format a30
+col install_user new_val INSTALL_USER format a128
+col remote_user new_val REMOTE_USER format a128
+col default_language new_val DEFAULT_LANGUAGE format a128
 
-select user sys_user,
-       upper('&1.') install_user,
-       upper('&2.') default_language
-  from V$NLS_VALID_VALUES
- where parameter = 'LANGUAGE'
-   and value = upper('&2.');
+select upper('&1.') install_user, upper('&2.') remote_user, pit.get_default_language default_language
+  from dual;
    
-col ora_name_type new_val ORA_NAME_TYPE format a30
+col ora_name_type new_val ORA_NAME_TYPE format a128
 select 'varchar2(' || data_length || ' byte)' ora_name_type
   from all_tab_columns
  where table_name = 'USER_TABLES'
    and column_name = 'TABLE_NAME';
+   
+-- Copy boolean value type from PIT
+col FLAG_TYPE  new_val FLAG_TYPE format a128
+col C_FALSE  new_val C_FALSE format a128
+col C_TRUE  new_val C_TRUE format a128
 
-
--- ADJUST THIS SETTING IF YOU WANT ANOTHER TYPE 
-define FLAG_TYPE="char(1 byte)";
-define C_TRUE="'Y'";
-define C_FALSE="'N'";
-
---define FLAG_TYPE="number(1, 0)";q
---define C_TRUE=1;
---define C_FALSE=0;
-
-define INSTALL_ON_DEV = false
+select lower(data_type) || '(' ||     
+         case when data_type in ('CHAR', 'VARCHAR2') then data_length || case char_used when 'B' then ' byte)' else ' char)' end
+         else data_precision || ', ' || data_scale || ')'
+       end FLAG_TYPE,
+       case when data_type in ('CHAR', 'VARCHAR2') then dbms_assert.enquote_literal(pit_util.c_true) else to_char(pit_util.c_true) end C_TRUE, 
+       case when data_type in ('CHAR', 'VARCHAR2') then dbms_assert.enquote_literal(pit_util.c_false) else to_char(pit_util.c_false) end C_FALSE
+  from all_tab_columns
+ where table_name = 'PARAMETER_LOCAL'
+   and column_name = 'PAL_BOOLEAN_VALUE';
 
 define section="********************************************************************************"
 define h1="*** "

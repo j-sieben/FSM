@@ -5,14 +5,11 @@ set feedback off
 set lines 120
 set pages 9999
 whenever sqlerror exit
-clear screen
 set termout off
-col sys_user new_val SYS_USER format a128
 col install_user new_val INSTALL_USER format a128
 col remote_user new_val REMOTE_USER format a128
 
-select user sys_user,
-       upper('&1.') install_user,
+select upper('&1.') install_user,
        upper('&2.') remote_user
   from dual;
    

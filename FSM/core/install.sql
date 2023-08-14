@@ -1,8 +1,5 @@
 @tools/set_folders core
 
-prompt - cleaning up installation
-@&INSTALL_DIR.clean_up.sql
-
 prompt - creating default messages
 @&tools.run_language_script create_messages
 @&tools.run_language_script TranslatableItemsGroup_FSM
@@ -20,13 +17,13 @@ prompt - create tables
 prompt - create views
 @&tools.install_view fsm_classes_v
 @&tools.install_view fsm_status_groups_v
+@&tools.install_view fsm_status_severities_v
 @&tools.install_view fsm_events_v
 @&tools.install_view fsm_status_v
 @&tools.install_view fsm_transitions_v
 @&tools.install_view fsm_objects_v
+@&tools.install_view fsm_log_v
 @&tools.install_view fsm_fsl_log_v
-@&tools.install_view bl_fsm_next_commands
-@&tools.install_view bl_fsm_hierarchy
 @&tools.install_view bl_fsm_active_status_event
 
 prompt - sequences
@@ -35,8 +32,8 @@ prompt - sequences
 
 prompt - create types and packages
 @&tools.install_type_spec fsm_type
-@&tools.install_package_spec fsm_admin
 @&tools.install_package_spec fsm
+@&tools.install_package_spec fsm_admin
 
 @&tools.install_type_body fsm_type
 @&tools.install_package_body fsm_admin

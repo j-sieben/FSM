@@ -1,22 +1,37 @@
 create table fsm_log(	
-  fsl_id number, 
-	fsl_fsm_id number, 
-	fsl_session_id varchar2(30 char), 
-	fsl_user_name varchar2(60 char), 
+  fsl_id number constraint fsl_id_nn not null, 
+	fsl_fsm_id number constraint fsl_fsm_id_nn not null, 
+	fsl_user_name &ORA_NAME_TYPE., 
+	fsl_session_id varchar2(64 byte), 
 	fsl_log_date timestamp (6), 
 	fsl_msg_text clob, 
 	fsl_severity number, 
-	fsl_fst_id varchar2(26 byte), 
+	fsl_fst_id &ORA_NAME_TYPE., 
 	fsl_fev_list varchar2(200 char), 
-	fsl_fcl_id varchar2(30 char), 
-	fsl_msg_id varchar2(30 char), 
+	fsl_fcl_id &ORA_NAME_TYPE. constraint fsl_fcl_id_nn not null, 
+	fsl_msg_id &ORA_NAME_TYPE. constraint fsl_msg_id_nn not null, 
 	fsl_msg_args msg_args_char,
   constraint pk_fsm_log primary key (fsl_id),
   constraint fsl_fsm_id foreign key (fsl_fsm_id)
-	  references fsm_objects (fsm_id) on delete cascade
+	  references fsm_objects (fsm_id) on delete cascade,
+  constraint fsl_fcl_id foreign key (fsl_fcl_id)
+	  references fsm_classes (fcl_id) on delete cascade
 );
 
+comment on table fsm_log is 'Logging table for the finite state machine, populated by PIT output module PIT_FSM';
+comment on column fsm_log.fsl_id is 'Primary key, populated by PIT';
+comment on column fsm_log.fsl_fsm_id is 'ID of the referenced FSM object, Reference to the FSM_OBJECTS';
+comment on column fsm_log.fsl_user_name is 'Username that created this log entry';
+comment on column fsm_log.fsl_session_id is 'Session ID of the session that created this entry';
+comment on column fsm_log.fsl_log_date is 'Timestamp of the log entry';
+comment on column fsm_log.fsl_msg_text is 'Generated message text';
+comment on column fsm_log.fsl_severity is 'Severity of the log entry, fi Milestone etc.';
+comment on column fsm_log.fsl_fst_id is 'Actual state the FSM object is in';
+comment on column fsm_log.fsl_fev_list is 'List of allowed events that can be raised on the FSM object';
+comment on column fsm_log.fsl_fcl_id is 'Type of the FSM object, reference to FSM_CLASSES';
+comment on column fsm_log.fsl_msg_id is 'Name of the PIT message, used to display the log in a different language';
+comment on column fsm_log.fsl_msg_args is 'Optional message arguments';
 
-create index idx_fsl_session_id on fsm_log (fsl_session_id);
 create index idx_fsl_log_date on fsm_log (fsl_log_date);
 create index idx_fsl_fsm_id on fsm_log (fsl_fsm_id);
+create index idx_fsl_fcl_id on fsm_log (fsl_fcl_id);

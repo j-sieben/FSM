@@ -4,8 +4,8 @@ select fev_id, fev_fcl_id, fev_msg_id, pti_name fev_name, pti_description fev_de
        fev_button_highlight, fev_confirm_message, fev_button_icon, fev_active
   from fsm_events
   join pit_translatable_item_v
-    on fev_id = pti_id
-   and fev_fcl_id =  pti_pmg_name;
+    on fev_pti_id = pti_id
+   and fev_fcl_id = pti_pmg_name;
  
 comment on table fsm_events_v  is 'Table to store fsm status definitions per class type';
 comment on column fsm_events_v.fev_id is 'Primary key';

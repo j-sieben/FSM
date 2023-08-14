@@ -1,9 +1,9 @@
 create table fsm_status_change_log(
   fsl_id number, 
 	fsl_fsm_id number, 
-	fsl_fst_id varchar2(50 char), 
-	fsl_fev_id varchar2(50 char), 
-	fsl_fcl_id varchar2(50 char), 
+	fsl_fst_id &ORA_NAME_TYPE. constraint fsl_fst_id_nn not null, 
+	fsl_fev_id &ORA_NAME_TYPE. constraint fsl_fev_id_nn not null, 
+	fsl_fcl_id &ORA_NAME_TYPE. constraint fsl_fcl_id_nn not null, 
 	fsl_fsm_validity number, 
 	fsl_timestamp timestamp (6) with time zone default systimestamp, 
 	constraint pk_fsm_status_change_log primary key (fsl_id),

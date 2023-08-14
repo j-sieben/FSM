@@ -1,0 +1,20 @@
+/*
+  Script to install FSM-CLIENT
+  Usage:
+  Call this script either directly or by using the bat/sh script files.
+  
+  Parameter:
+  - REMOTE_USER:  database user who will be enabled to use PIT
+*/
+@tools/init_client.sql &1. &2.
+
+
+prompt
+prompt &section.
+prompt &h1.Revoke access to FSM to client &REMOTE_USER.
+
+@core/revoke_client_access.sql
+
+prompt &h1.Finished revoking FSM client grants
+
+exit

@@ -4,6 +4,7 @@ as
   C_FCL constant varchar2(20 byte) := '#FCL#';
   C_PTI_CLASS_PREFIX varchar2(20 byte) := 'FCL_';
   C_PTI_GROUP_PREFIX varchar2(20 byte) := 'FSG_#FCL#_';
+  C_PTI_SEVERITY_PREFIX varchar2(20 byte) := 'FSS_#FCL#_';
   C_PTI_STATUS_PREFIX varchar2(20 byte) := 'FST_#FCL#_';
   C_PTI_EVENT_PREFIX varchar2(20 byte) := 'FEV_#FCL#_';
   
@@ -21,7 +22,11 @@ as
   end bool_to_char;
   
   
-  /* INTERFACE */
+  /* INTERFACE */    
+  /**
+    Procedure: merge_class
+      See <FSM_ADMIN.merge_class>
+   */
   procedure merge_class(
     p_fcl_id in fsm_classes_v.fcl_id%type,
     p_fcl_name in fsm_classes_v.fcl_name%type,
@@ -52,6 +57,10 @@ as
   end merge_class;
   
   
+  /**
+    Procedure: delete_class
+      See <FSM_ADMIN.delete_class>
+   */
   procedure delete_class(
     p_fcl_id in fsm_classes_v.fcl_id%type,
     p_force in boolean default false)
@@ -74,10 +83,15 @@ as
      where fcl_id = p_fcl_id;
     
     pit_admin.delete_translatable_item(
-      p_pti_id => g_pti_id);
+      p_pti_id => g_pti_id,
+      p_pti_pmg_name => p_fcl_id);
   end delete_class;  
-    
-    
+  
+  
+  /**
+    Procedure: merge_status_group
+      See <FSM_ADMIN.merge_status_group>
+   */
   procedure merge_status_group(
     p_fsg_id in fsm_status_groups_v.fsg_id%type,
     p_fsg_fcl_id in fsm_status_groups_v.fsg_fcl_id%type,
@@ -113,9 +127,13 @@ as
           t.fsg_active = s.fsg_active
      when not matched then insert(fsg_id, fsg_fcl_id, fsg_pti_id, fsg_icon_css, fsg_name_css, fsg_active)
           values(s.fsg_id, s.fsg_fcl_id, s.fsg_pti_id, s.fsg_icon_css, s.fsg_name_css, s.fsg_active);
-  end merge_status_group;
+  end merge_status_group; 
   
   
+  /**
+    Procedure: delete_status_group
+      See <FSM_ADMIN.delete_status_group>
+   */
   procedure delete_status_group(
     p_fsg_id in fsm_status_groups_v.fsg_id%type,
     p_fsg_fcl_id in fsm_status_groups_v.fsg_fcl_id%type,
@@ -140,10 +158,65 @@ as
        and fsg_fcl_id = p_fsg_fcl_id;
     
     pit_admin.delete_translatable_item(
-      p_pti_id => g_pti_id);
+      p_pti_id => g_pti_id,
+      p_pti_pmg_name => p_fsg_fcl_id);
   end delete_status_group;
     
     
+  /**
+    Procedure: merge_status_severity
+      See <FSM_ADMIN.merge_status_severity>
+   */
+  procedure merge_status_severity(
+    p_fss_id in fsm_status_severities_v.fss_id%type,
+    p_fss_fcl_id in fsm_status_severities_v.fss_fcl_id%type,
+    p_fss_name in fsm_status_severities_v.fss_name%type,
+    p_fss_description in fsm_status_severities_v.fss_description%type,
+    p_fss_html in fsm_status_severities_v.fss_html%type,
+    p_fss_icon in fsm_status_severities_v.fss_icon%type)
+  as
+  begin
+    g_pti_id := replace(C_PTI_SEVERITY_PREFIX, C_FCL, p_fss_fcl_id) || p_fss_id;
+    
+    pit_admin.merge_translatable_item(
+      p_pti_id => g_pti_id,
+      p_pti_pml_name => pit.get_default_language,
+      p_pti_pmg_name => p_fss_fcl_id,
+      p_pti_name => p_fss_name,
+      p_pti_description => p_fss_description);
+      
+    merge into fsm_status_severities t
+    using (select p_fss_id fss_id,
+                  p_fss_fcl_id fss_fcl_id,
+                  g_pti_id fss_pti_id,
+                  p_fss_html fss_html,
+                  p_fss_icon fss_icon
+             from dual) s
+       on (t.fss_id = s.fss_id)
+     when not matched then insert(fss_id, fss_fcl_id, fss_pti_id, fss_html, fss_icon)
+          values(s.fss_id, s.fss_fcl_id, s.fss_pti_id, s.fss_html, s.fss_icon);
+  end merge_status_severity;
+  
+    
+  /**
+    Procedure: delete_status_severity
+      See <FSM_ADMIN.delete_status_severity>
+   */
+  procedure delete_status_severity(
+    p_fss_id in fsm_status_severities_v.fss_id%type,
+    p_fss_fcl_id in fsm_status_severities_v.fss_fcl_id%type)
+  as
+  begin
+    delete from fsm_status_severities
+     where fss_id = p_fss_id
+       and fss_fcl_id = p_fss_fcl_id;
+  end delete_status_severity;
+  
+    
+  /**
+    Procedure: merge_status
+      See <FSM_ADMIN.merge_status>
+   */
   procedure merge_status(
     p_fst_id in fsm_status_v.fst_id%type,
     p_fst_fcl_id in fsm_status_v.fst_fcl_id%type,
@@ -202,6 +275,10 @@ as
   end merge_status;
   
   
+  /**
+    Procedure: delete_status
+      See <FSM_ADMIN.delete_status>
+   */
   procedure delete_status(
     p_fst_id in fsm_status_v.fst_id%type,
     p_fst_fcl_id in fsm_status_v.fst_fcl_id%type,
@@ -219,10 +296,15 @@ as
      where fst_id = p_fst_id;
     
     pit_admin.delete_translatable_item(
-      p_pti_id => g_pti_id);
+      p_pti_id => g_pti_id,
+      p_pti_pmg_name => p_fst_fcl_id);
   end delete_status;
   
   
+  /**
+    Procedure: merge_event
+      See <FSM_ADMIN.merge_event>
+   */
   procedure merge_event(
     p_fev_id in fsm_events_v.fev_id%type,
     p_fev_fcl_id in fsm_events_v.fev_fcl_id%type,
@@ -280,6 +362,10 @@ as
   end merge_event;
   
   
+  /**
+    Procedure: delete_event
+      See <FSM_ADMIN.delete_event>
+   */
   procedure delete_event(
     p_fev_id in fsm_events_v.fev_id%type,
     p_fev_fcl_id in fsm_events_v.fev_fcl_id%type,
@@ -296,17 +382,22 @@ as
      where fev_id = p_fev_id;
     
     pit_admin.delete_translatable_item(
-      p_pti_id => g_pti_id);
+      p_pti_id => g_pti_id,
+      p_pti_pmg_name => p_fev_fcl_id);
   end delete_event;
-    
-    
+  
+  
+  /**
+    Procedure: merge_transition
+      See <FSM_ADMIN.merge_transition>
+   */
   procedure merge_transition(
     p_ftr_fst_id in fsm_transitions_v.ftr_fst_id%type,
     p_ftr_fev_id in fsm_transitions_v.ftr_fev_id%type,
     p_ftr_fcl_id in fsm_transitions_v.ftr_fcl_id%type,
     p_ftr_fst_list in fsm_transitions_v.ftr_fst_list%type,
     p_ftr_raise_automatically in boolean,
-    p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default 0,
+    p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default fsm.C_OK,
     p_ftr_required_role in fsm_transitions_v.ftr_required_role%type default null,
     p_ftr_active in boolean default true)
   as
@@ -343,6 +434,10 @@ as
   end merge_transition;
   
   
+  /**
+    Procedure: delete_transition
+      See <FSM_ADMIN.delete_transition>
+   */
   procedure delete_transition(
     p_ftr_fst_id in fsm_transitions_v.ftr_fst_id%type,
     p_ftr_fev_id in fsm_transitions_v.ftr_fev_id%type,
@@ -355,7 +450,11 @@ as
        and ftr_fcl_id = p_ftr_fcl_id;
   end delete_transition;
   
-
+  
+  /**
+    Procedure: create_event_package
+      See <FSM_ADMIN.create_event_package>
+   */
   procedure create_event_package
   as
     C_PKG_NAME constant varchar2(30) := 'fsm_fev';
@@ -382,8 +481,12 @@ as
     dbms_lob.writeappend(l_sql_text, length(l_end_sql), l_end_sql);
     execute immediate l_sql_text;
   end create_event_package;
-
-
+  
+  
+  /**
+    Procedure: create_status_package
+      See <FSM_ADMIN.create_status_package>
+   */
   procedure create_status_package
   as
     C_PKG_NAME constant varchar2(30) := 'fsm_fst';
@@ -411,8 +514,12 @@ as
   end create_status_package;
   
   
+  /**
+    Procedure: export_class
+      See <FSM_ADMIN.export_class>
+   */
   function export_class(
-    p_fcl_id in fsm_classes.fcl_id%type)
+    p_fcl_id in fsm_classes_v.fcl_id%type)
     return clob
   as
   begin

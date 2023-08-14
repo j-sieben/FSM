@@ -1,11 +1,15 @@
 create table fsm_classes(
-  fcl_id varchar2(3 char), 
-	fcl_pti_id &ORA_NAME_TYPE., 
-	fcl_active &FLAG_TYPE. default &C_TRUE., 
+  fcl_id varchar2(3 char) constraint fcl_id_nn not null, 
+	fcl_pti_id &ORA_NAME_TYPE. constraint fcl_pti_id_nn not null, 
+	fcl_active &FLAG_TYPE. default on null &C_TRUE. constraint fcl_active_nn not null, 
 	constraint pk_fsm_classes primary key (fcl_id),
+  constraint fk_fcl_pti_id foreign key(fcl_pti_id, fcl_id)
+    references pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_fcl_active check (fcl_active is not null),
   constraint chk_fcl_active check (fcl_active in (&C_TRUE., &C_FALSE.))
 ) organization index;
+
+create index idx_fcl_pti_id on fsm_classes(fcl_pti_id, fcl_id);
 
 comment on table fsm_classes is 'Table for storing fsm classes';
 comment on column fsm_classes.fcl_id is 'primary key';

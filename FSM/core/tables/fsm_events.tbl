@@ -1,19 +1,20 @@
 create table fsm_events (
-  fev_id varchar2(26 char), 
-	fev_fcl_id varchar2(50 char), 
-	fev_msg_id varchar2(50 char),
-	fev_pti_id &ORA_NAME_TYPE., 
-  fev_raised_by_user &FLAG_TYPE. default &C_FALSE.,
-  fev_button_highlight &FLAG_TYPE. default &C_FALSE.,
+  fev_id &ORA_NAME_TYPE. constraint fev_id_nn not null, 
+	fev_fcl_id varchar2(3 char) constraint fev_fcl_id_nn not null, 
+	fev_msg_id &ORA_NAME_TYPE. constraint fev_msg_id_nn not null,
+	fev_pti_id &ORA_NAME_TYPE. constraint fev_pti_id_nn not null, 
+  fev_raised_by_user &FLAG_TYPE. default on null &C_FALSE. constraint fev_raised_by_user_nn not null,
+  fev_button_highlight &FLAG_TYPE. default on null &C_FALSE. constraint fev_button_highlight_nn not null,
   fev_confirm_message varchar2(200 char),
   fev_button_icon varchar2(50 char),
-	fev_active &FLAG_TYPE. default &C_TRUE.,
-  constraint pk_fsm_events primary key (fev_id, fev_fcl_id) enable,
+	fev_active &FLAG_TYPE. default &C_TRUE. constraint fev_active_nn not null,
+  constraint pk_fsm_events primary key (fev_id, fev_fcl_id),
   constraint fk_fev_fcl_id foreign key (fev_fcl_id)
-	  references fsm_classes (fcl_id),
+	  references fsm_classes (fcl_id) on delete cascade,
   constraint fk_fev_msg_id foreign key (fev_msg_id)
 	  references pit_message (pms_id),
-  constraint nn_fev_msg_id check (fev_msg_id is not null),
+  constraint fk_fev_pti_id foreign key(fev_pti_id, fev_fcl_id)
+    references pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint chk_fev_raised_by_user check (fev_raised_by_user in (&C_TRUE., &C_FALSE.)),
   constraint chk_fev_button_highlight check (fev_button_highlight in (&C_TRUE., &C_FALSE.))
 ) organization index;
@@ -30,5 +31,5 @@ comment on column fsm_events.fev_button_icon is 'Optional css class resp. url to
 comment on column fsm_events.fev_active is 'Flag to indicate whether status is in use actually.';
 
 
-create index idx_fk_fev_fcl_id on fsm_events (fev_fcl_id, fev_id);
+create index idx_fk_fev_fcl_id on fsm_events (fev_fcl_id, fev_id, fev_pti_id);
 create index idx_fk_fev_msg_id on fsm_events (fev_msg_id);

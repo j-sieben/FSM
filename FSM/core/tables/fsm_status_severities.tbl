@@ -1,13 +1,21 @@
 create table fsm_status_severities(
   fss_id number, 
-	fss_name varchar2(50 char), 
+	fss_fcl_id &ORA_NAME_TYPE. default on null 'FSM' constraint fss_pmg_name_nn not null,
+	fss_pti_id &ORA_NAME_TYPE. constraint fss_pti_id_nn not null, 
 	fss_html varchar2(200 char), 
-	fss_status varchar2(200 char), 
-  constraint pk_fsm_status_severities primary key (fss_id) enable
+	fss_icon varchar2(200 char), 
+  constraint pk_fsm_status_severities primary key (fss_id, fss_fcl_id),
+  constraint fk_fss_fcl_id foreign key(fss_fcl_id)
+    references fsm_classes(fcl_id) on delete cascade,
+  constraint fk_fss_pti_id foreign key(fss_pti_id, fss_fcl_id)
+    references pit_translatable_item(pti_uid, pti_upmg) on delete cascade
 ) organization index;
+
+create index idx_fss_pti_id on fsm_status_severities(fss_fcl_id, fss_pti_id);
 
 comment on table fsm_status_severities is 'Table for storing GUI information for severity filtering';
 comment on column fsm_status_severities.fss_id is 'Technical key, equivalent to MESSAGE_SEVERITY';
-comment on column fsm_status_severities.fss_name is 'Severity name';
+comment on column fsm_status_severities.fss_fcl_id is 'Technical Key. Message group. Defaults to FSM';
+comment on column fsm_status_severities.fss_pti_id is 'Severity name';
 comment on column fsm_status_severities.fss_html is 'HTML snippet, long form';
-comment on column fsm_status_severities.fss_status is 'HTML snippet, status icon';
+comment on column fsm_status_severities.fss_icon is 'HTML snippet, status icon';

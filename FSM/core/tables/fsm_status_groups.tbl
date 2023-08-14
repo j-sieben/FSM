@@ -1,17 +1,19 @@
 create table fsm_status_groups(
   fsg_id &ORA_NAME_TYPE.,
-  fsg_fcl_id &ORA_NAME_TYPE.,
-	fsg_pti_id &ORA_NAME_TYPE., 
-  fsg_icon_css varchar2(50 char),
-  fsg_name_css varchar2(50 char),
-	fsg_active &FLAG_TYPE. default &C_TRUE., 
+  fsg_fcl_id &ORA_NAME_TYPE.constraint fsg_fcl_id_nn not null,
+	fsg_pti_id &ORA_NAME_TYPE. constraint fsg_pti_id_nn not null, 
+  fsg_icon_css &ORA_NAME_TYPE.,
+  fsg_name_css &ORA_NAME_TYPE.,
+	fsg_active &FLAG_TYPE. default on null &C_TRUE. constraint fsg_active_nn not null, 
 	constraint pk_fsm_status_groups primary key (fsg_id, fsg_fcl_id),
   constraint fk_fsg_fcl_id foreign key(fsg_fcl_id)
-    references fsm_classes(fcl_id),
+    references fsm_classes(fcl_id) on delete cascade,
+  constraint fk_fsg_pti_id foreign key(fsg_pti_id, fsg_fcl_id)
+    references pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint chk_fsg_active check (fsg_active in (&C_TRUE., &C_FALSE.))
 ) organization index;
 
-create index idx_fsg_fcl_id on fsm_status_groups(fsg_fcl_id);
+create index idx_fsg_fcl_id on fsm_status_groups(fsg_pti_id, fsg_fcl_id);
 
 comment on table fsm_status_groups is 'Table for summarizing statuses into groups for easier evaluation';
 comment on column fsm_status_groups.fsg_id is 'Primary key';
