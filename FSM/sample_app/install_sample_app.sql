@@ -15,15 +15,19 @@ prompt &h2.Create synonyms for granted objects
 @&tool_dir.create_synonym fsm_request_types_vw
 @&tool_dir.create_synonym fsm_requestors_vw
 @&tool_dir.create_synonym fsm_requests_vw
-@&tool_dir.create_synonym bl_request
+@&tool_dir.create_synonym fsm_req_type
 @&tool_dir.create_synonym fsm_req
+@&tool_dir.create_synonym bl_request
 
 prompt &h2.Create UI-Views
 @&tool_dir.install_view fsm_lov_demo_user
-@&tool_dir.install_view fsm_lov_severity
-@&tool_dir.install_view fsm_lov_requestor
 @&tool_dir.install_view fsm_lov_request_type
-@&tool_dir.isntall_view fsm_ui_next_commands
+@&tool_dir.install_view fsm_lov_requestor
+@&tool_dir.install_view fsm_lov_severity
+@&tool_dir.install_view fsm_ui_details
+@&tool_dir.install_view fsm_ui_edit_request
+@&tool_dir.install_view fsm_ui_main
+@&tool_dir.install_view fsm_ui_next_commands
 
 prompt &h2.Create UI-Package
 @&tool_dir.install_package_spec fsm_ui

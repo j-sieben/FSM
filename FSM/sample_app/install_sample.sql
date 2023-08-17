@@ -55,7 +55,7 @@ prompt &h3.Create package bodies
 @&tool_dir.install_package_body bl_request
 
 prompt Create REQUEST related data
-@&script_dir.create_fsm_data.sql
+@&script_dir.create_request_data.sql
 
 prompt Prepare installation of APEX application by granting access
 @&sample_dir.grant_apex_access.sql

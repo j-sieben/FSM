@@ -1,8 +1,8 @@
 create table fsm_objects(
-  fsm_id number constraint fsm_id_nn not null, 
+  fsm_id number default on null fsm_seq.nextval constraint fsm_id_nn not null, 
 	fsm_fcl_id &ORA_NAME_TYPE. constraint fsm_fcl_id_nn not null, 
 	fsm_fst_id &ORA_NAME_TYPE. constraint fsm_fst_id_nn not null, 
-	fsm_fev_id &ORA_NAME_TYPE. constraint fsm_fev_id_nn not null, 
+	fsm_fev_id &ORA_NAME_TYPE., 
 	fsm_retry_schedule &ORA_NAME_TYPE., 
 	fsm_validity number, 
 	fsm_fev_list varchar2(500 char), 

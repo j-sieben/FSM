@@ -6,7 +6,7 @@ define TOOLKIT=REQ
 
 -- Params:
 -- 1.: Name of the remote owner of the Toolkit
-@tools/init.sql %1.
+@tools/init.sql &1. &2.
 
 define tool_dir=tools/
 define sample_dir=sample_app/

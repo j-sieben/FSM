@@ -123,7 +123,7 @@ as
     p_req_id in out nocopy number, 
 	  p_req_rtp_id in varchar2, 
 	  p_req_rre_id in varchar2, 
-	  p_req_text in varchar2);
+	  p_req_text in varchar2);    
 
 
   /**

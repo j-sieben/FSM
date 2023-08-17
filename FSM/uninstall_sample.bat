@@ -20,9 +20,8 @@ for /f "tokens=*" %%a in ('%RemotePWD%') do set RemotePWD=%%a
 set /p ApexWorkspace=Enter name of APEX workspace:
 set /p AppId=Enter the FSM application ID:
 
-
 set nls_lang=GERMAN_GERMANY.AL32UTF8
 
-sqlplus %RemoteUser%/%RemotePWD%@%SID% @install_scripts/uninstall_sample_app.sql %ApexWorkspace% %AppId%
+sqlplus %RemoteUser%/%RemotePWD%@%SID% @install_scripts/uninstall_sample_app.sql %InstallUser% %RemoteUser% %ApexWorkspace% %AppId%
 
-sqlplus %InstallUser%/%InstallPWD%@%SID% @install_scripts/uninstall_sample.sql %RemoteUser%
+sqlplus %InstallUser%/%InstallPWD%@%SID% @install_scripts/uninstall_sample.sql %InstallUser% %RemoteUser%

@@ -29,9 +29,6 @@ as
       max_char - Maximum varchar2 PL/SQL variable width
       max_sql_char - Maximum varchar2 SQL width
    */
-
-  subtype ora_name_type is &ORA_NAME_TYPE.;
-  subtype flag_type is &FLAG_TYPE.;
   subtype max_char is varchar2(32767 byte);
   subtype max_sql_char is varchar2(4000 byte);
   
@@ -43,16 +40,30 @@ as
     Constants:
       C_OK - Flag to indicate that a state transition was successful
       C_ERROR - Flag to indicate that a state transition was unsuccessful
-      C_TRUE - Boolean flag TRUE as FLAG_TYPE
-      C_FALSE - Boolean flag FALSE as FLAG_TYPE
       C_CR - Carriage return character
    */
   C_OK constant binary_integer := 0;
   C_ERROR constant binary_integer := 1;
-  C_TRUE constant flag_type := &C_TRUE.;
-  C_FALSE constant flag_type := &C_FALSE.;
   C_CR constant varchar2(2 byte) := chr(10);
+  
 
+  /**
+    Group: Object maintenance
+   */
+  /**
+    Procedure: drop_object
+      Method to remove an existing FSM object
+      
+    Parameter:
+      p_fsm_id - ID of the FSM object to drop
+   */
+  procedure drop_object(
+    p_fsm_id in fsm_objects_v.fsm_id%type);
+
+
+  /**
+    Group: FSM_TYPE method implementations
+   */
   /**
     Function: raise_event
       On an abstract level this methods only task is to take care of logging.
@@ -81,7 +92,7 @@ as
       p_fsm - FSM_TYPE instance
    */
   procedure persist(
-    p_fsm in fsm_type);
+    p_fsm in out nocopy fsm_type);
 
 
   /**
@@ -181,7 +192,7 @@ as
    */
   procedure notify(
     p_fsm in out nocopy fsm_type,
-    p_msg in ora_name_type,
+    p_msg in pit_util.ora_name_type,
     p_msg_args in msg_args);
 
 

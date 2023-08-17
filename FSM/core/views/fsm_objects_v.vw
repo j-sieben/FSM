@@ -8,6 +8,7 @@ select fsm_id, fsm_fcl_id fcl_id,
   join fsm_status_v
     on fsm_fst_id = fst_id
    and fsm_fcl_id = fst_fcl_id
-  join fsm_status_groups_v
+  left join fsm_status_groups_v
     on fst_fsg_id = fsg_id;
 
+comment on table fsm_objects_v is 'Access view for FSM_OBJECTS.';

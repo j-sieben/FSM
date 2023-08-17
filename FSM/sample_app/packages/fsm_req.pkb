@@ -186,7 +186,7 @@ as
 
       persist(p_req);
       
-      pit.verbose(msg.fsm_CREATED, msg_args(C_FCL_ID, to_char(p_req_id)));
+      pit.verbose(msg.FSM_CREATED, msg_args(C_FCL_ID, to_char(p_req_id)));
       g_result := p_req.set_status(fsm_fst.REQ_CREATED);
     else
       -- Wrong constructor chosen
@@ -214,11 +214,13 @@ as
     select *
       into l_req
       from fsm_requests_vw
-     where fsm_id = p_req_id;
+     where req_id = p_req_id;
      
-    p_req.fsm_id := l_req.fsm_id;
-    p_req.fsm_fst_id := l_req.fsm_fst_id;
-    p_req.fsm_fev_list := l_req.fsm_fev_list;
+    p_req.fsm_id := l_req.req_id;
+    p_req.fsm_fcl_id := l_req.req_fcl_id;
+    p_req.fsm_fst_id := l_req.req_fst_id;
+    p_req.fsm_fev_list := l_req.req_fev_list;
+    p_req.fsm_validity := l_req.req_validity;
     p_req.req_rtp_id := l_req.req_rtp_id;
     p_req.req_rre_id := l_req.req_rre_id;
     p_req.req_text := l_req.req_text;
@@ -231,7 +233,27 @@ as
     
 
   /**
-    Procedure: raise_event 
+    Procedure: persist_request 
+      See <FSM_REQ.persist_request>
+   */
+  procedure persist_request(
+    p_req_id in number, 
+	  p_req_rtp_id in varchar2, 
+	  p_req_rre_id in varchar2, 
+	  p_req_text in varchar2)
+  as
+    l_req fsm_req_type;
+  begin
+    l_req := fsm_req_type(
+               p_req_id => p_req_id,
+               p_req_rtp_id => p_req_rtp_id,
+               p_req_rre_id => p_req_rre_id,
+               p_req_text => p_req_text);
+  end persist_request;
+  
+
+  /**
+    Function: raise_event 
       See <FSM_REQ.raise_event>
    */
   function raise_event(
@@ -265,6 +287,23 @@ as
     
     pit.leave_mandatory;
     return g_result;
+  end raise_event;
+  
+
+  /**
+    Procedure: raise_event 
+      See <FSM_REQ.raise_event>
+   */
+  procedure raise_event(
+    p_req_id in fsm_objects_v.fsm_id%type,
+    p_fev_id in fsm_events_v.fev_id%type)
+  as
+    l_req fsm_req_type;
+    l_result binary_integer;
+  begin
+    l_req := fsm_req_type(p_req_id);
+    l_result := l_req.raise_event(p_req_id);
+    pit.assert(l_result = 0);
   end raise_event;
     
     

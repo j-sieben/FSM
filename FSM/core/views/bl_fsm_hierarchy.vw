@@ -1,7 +1,7 @@
-create or replace force view bl_fsm_hierarchy as 
+create or replace view bl_fsm_hierarchy as
 with params as (
        select /*+ no_merge */ pit_util.C_TRUE C_TRUE
-         from dual)     
+         from dual)
  select level lvl,
         connect_by_iscycle zirkel,
         ftr_fcl_id class,
@@ -23,11 +23,11 @@ with params as (
         fev_description event_beschreibung
    from (select *
            from fsm_transitions_v
-           join fsm_status_v fst 
+           join fsm_status_v fst
              on ftr_fst_id = fst_id
             and ftr_fcl_id = fst_fcl_id
-           join fsm_events_v fev 
-             on ftr_fev_id = fev_id 
+           join fsm_events_v fev
+             on ftr_fev_id = fev_id
             and ftr_fcl_id = fev_fcl_id
            join params
              on ftr_active = C_TRUE
@@ -36,4 +36,5 @@ with params as (
   start with ftr_fst_id in ('CREATED', 'IMPORTED')
 connect by nocycle instr(prior ftr_fst_list, ftr_fst_id) > 0 and ftr_fcl_id = prior ftr_fcl_id
   order siblings by ftr_fst_id;
-
+  
+comment on table bl_fsm_hierarchy is 'Generic hierarchical query to visualize the logical flow of a FSM flow';

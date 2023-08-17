@@ -140,7 +140,7 @@ as
   as
     l_message message_type;
     l_message_id fsm_events_v.fev_msg_id%type;
-    l_user ora_name_type;
+    l_user pit_util.ora_name_type;
     l_msg_args msg_args;
   begin
     pit.enter_optional(
@@ -196,17 +196,35 @@ as
   
   
   /* INTERFACE */
+  
+  procedure drop_object(
+    p_fsm_id in fsm_objects_v.fsm_id%type)
+  as
+  begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_fsm_id', p_fsm_id)));
+                    
+    delete from fsm_objects
+     where fsm_id = p_fsm_id;
+          
+    pit.leave_mandatory;
+  end drop_object;
+  
+  
   /*
     Procedure: persist
       See  <FSM.persist>
    */
   procedure persist(
-    p_fsm in fsm_type)
+    p_fsm in out nocopy fsm_type)
   as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
                     msg_param('p_fsm', 'opaque')));
+                    
+    p_fsm.fsm_id := coalesce(p_fsm.fsm_id, fsm_seq.nextval);
     merge into fsm_objects o
     using (select p_fsm.fsm_id fsm_id,
                   p_fsm.fsm_fcl_id fsm_fcl_id,
@@ -287,7 +305,7 @@ as
                     
     for fsm in fsm_cur(p_fsm.fsm_id) loop
       if fsm.fst_retries_on_error > C_ERROR then
-        pit.verbose(msg.fsm_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, C_TRUE), p_fsm.fsm_id);
+        pit.verbose(msg.fsm_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_TRUE), p_fsm.fsm_id);
         -- take retry into account
         -- fsm_VALIDITY may have one of the following values:
         -- C_OK = no retry planned yet (or succesful state conversion, then this method wouldn't have been called)
@@ -316,7 +334,7 @@ as
           re_fire_event(p_fsm, p_fev_id, fsm.fst_retry_time, l_validity);
         end case;
       else
-        pit.verbose(msg.fsm_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, C_FALSE), p_fsm.fsm_id);
+        pit.verbose(msg.fsm_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_FALSE), p_fsm.fsm_id);
         proceed_with_error_event(p_fsm);
       end if;
       
@@ -486,7 +504,7 @@ as
    */
   procedure notify(
     p_fsm in out nocopy fsm_type,
-    p_msg in ora_name_type,
+    p_msg in pit_util.ora_name_type,
     p_msg_args in msg_args)
   as
   begin

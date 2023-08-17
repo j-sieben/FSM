@@ -10,7 +10,7 @@ define core_dir=core/
 -- Params:
 -- 1.: Name of the database owner of the Toolkit
 -- 2.: Default language for messages as an oracle language name (AMERICAN | GERMAN)
-@&tool_dir.init.sql
+@&tool_dir.init.sql &1. &2.
 
 @&install_dir.check_prerequisites.sql
 

@@ -9,16 +9,13 @@ as
   C_PTI_EVENT_PREFIX varchar2(20 byte) := 'FEV_#FCL#_';
   
   
-  g_active fsm.flag_type;
-  g_pti_id fsm.ora_name_type;
-  
   /* Helper */
   function bool_to_char(
     p_bool in boolean)
     return varchar2
   as
   begin
-    return case when p_bool then fsm.C_TRUE else fsm.C_FALSE end;
+    return case when p_bool then pit_util.C_TRUE else pit_util.C_FALSE end;
   end bool_to_char;
   
   
@@ -33,12 +30,14 @@ as
     p_fcl_description in fsm_classes_v.fcl_description%type,
     p_fcl_active in boolean default true)
   as
+    l_active pit_util.flag_type;
+    l_pti_id pit_util.ora_name_type;
   begin
-    g_active := bool_to_char(p_fcl_active);
-    g_pti_id := C_PTI_CLASS_PREFIX || p_fcl_id;
+    l_active := bool_to_char(p_fcl_active);
+    l_pti_id := C_PTI_CLASS_PREFIX || p_fcl_id;
     
     pit_admin.merge_translatable_item(
-      p_pti_id => g_pti_id,
+      p_pti_id => l_pti_id,
       p_pti_pml_name => pit.get_default_language,
       p_pti_pmg_name => p_fcl_id,
       p_pti_name => p_fcl_name,
@@ -46,8 +45,8 @@ as
     
     merge into fsm_classes t
     using (select p_fcl_id fcl_id,
-                  g_pti_id fcl_pti_id,
-                  g_active fcl_active
+                  l_pti_id fcl_pti_id,
+                  l_active fcl_active
              from dual) s
        on (t.fcl_id = s.fcl_id)
      when matched then update set
@@ -65,8 +64,9 @@ as
     p_fcl_id in fsm_classes_v.fcl_id%type,
     p_force in boolean default false)
   as
+    l_pti_id pit_util.ora_name_type;
   begin
-    g_pti_id := C_PTI_CLASS_PREFIX || p_fcl_id;
+    l_pti_id := C_PTI_CLASS_PREFIX || p_fcl_id;
     
     if p_force then
       delete from fsm_transitions
@@ -83,7 +83,7 @@ as
      where fcl_id = p_fcl_id;
     
     pit_admin.delete_translatable_item(
-      p_pti_id => g_pti_id,
+      p_pti_id => l_pti_id,
       p_pti_pmg_name => p_fcl_id);
   end delete_class;  
   
@@ -101,12 +101,14 @@ as
     p_fsg_name_css in fsm_status_groups_v.fsg_name_css%type default null,
     p_fsg_active in boolean default true)
   as
+    l_active pit_util.flag_type;
+    l_pti_id pit_util.ora_name_type;
   begin
-    g_active := bool_to_char(p_fsg_active);
-    g_pti_id := replace(C_PTI_GROUP_PREFIX, C_FCL, p_fsg_fcl_id) || p_fsg_id;
+    l_active := bool_to_char(p_fsg_active);
+    l_pti_id := replace(C_PTI_GROUP_PREFIX, C_FCL, p_fsg_fcl_id) || p_fsg_id;
     
     pit_admin.merge_translatable_item(
-      p_pti_id => g_pti_id,
+      p_pti_id => l_pti_id,
       p_pti_pml_name => pit.get_default_language,
       p_pti_pmg_name => p_fsg_fcl_id,
       p_pti_name => p_fsg_name,
@@ -115,10 +117,10 @@ as
     merge into fsm_status_groups t
     using (select p_fsg_id fsg_id,
                   p_fsg_fcl_id fsg_fcl_id,
-                  g_pti_id fsg_pti_id,
+                  l_pti_id fsg_pti_id,
                   p_fsg_icon_css fsg_icon_css,
                   p_fsg_name_css fsg_name_css,
-                  g_active fsg_active
+                  l_active fsg_active
              from dual) s
        on (t.fsg_id = s.fsg_id)
      when matched then update set
@@ -139,8 +141,9 @@ as
     p_fsg_fcl_id in fsm_status_groups_v.fsg_fcl_id%type,
     p_force in boolean default false)
   as
+    l_pti_id pit_util.ora_name_type;
   begin
-    g_pti_id := replace(C_PTI_GROUP_PREFIX, C_FCL, p_fsg_fcl_id) || p_fsg_id;
+    l_pti_id := replace(C_PTI_GROUP_PREFIX, C_FCL, p_fsg_fcl_id) || p_fsg_id;
     
     if p_force then
       delete from fsm_transitions
@@ -158,7 +161,7 @@ as
        and fsg_fcl_id = p_fsg_fcl_id;
     
     pit_admin.delete_translatable_item(
-      p_pti_id => g_pti_id,
+      p_pti_id => l_pti_id,
       p_pti_pmg_name => p_fsg_fcl_id);
   end delete_status_group;
     
@@ -175,11 +178,12 @@ as
     p_fss_html in fsm_status_severities_v.fss_html%type,
     p_fss_icon in fsm_status_severities_v.fss_icon%type)
   as
+    l_pti_id pit_util.ora_name_type;
   begin
-    g_pti_id := replace(C_PTI_SEVERITY_PREFIX, C_FCL, p_fss_fcl_id) || p_fss_id;
+    l_pti_id := replace(C_PTI_SEVERITY_PREFIX, C_FCL, p_fss_fcl_id) || p_fss_id;
     
     pit_admin.merge_translatable_item(
-      p_pti_id => g_pti_id,
+      p_pti_id => l_pti_id,
       p_pti_pml_name => pit.get_default_language,
       p_pti_pmg_name => p_fss_fcl_id,
       p_pti_name => p_fss_name,
@@ -188,7 +192,7 @@ as
     merge into fsm_status_severities t
     using (select p_fss_id fss_id,
                   p_fss_fcl_id fss_fcl_id,
-                  g_pti_id fss_pti_id,
+                  l_pti_id fss_pti_id,
                   p_fss_html fss_html,
                   p_fss_icon fss_icon
              from dual) s
@@ -231,13 +235,14 @@ as
     p_fst_name_css in fsm_status_v.fst_name_css%type default null,
     p_fst_active in boolean default true)
   as
-    g_active fsm.flag_type;
+    l_active pit_util.flag_type;
+    l_pti_id pit_util.ora_name_type;
   begin
-    g_active := bool_to_char(p_fst_active);
-    g_pti_id := replace(C_PTI_STATUS_PREFIX, C_FCL, p_fst_fcl_id) || p_fst_id;
+    l_active := bool_to_char(p_fst_active);
+    l_pti_id := replace(C_PTI_STATUS_PREFIX, C_FCL, p_fst_fcl_id) || p_fst_id;
     
     pit_admin.merge_translatable_item(
-      p_pti_id => g_pti_id,
+      p_pti_id => l_pti_id,
       p_pti_pml_name => pit.get_default_language,
       p_pti_pmg_name => p_fst_fcl_id,
       p_pti_name => p_fst_name,
@@ -248,13 +253,13 @@ as
                   p_fst_fcl_id fst_fcl_id,
                   p_fst_fsg_id fst_fsg_id,
                   p_fst_msg_id fst_msg_id, 
-                  g_pti_id fst_pti_id,
+                  l_pti_id fst_pti_id,
                   p_fst_retries_on_error fst_retries_on_error,
                   p_fst_retry_schedule fst_retry_schedule,
                   p_fst_retry_time fst_retry_time,
                   p_fst_icon_css fst_icon_css,
                   p_fst_name_css fst_name_css,
-                  g_active fst_active
+                  l_active fst_active
              from dual) s
        on (t.fst_id = s.fst_id and t.fst_fcl_id = s.fst_fcl_id)
      when matched then update set
@@ -284,8 +289,9 @@ as
     p_fst_fcl_id in fsm_status_v.fst_fcl_id%type,
     p_force in boolean default false)
   as
+    l_pti_id pit_util.ora_name_type;
   begin
-    g_pti_id := replace(C_PTI_STATUS_PREFIX, C_FCL, p_fst_fcl_id) || p_fst_id;
+    l_pti_id := replace(C_PTI_STATUS_PREFIX, C_FCL, p_fst_fcl_id) || p_fst_id;
     
     if p_force then 
       delete from fsm_transitions
@@ -296,7 +302,7 @@ as
      where fst_id = p_fst_id;
     
     pit_admin.delete_translatable_item(
-      p_pti_id => g_pti_id,
+      p_pti_id => l_pti_id,
       p_pti_pmg_name => p_fst_fcl_id);
   end delete_status;
   
@@ -318,17 +324,18 @@ as
     p_fev_confirm_message in fsm_events_v.fev_confirm_message%type default null,
     p_fev_active in boolean default true)
   as
-    g_active fsm.flag_type;
-    l_raised_by_user fsm.flag_type;
-    l_button_highlight fsm.flag_type;
+    l_pti_id pit_util.ora_name_type;
+    l_active pit_util.flag_type;
+    l_raised_by_user pit_util.flag_type;
+    l_button_highlight pit_util.flag_type;
   begin
-    g_pti_id := replace(C_PTI_EVENT_PREFIX, C_FCL, p_fev_fcl_id) || p_fev_id;
-    g_active := bool_to_char(p_fev_active);    
+    l_pti_id := replace(C_PTI_EVENT_PREFIX, C_FCL, p_fev_fcl_id) || p_fev_id;
+    l_active := bool_to_char(p_fev_active);    
     l_raised_by_user := bool_to_char(p_fev_raised_by_user);
     l_button_highlight := bool_to_char(p_fev_button_highlight);
     
     pit_admin.merge_translatable_item(
-      p_pti_id => g_pti_id,
+      p_pti_id => l_pti_id,
       p_pti_pml_name => pit.get_default_language,
       p_pti_pmg_name => p_fev_fcl_id,
       p_pti_name => p_fev_name,
@@ -339,8 +346,8 @@ as
     using (select p_fev_id fev_id,
                   p_fev_fcl_id fev_fcl_id,
                   p_fev_msg_id fev_msg_id,
-                  g_pti_id fev_pti_id,
-                  g_active fev_active,                  
+                  l_pti_id fev_pti_id,
+                  l_active fev_active,                  
                   l_raised_by_user fev_raised_by_user,
                   p_fev_button_icon fev_button_icon,
                   l_button_highlight fev_button_highlight,
@@ -371,8 +378,9 @@ as
     p_fev_fcl_id in fsm_events_v.fev_fcl_id%type,
     p_force in boolean default false)
   as
+    l_pti_id pit_util.ora_name_type;
   begin
-    g_pti_id := replace(C_PTI_EVENT_PREFIX, C_FCL, p_fev_fcl_id) || p_fev_id;
+    l_pti_id := replace(C_PTI_EVENT_PREFIX, C_FCL, p_fev_fcl_id) || p_fev_id;
     if p_force then
       delete from fsm_transitions
        where ftr_fev_id = p_fev_id;
@@ -382,7 +390,7 @@ as
      where fev_id = p_fev_id;
     
     pit_admin.delete_translatable_item(
-      p_pti_id => g_pti_id,
+      p_pti_id => l_pti_id,
       p_pti_pmg_name => p_fev_fcl_id);
   end delete_event;
   
@@ -401,17 +409,17 @@ as
     p_ftr_required_role in fsm_transitions_v.ftr_required_role%type default null,
     p_ftr_active in boolean default true)
   as
-    g_active fsm.flag_type;
-    l_raise_automatically fsm.flag_type;
+    l_active pit_util.flag_type;
+    l_raise_automatically pit_util.flag_type;
   begin
-    g_active := bool_to_char(p_ftr_active);
+    l_active := bool_to_char(p_ftr_active);
     l_raise_automatically := bool_to_char(p_ftr_raise_automatically);
     merge into fsm_transitions t
     using (select p_ftr_fst_id ftr_fst_id,
                   p_ftr_fev_id ftr_fev_id,
                   p_ftr_fcl_id ftr_fcl_id,
                   p_ftr_fst_list ftr_fst_list,
-                  g_active ftr_active,
+                  l_active ftr_active,
                   l_raise_automatically ftr_raise_automatically,
                   p_ftr_raise_on_status ftr_raise_on_status,
                   p_ftr_required_role ftr_required_role
@@ -466,7 +474,7 @@ as
     cursor event_cur is
       select upper(fev_id) fev_id, upper(fev_fcl_id) fev_fcl_id
         from fsm_events
-       where fev_active = fsm.C_TRUE
+       where fev_active = pit_util.C_TRUE
        order by fev_fcl_id, fev_id;
 
     c_event_template constant varchar2(200) :=
@@ -498,7 +506,7 @@ as
     cursor status_cur is
       select upper(fst_id) fst_id, upper(fst_fcl_id) fst_fcl_id
         from fsm_status
-       where fst_active = fsm.C_TRUE
+       where fst_active = pit_util.C_TRUE
        order by fst_fcl_id, fst_id;
     c_status_template constant varchar2(200) :=
       q'~  #FCL#_#FST# constant varchar2(30 byte) := '#FST#';~' || fsm.C_CR;

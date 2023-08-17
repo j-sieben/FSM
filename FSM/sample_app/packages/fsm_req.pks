@@ -45,6 +45,25 @@ as
     p_req in out nocopy fsm_req_type,
     p_req_id in fsm_requests.req_id%type);
     
+    
+  /**
+    Procedure: persist_request
+      Method that persists a request without the need to create an instance of FSM_REQ_TYPE
+      upfront. Instead, this is handled within this method. Is called if an application wants
+      to store or edit a request.
+      
+    Parameters:
+      p_req_id - ID of the request
+      p_req_rtp_id - Reference to the request type
+      p_req_rre_id - Reference to the requestor
+      p_req_text - Request in textual form
+   */
+  procedure persist_request(
+    p_req_id in number, 
+	  p_req_rtp_id in varchar2, 
+	  p_req_rre_id in varchar2, 
+	  p_req_text in varchar2);      
+    
 
   /**
     Function: raise_event
@@ -63,6 +82,19 @@ as
     p_req in out nocopy fsm_req_type,
     p_fev_id in fsm_events_v.fev_id%type)
     return binary_integer;
+      
+  
+  /**
+    Procedure: raise_event
+      Method to wrap the creation of an fsm_req_type in order to throw an event on it.
+    
+    Parameters:
+      p_req_id - ID of an existing FSM_REQ_TYPE instance
+      p_fev_id - Event to raise. Reference to FSM_EVENT
+   */
+  procedure raise_event(
+    p_req_id in fsm_objects_v.fsm_id%type,
+    p_fev_id in fsm_events_v.fev_id%type);
     
 
   /**

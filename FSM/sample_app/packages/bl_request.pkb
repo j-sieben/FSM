@@ -151,7 +151,7 @@ as
   begin
   
     merge into fsm_requests d
-    using (select p_row.fsm_id req_id,
+    using (select p_row.req_id req_id,
                   p_row.req_rtp_id req_rtp_id,
                   p_row.req_rre_id req_rre_id,
                   p_row.req_text req_text
@@ -177,7 +177,7 @@ as
   as
     l_row fsm_requests_vw%rowtype;
   begin
-    l_row.fsm_id := p_req_id;
+    l_row.req_id := p_req_id;
     l_row.req_rtp_id := p_req_rtp_id;
     l_row.req_rre_id := p_req_rre_id;
     l_row.req_text := p_req_text;
@@ -196,7 +196,7 @@ as
   as
   begin
     delete from fsm_requests
-     where req_id = p_row.fsm_id;
+     where req_id = p_row.req_id;
      
   end delete_request;
   

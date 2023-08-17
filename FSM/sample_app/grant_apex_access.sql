@@ -9,4 +9,5 @@ prompt &h3.Grant access to views
 
 prompt &h3.Grant access to packages
 @&tool_dir.grant_access execute bl_request
+@&tool_dir.grant_access execute fsm_req_type
 @&tool_dir.grant_access execute fsm_req

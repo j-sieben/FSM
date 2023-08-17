@@ -12,9 +12,10 @@ declare
             from user_objects
            where object_name in (
                  'FSM_REQ_TYPE', -- Typen
-                 'FSM_REQ_PKG', 'BL_REQUEST', -- Packages
-                 'FSM_REQUESTS_VW', 'FSM_REQUEST_TYPES_VW', 'FSM_LOV_DEMO_USER', 'FSM_LOV_REQUEST_TYPE', 'FSM_LOV_REQUESTOR', 'FSM_LOV_SEVERITY', 'FSM_REQUESTORS_VW', 
-                 'FSM_UI_NEXT_COMMANDS', -- Views
+                 'FSM_UI', 'FSM_REQ_PKG', 'BL_REQUEST', -- Packages
+                 'FSM_REQUESTS_VW', 'FSM_REQUESTORS_VW', 'FSM_REQUEST_TYPES_VW', 
+                 'FSM_LOV_DEMO_USER', 'FSM_LOV_REQUEST_TYPE', 'FSM_LOV_REQUESTOR', 'FSM_LOV_SEVERITY', 
+                 'FSM_UI_MAIN', 'FSM_UI_DETAILS', 'FSM_UI_EDIT_REQUEST', 'FSM_UI_NEXT_COMMANDS', -- Views
                  'FSM_REQUESTS', 'FSM_REQUEST_TYPES', 'FSM_REQUESTORS', 'DEMO_USERS',  -- Tabellen
                  '',  -- Synonyme
                  '' -- Sequenzen

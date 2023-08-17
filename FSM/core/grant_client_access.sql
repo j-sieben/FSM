@@ -18,3 +18,6 @@ define tool_dir=tools/
 @&tool_dir.grant_access_with_grant_option.sql read fsm_status_severities_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_status_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_transitions_v
+@&tool_dir.grant_access_with_grant_option.sql read bl_fsm_active_status_event
+@&tool_dir.grant_access_with_grant_option.sql read bl_fsm_hierarchy
+@&tool_dir.grant_access_with_grant_option.sql read bl_fsm_next_commands

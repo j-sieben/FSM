@@ -12,8 +12,8 @@ declare
             from user_objects
            where object_name in (
                  'FSM_REQ_TYPE', -- Typen
-                 'FSM_REQ_PKG', 'BL_REQUEST', -- Packages
-                 'FSM_REQUESTS_VW', 'FSM_REQUESTORS_VW', 'FSM_REQUEST_TYPES_VW', -- Views
+                 'FSM_REQ', 'BL_REQUEST', -- Packages
+                 'DEMO_USERS_VW', 'FSM_REQUESTS_VW', 'FSM_REQUESTORS_VW', 'FSM_REQUEST_TYPES_VW', -- Views
                  'FSM_REQUESTS', 'FSM_REQUEST_TYPES', 'FSM_REQUESTORS', 'DEMO_USERS',  -- Tabellen
                  '',  -- Synonyme
                  '' -- Sequenzen
