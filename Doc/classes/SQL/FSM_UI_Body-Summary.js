@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("SQLClass:FSM_UI_Body","FSM_UI Body");NDSummary.OnSummaryLoaded("SQLClass:FSM_UI_Body",[["SQL","SQL"]],[["Classes","Class"],["Functions","Function"],["Groups","Group"]],[[56,0,0,"FSM_UI Body"],[58,0,2,"Interface","Interface"],[59,0,1,"edit_request_process","edit_request_process"],[60,0,1,"raise_event","raise_event"]]);

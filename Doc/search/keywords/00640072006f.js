@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("dro",["Function"],[["drop_object",,[["FSM Body",,,,0,"File:core/packages/fsm.pkb:FSM_Body.drop_object","SQLClass:FSM_Body:drop_object"],["FSM",,,,0,"File:core/packages/fsm.pks:FSM.drop_object","SQLClass:FSM:drop_object"]]]]);

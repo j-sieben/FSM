@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("con",["Constant"],[["Constants",,[["BL_REQUEST","Public Constants",,,0,"File:sample_app/packages/bl_request.pks:BL_REQUEST.Public_Constants","SQLClass:BL_REQUEST:Public_Constants"],["FSM_UI","Public Constants",,,0,"File:sample_app/packages/fsm_ui.pks:FSM_UI.Public_Constants","SQLClass:FSM_UI:Public_Constants"]]]]);

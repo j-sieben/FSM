@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("max",["Type"],[["max_char",,[["FSM",,,,0,"File:core/packages/fsm.pks:FSM.max_char","SQLClass:FSM:max_char"]]],["max_sql_char",,[["FSM",,,,0,"File:core/packages/fsm.pks:FSM.max_sql_char","SQLClass:FSM:max_sql_char"]]]]);

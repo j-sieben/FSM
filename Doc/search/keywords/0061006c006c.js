@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("all",["Function"],[["allows_event",,[["FSM Body",,,,0,"File:core/packages/fsm.pkb:FSM_Body.allows_event","SQLClass:FSM_Body:allows_event"],["FSM",,,,0,"File:core/packages/fsm.pks:FSM.allows_event","SQLClass:FSM:allows_event"]]]]);

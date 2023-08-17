@@ -1,7 +1,18 @@
 create or replace package body fsm 
 as  
+  /**
+    Package: FSM Body
+      Implementation of the FSM package
+
+    Author::
+      Juergen Sieben, ConDeS GmbH
+
+      Published under MIT licence
+   */
   
-  /* HELPER */
+  /**
+    Group: Private methods
+   */
   /* 
     Procedure: persist_retry
       Method persists retry of a FSM instance to achieve a new status.
@@ -195,8 +206,13 @@ as
   end log_change;
   
   
-  /* INTERFACE */
-  
+  /**
+    Group: Interface
+   */
+  /*
+    Procedure: drop_object
+      See  <FSM.drop_object>
+   */
   procedure drop_object(
     p_fsm_id in fsm_objects_v.fsm_id%type)
   as

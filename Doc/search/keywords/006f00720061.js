@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("ora",["Type"],[["ora_name_type",,[["FSM",,,,0,"File:core/packages/fsm.pks:FSM.ora_name_type","SQLClass:FSM:ora_name_type"]]]]);

@@ -1,0 +1,1 @@
+﻿NDMenu.OnSectionLoaded("files.js",[[2,["core","packages"],"File:core/packages/",[[1,"fsm.pkb"],[1,"fsm.pks"],[1,"fsm_admin.pkb"],[1,"fsm_admin.pks"]]],[2,["sample_app","packages"],"File:sample_app/packages/",[[1,"bl_request.pkb"],[1,"bl_request.pks"],[1,"fsm_req.pkb"],[1,"fsm_req.pks"],[1,"fsm_ui.pkb"],[1,"fsm_ui.pks"]]]]);

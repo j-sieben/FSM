@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("bl_",["Class"],[["BL_REQUEST",,[[,,,,0,"File:sample_app/packages/bl_request.pks:BL_REQUEST","SQLClass:BL_REQUEST"],[,"BL_REQUEST Body",,,0,"File:sample_app/packages/bl_request.pkb:BL_REQUEST_Body","SQLClass:BL_REQUEST_Body"]]]]);
