@@ -1,11 +1,11 @@
 create table fsm_transitions(
-  ftr_fst_id varchar2(50 char), 
-	ftr_fev_id varchar2(50 char), 
-	ftr_fcl_id varchar2(50 char), 
+  ftr_fst_id &ora_name_type., 
+	ftr_fev_id &ora_name_type., 
+	ftr_fcl_id &ora_name_type., 
 	ftr_fst_list varchar2(1000 char), 
-	ftr_active char(1 byte) default 'Y',  
-	ftr_required_role varchar2(50 char), 
-	ftr_raise_automatically char(1 byte) default 'N',
+	ftr_active &flag_type. default &C_TRUE.,  
+	ftr_required_role &ora_name_type., 
+	ftr_raise_automatically &flag_type. default &C_FALSE.,
 	ftr_raise_on_status number default 0,
   constraint pk_fsm_transitions primary key (ftr_fst_id, ftr_fev_id, ftr_fcl_id),
   constraint fk_ftr_fev_id foreign key (ftr_fev_id, ftr_fcl_id)

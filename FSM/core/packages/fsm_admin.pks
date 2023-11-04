@@ -18,6 +18,9 @@ as
     p_fcl_description in fsm_classes_v.fcl_description%type,
     p_fcl_active in boolean default true);
     
+  procedure merge_class(
+    p_row fsm_classes_v%rowtype);
+    
   
   /** 
     Procedure: delete_class
@@ -53,6 +56,9 @@ as
     p_fsg_icon_css in fsm_status_groups_v.fsg_icon_css%type default null,
     p_fsg_name_css in fsm_status_groups_v.fsg_name_css%type default null,
     p_fsg_active in boolean default true);
+    
+  procedure merge_status_group(
+    p_row fsm_status_groups_v%rowtype);
     
     
   /** 
@@ -90,6 +96,9 @@ as
     p_fss_html in fsm_status_severities_v.fss_html%type,
     p_fss_icon in fsm_status_severities_v.fss_icon%type);
     
+  procedure merge_status_severity(
+    p_row fsm_status_severities_v%rowtype);
+    
     
   /**
     Procedure: delete_status_severity
@@ -113,7 +122,8 @@ as
       p_fst_fcl_id - Reference to the class the status belongs to
       p_fst_fsg_id - Reference to a status group
       p_fst_name - Display name of the status
-      p_fev_description - Description of the status. May be used in tooltips
+      p_fst_description - Description of the status. May be used in tooltips
+      p_fst_severity - Severity of the status, reference to FSM_STATUS_SEVERITIES_V
       p_fst_msg_id - Optional name of the message used for logging
       p_fst_retries_on_error - Optional number of retries allowed to enter this status
       p_fst_retry_schedule - Optional schedule if a retry is executed. Controls when this retry takes place
@@ -128,6 +138,7 @@ as
     p_fst_fsg_id in fsm_status_v.fst_fsg_id%type,
     p_fst_name in fsm_status_v.fst_name%type,
     p_fst_description in fsm_status_v.fst_description%type,
+    p_fst_severity in fsm_status_v.fst_severity%type,
     p_fst_msg_id in fsm_status_v.fst_msg_id%type default msg.FSM_STATUS_CHANGED,
     p_fst_retries_on_error in fsm_status_v.fst_retries_on_error%type default 0,
     p_fst_retry_schedule in fsm_status_v.fst_retry_schedule%type default null,
@@ -136,6 +147,8 @@ as
     p_fst_name_css in fsm_status_v.fst_name_css%type default null,
     p_fst_active in boolean default true);
     
+  procedure merge_status(
+    p_row in fsm_status_v%rowtype);
     
   /** 
     Procedure: delete_status
@@ -183,6 +196,9 @@ as
     p_fev_confirm_message in fsm_events_v.fev_confirm_message%type default null,
     p_fev_active in boolean default true);
     
+  procedure merge_event(
+    p_row in fsm_events_v%rowtype);
+    
     
   /**
     Procedure: delete_event
@@ -224,6 +240,9 @@ as
     p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default fsm.C_OK,
     p_ftr_required_role in fsm_transitions_v.ftr_required_role%type default null,
     p_ftr_active in boolean default true);
+    
+  procedure merge_transition(
+    p_row fsm_transitions_v%rowtype);
     
     
   /**

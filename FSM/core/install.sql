@@ -50,6 +50,4 @@ begin
 end;
 /
 
-@&tools.run_script ParameterGroup_PIT
-
 @&tools.install_package_body fsm

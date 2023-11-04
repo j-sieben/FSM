@@ -3,7 +3,7 @@ select fsg_id, fsg_fcl_id, pti_name fsg_name, pti_description fsg_description,
        fsg_icon_css, fsg_name_css, fsg_active
   from fsm_status_groups
   join pit_translatable_item_v
-    on fsg_id = pti_id
+    on fsg_pti_id = pti_id
    and fsg_fcl_id = pti_pmg_name;
  
 comment on table fsm_status_groups_v  is 'Table to store fsm status definitions per class type';

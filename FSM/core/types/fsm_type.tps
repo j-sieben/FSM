@@ -1,4 +1,4 @@
-create or replace type fsm_type
+create or replace type fsm_type force
 authid definer
 as object(
   fsm_id number,
@@ -15,14 +15,16 @@ as object(
     return varchar2,
   member function raise_event(
     self in out nocopy fsm_type,
-    p_fev_id in varchar2)
+    p_fev_id in varchar2,
+    p_msg_args in msg_args default null)
     return number,
   member procedure retry(
     self in out nocopy fsm_type,
     p_fev_id in varchar2),
   member function set_status(
     self in out nocopy fsm_type,
-    p_fst_id in varchar2)
+    p_fst_id in varchar2,
+    p_msg_args in msg_args default null)
     return number,
   member procedure notify(
     self in out nocopy fsm_type,

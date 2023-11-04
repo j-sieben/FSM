@@ -18,19 +18,6 @@ as
 
       Published under MIT licence
    */
-
-  /**
-    Group: Public Types
-   */
-   /**
-    Types: PL/SQL subtypes
-      ora_name_type - Oracle name type, length depends on database version: since 12c: 128 byte.
-      flag_type - Boolean type for SQL usage. May be obsolete once version 23c can be assumed.
-      max_char - Maximum varchar2 PL/SQL variable width
-      max_sql_char - Maximum varchar2 SQL width
-   */
-  subtype max_char is varchar2(32767 byte);
-  subtype max_sql_char is varchar2(4000 byte);
   
 
   /**
@@ -72,13 +59,15 @@ as
     Parameters:
       p_fsm - Instance of the class FSM_TYPE
       p_fev_id - Event that was triggered
+      p_msg_args - Optional parameters to pass to the log message
       
     Returns:
       C_OK or C_ERROR. C_ERROR only if no logging is performed
    */
   function raise_event(
     p_fsm in out nocopy fsm_type,
-    p_fev_id in fsm_events_v.fev_id%type)
+    p_fev_id in fsm_events_v.fev_id%type,
+    p_msg_args in msg_args default null)
     return integer;
 
 
@@ -149,7 +138,8 @@ as
                       Is decreased by 1 for each repetition, until C_ERROR
    */
   function set_status(
-    p_fsm in out nocopy fsm_type)
+    p_fsm in out nocopy fsm_type,
+    p_msg_args in msg_args default null)
     return number;
 
   /**
@@ -158,7 +148,8 @@ as
       See <FSM.set_status>
    */
   procedure set_status(
-    p_fsm in out nocopy fsm_type);
+    p_fsm in out nocopy fsm_type,
+    p_msg_args in msg_args default null);
 
 
   /**

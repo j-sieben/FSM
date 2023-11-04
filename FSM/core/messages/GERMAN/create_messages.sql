@@ -2,7 +2,7 @@ begin
 
   pit_admin.merge_message_group(
     p_pmg_name => 'FSM',
-    p_pmg_description => 'Meldungen für &Toolkit.'
+    p_pmg_description => 'Meldungen für FSM'
   );
 
   pit_admin.merge_message(

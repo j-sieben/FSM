@@ -27,9 +27,9 @@ as
     p_retry_schedule in fsm_objects.fsm_retry_schedule%type)
   as
   begin
-    pit.enter_detailed(
+    pit.enter_detailed('persist_retry',
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque'),
+                    msg_param('p_fsm', p_fsm.fsm_id),
                     msg_param('p_retry_schedule', p_retry_schedule)));
     
     update fsm_objects
@@ -60,16 +60,16 @@ as
   as
     l_result binary_integer;
   begin
-    pit.enter_optional(
+    pit.enter_optional('re_fire_event',
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque'),
+                    msg_param('p_fsm', p_fsm.fsm_id),
                     msg_param('p_fev_id', p_fev_id),
                     msg_param('p_wait_time', p_wait_time),
                     msg_param('p_try_count', p_try_count)));
                     
     if p_wait_time is not null then
       pit.info(
-        msg.fsm_RETRYING, 
+        msg.FSM_RETRYING, 
         msg_args(
           p_fev_id, 
           p_fsm.fsm_fst_id, 
@@ -101,11 +101,11 @@ as
     l_result binary_integer;
     l_event fsm_events_v.fev_id%type;
   begin
-    pit.enter_optional(
+    pit.enter_optional('proceed_with_error_event',
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque')));
+                    msg_param('p_fsm', p_fsm.fsm_id)));
     pit.verbose(
-      msg.fsm_VALIDITY, 
+      msg.FSM_VALIDITY, 
       msg_args(
         to_char(p_fsm.fsm_validity)),
         p_fsm.fsm_id);
@@ -114,8 +114,8 @@ as
       from fsm_transitions
      where ftr_fst_id = p_fsm.fsm_fst_id
        and ftr_fcl_id = p_fsm.fsm_fcl_id
-       and ftr_raise_on_status = C_ERROR;
-    pit.verbose(msg.fsm_THROW_ERROR_EVENT, msg_args(l_event), p_fsm.fsm_id);
+       and ftr_raise_on_status = 1;
+    pit.verbose(msg.FSM_THROW_ERROR_EVENT, msg_args(l_event), p_fsm.fsm_id);
     
     p_fsm.fsm_fev_list := l_event;
     p_fsm.fsm_validity := C_ERROR;
@@ -154,23 +154,26 @@ as
     l_user pit_util.ora_name_type;
     l_msg_args msg_args;
   begin
-    pit.enter_optional(
+    pit.enter_optional('log_change',
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque'),
+                    msg_param('p_fsm', p_fsm.fsm_id),
                     msg_param('p_fev_id', p_fev_id),
                     msg_param('p_fst_id', p_fst_id),
                     msg_param('p_msg', p_msg),
-                    msg_param('p_msg_args', 'opaque')));
+                    msg_param('p_msg_args', p_msg_args)));
                     
     -- choose appropriate message based on parameters entered
     case
+    when p_msg is not null then
+      l_message_id := p_msg;
+      l_msg_args := p_msg_args;
     when p_fev_id is not null then
       select fev_msg_id, msg_args(fev_name)
         into l_message_id, l_msg_args
         from fsm_events_v
        where fev_id = p_fev_id;
     when p_fst_id = fsm_fst.fsm_ERROR then
-      select msg.fsm_DELIVERY_FAILED, msg_args(fst_name)
+      select msg.FSM_DELIVERY_FAILED, msg_args(fst_name)
         into l_message_id, l_msg_args
         from fsm_status_v
        where fst_id = p_fst_id;
@@ -180,8 +183,7 @@ as
         from fsm_status_v
        where fst_id = p_fst_id;
     else
-      l_message_id := p_msg;
-      l_msg_args := p_msg_args;
+      null;
     end case;
     
     -- create message
@@ -217,7 +219,7 @@ as
     p_fsm_id in fsm_objects_v.fsm_id%type)
   as
   begin
-    pit.enter_mandatory(
+    pit.enter_mandatory('drop_object',
       p_params => msg_params(
                     msg_param('p_fsm_id', p_fsm_id)));
                     
@@ -236,9 +238,9 @@ as
     p_fsm in out nocopy fsm_type)
   as
   begin
-    pit.enter_mandatory(
+    pit.enter_mandatory('persist',
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque')));
+                    msg_param('p_fsm', p_fsm.fsm_id)));
                     
     p_fsm.fsm_id := coalesce(p_fsm.fsm_id, fsm_seq.nextval);
     merge into fsm_objects o
@@ -266,18 +268,21 @@ as
    */
   function raise_event(
     p_fsm in out nocopy fsm_type,
-    p_fev_id in fsm_events_v.fev_id%type)
+    p_fev_id in fsm_events_v.fev_id%type,
+    p_msg_args in msg_args default null)
     return integer
   as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque'),
+                    msg_param('p_fsm', p_fsm.fsm_id),
+                    msg_param('fsm_fst_id', p_fsm.fsm_fst_id),
                     msg_param('p_fev_id', p_fev_id)));
     -- LOG verwalten
     log_change(
       p_fsm => p_fsm, 
-      p_fev_id => p_fev_id);
+      p_fev_id => p_fev_id,
+      p_msg_args => p_msg_args);
     p_fsm.fsm_validity := C_OK;
     
     pit.leave_mandatory(
@@ -286,7 +291,7 @@ as
     return C_OK;
   exception
     when others then
-      pit.handle_exception(msg.fsm_SQL_ERROR, msg_args(p_fsm.fsm_fcl_id, to_char(p_fsm.fsm_id), p_fev_id));
+      pit.handle_exception(msg.FSM_SQL_ERROR, msg_args(p_fsm.fsm_fcl_id, to_char(p_fsm.fsm_id), p_fev_id));
       return C_ERROR;
   end raise_event;
     
@@ -311,17 +316,18 @@ as
           on fsm.fsm_fst_id = fst.fst_id
          and fsm.fsm_fcl_id = fst.fst_fcl_id
        where fsm.fsm_id = p_fsm.fsm_id
-         and fsm.fsm_validity != 1;
+         and fsm.fsm_validity != fsm.C_ERROR;
     l_validity fsm_objects.fsm_validity%type;
   begin
-    pit.enter_mandatory(
+    pit.enter_mandatory('retry',
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque'),
+                    msg_param('p_fsm', p_fsm.fsm_id),
+                    msg_param('fsm_fst_id', p_fsm.fsm_id),
                     msg_param('p_fev_id', p_fev_id)));
                     
     for fsm in fsm_cur(p_fsm.fsm_id) loop
       if fsm.fst_retries_on_error > C_ERROR then
-        pit.verbose(msg.fsm_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_TRUE), p_fsm.fsm_id);
+        pit.verbose(msg.FSM_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_TRUE), p_fsm.fsm_id);
         -- take retry into account
         -- fsm_VALIDITY may have one of the following values:
         -- C_OK = no retry planned yet (or succesful state conversion, then this method wouldn't have been called)
@@ -341,16 +347,16 @@ as
         else
           p_fsm.fsm_validity := fsm.fsm_validity - 1;
           if p_fsm.fsm_validity > 2 then
-            p_fsm.notify(msg.fsm_RETRY_INFO);
+            p_fsm.notify(msg.FSM_RETRY_INFO);
           else
-            p_fsm.notify(msg.fsm_RETRY_WARN);
+            p_fsm.notify(msg.FSM_RETRY_WARN);
           end if;
           persist_retry(p_fsm, fsm.fst_retry_schedule);
           l_validity := fsm.fst_retries_on_error - fsm.fsm_validity + 1;
           re_fire_event(p_fsm, p_fev_id, fsm.fst_retry_time, l_validity);
         end case;
       else
-        pit.verbose(msg.fsm_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_FALSE), p_fsm.fsm_id);
+        pit.verbose(msg.FSM_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_FALSE), p_fsm.fsm_id);
         proceed_with_error_event(p_fsm);
       end if;
       
@@ -374,24 +380,28 @@ as
   begin
     pit.enter_optional(
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque'),
+                    msg_param('p_fsm', p_fsm.fsm_id),
+                    msg_param('fsm_fst_id', p_fsm.fsm_id),
                     msg_param('p_fev_id', p_fev_id)));
                     
     -- Check if event is allowed in current state
-    l_result := instr(':' || p_fsm.fsm_fev_list || ':ERROR:', ':' || p_fev_id || ':') > C_ERROR;
+    l_result := instr(':' || p_fsm.fsm_fev_list || ':ERROR:', ':' || p_fev_id || ':') > 0;
     
     -- Check if current user has required role rights
-    select case 
+    -- TODO: Add role support
+    /*select case 
            when ftr_required_role is not null then C_ERROR -- auth_user.is_authorized(ftr_required_role)
            else C_OK end
       into l_has_role
       from fsm_transitions
      where ftr_fev_id = p_fev_id
        and ftr_fst_id = p_fsm.fsm_fst_id
-       and ftr_fcl_id = p_fsm.fsm_fcl_id;
+       and ftr_fcl_id = p_fsm.fsm_fcl_id;*/
     
-    pit.leave_optional;
-    return l_result and l_has_role > C_ERROR;
+    pit.leave_optional(
+      p_params => msg_params(
+                    msg_param('result', pit_util.to_bool(l_result))));
+    return l_result;-- and l_has_role > C_ERROR;
   exception
     when no_data_found then
       pit.leave_optional;
@@ -404,13 +414,14 @@ as
       See  <FSM.set_status>
    */
   function set_status(
-    p_fsm in out nocopy fsm_type)
+    p_fsm in out nocopy fsm_type,
+    p_msg_args in msg_args default null)
     return number
   as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque')));
+                    msg_param('fsm_fst_id', p_fsm.fsm_fst_id)));
                     
     pit.assert_not_null(p_fsm.fsm_fst_id);
     p_fsm.fsm_validity := coalesce(p_fsm.fsm_validity, C_OK);
@@ -429,9 +440,10 @@ as
     
     log_change(
       p_fsm => p_fsm,
-      p_fst_id => p_fsm.fsm_fst_id);
+      p_fst_id => p_fsm.fsm_fst_id,
+      p_msg_args => p_msg_args);
     
-    notify(p_fsm, msg.fsm_NEXT_EVENTS, msg_args(p_fsm.fsm_fev_list, p_fsm.fsm_auto_raise));
+    notify(p_fsm, msg.FSM_NEXT_EVENTS, msg_args(p_fsm.fsm_fev_list, p_fsm.fsm_auto_raise));
     
     pit.leave_mandatory(
       p_params => msg_params(
@@ -465,11 +477,12 @@ as
       See  <FSM.set_status>
    */
   procedure set_status(
-    p_fsm in out nocopy fsm_type)
+    p_fsm in out nocopy fsm_type,
+    p_msg_args in msg_args default null)
   as
-    l_result number;
+    l_result binary_integer;
   begin
-    l_result := set_status(p_fsm);
+    l_result := set_status(p_fsm, p_msg_args);
   end set_status;
   
 
@@ -482,12 +495,12 @@ as
     p_fev_id in fsm_events_v.fev_id%type)
     return varchar2
   as
-    l_next_fst_list max_sql_char;
-    C_DELIMITER constant varchar2(1) := ':';
+    l_next_fst_list pit_util.max_sql_char;
+    C_DELIMITER constant pit_util.flag_type := ':';
   begin
     pit.enter_optional(
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque'),
+                    msg_param('fsm_fst_id', p_fsm.fsm_fst_id),
                     msg_param('p_fev_id', p_fev_id)));
                     
     select listagg(ftr_fst_list, C_DELIMITER) within group (order by ftr_fst_list)
@@ -495,21 +508,21 @@ as
       from fsm_transitions
      where ftr_fst_id = p_fsm.fsm_fst_id
        and ftr_fev_id = p_fev_id
-       and ftr_fcl_id = p_fsm.fsm_fcl_id;
+       and ftr_fcl_id in (p_fsm.fsm_fcl_id, 'FSM');
     if instr(l_next_fst_list, C_DELIMITER) = 0 then
-      notify(p_fsm, msg.fsm_NEXT_STATUS_RECOGNIZED, msg_args(l_next_fst_list));
+      notify(p_fsm, msg.FSM_NEXT_STATUS_RECOGNIZED, msg_args(l_next_fst_list));
       
       pit.leave_optional(
       p_params => msg_params(
                     msg_param('Next Status', l_next_fst_list)));
       return l_next_fst_list;
     else
-      pit.error(msg.fsm_NEXT_STATUS_NU, msg_args(p_fsm.fsm_fst_id), p_fsm.fsm_id);
+      pit.error(msg.FSM_NEXT_STATUS_NU, msg_args(p_fsm.fsm_fst_id), p_fsm.fsm_id);
       return null;
     end if;
   exception
     when no_data_found then
-      pit.error(msg.fsm_NEXT_STATUS_NU, msg_args(p_fsm.fsm_fst_id), p_fsm.fsm_id);
+      pit.error(msg.FSM_NEXT_STATUS_NU, msg_args(p_fsm.fsm_fst_id), p_fsm.fsm_id);
       return null;
   end get_next_status;    
   
@@ -526,7 +539,7 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque'),
+                    msg_param('p_fsm', p_fsm.fsm_id),
                     msg_param('p_msg', p_msg),
                     msg_param('p_msg_args', 'msg_args')));
                     
@@ -547,8 +560,8 @@ as
     p_fsm in fsm_type)
     return varchar2
   as
-    l_result varchar2(32767) := 
-    q'[Instanz vom Typ fsm_TYPE
+    l_result pit_util.max_char := 
+    q'[Instance of type FSM_TYPE
     fsm_ID: #FSM_ID#
     fsm_fcl_id: #FSM_FCL_ID#
     fsm_fst_id: #FSM_FST_ID#
@@ -558,7 +571,7 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque')));
+                    msg_param('p_fsm', p_fsm.fsm_id)));
     
     utl_text.bulk_replace(l_result, char_table(
       'FSM_ID', p_fsm.fsm_id,
@@ -582,7 +595,7 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_fsm', 'opaque')));
+                    msg_param('p_fsm', p_fsm.fsm_id)));
     null;
     pit.leave_mandatory;
   end finalize;
