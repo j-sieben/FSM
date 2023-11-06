@@ -16,6 +16,7 @@ as object(
   member function raise_event(
     self in out nocopy fsm_type,
     p_fev_id in varchar2,
+    p_msg in varchar2 default null,
     p_msg_args in msg_args default null)
     return number,
   member procedure retry(
@@ -24,6 +25,7 @@ as object(
   member function set_status(
     self in out nocopy fsm_type,
     p_fst_id in varchar2,
+    p_msg in varchar2 default null,
     p_msg_args in msg_args default null)
     return number,
   member procedure notify(

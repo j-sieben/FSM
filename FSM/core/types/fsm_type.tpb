@@ -3,11 +3,12 @@ create or replace type body fsm_type as
   member function raise_event(
     self in out nocopy fsm_type,
     p_fev_id in varchar2,
+    p_msg in varchar2 default null,
     p_msg_args in msg_args default null)
     return number
   as
   begin
-    return fsm.raise_event(self, p_fev_id, p_msg_args);
+    return fsm.raise_event(self, p_fev_id, p_msg, p_msg_args);
   end raise_event;
 
   member procedure retry(
@@ -42,13 +43,14 @@ create or replace type body fsm_type as
   member function set_status(
     self in out nocopy fsm_type,
     p_fst_id in varchar2,
+    p_msg in varchar2 default null,
     p_msg_args in msg_args default null)
     return number
   as
     l_result binary_integer;
   begin
     self.fsm_fst_id := p_fst_id;
-    l_result := fsm.set_status(self, p_msg_args);
+    l_result := fsm.set_status(self, p_msg, p_msg_args);
     return l_result;
   end set_status;
 

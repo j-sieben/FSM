@@ -59,6 +59,7 @@ as
     Parameters:
       p_fsm - Instance of the class FSM_TYPE
       p_fev_id - Event that was triggered
+      p_msg - Reference to MSG, will be created as message
       p_msg_args - Optional parameters to pass to the log message
       
     Returns:
@@ -67,6 +68,7 @@ as
   function raise_event(
     p_fsm in out nocopy fsm_type,
     p_fev_id in fsm_events_v.fev_id%type,
+    p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null)
     return integer;
 
@@ -128,6 +130,8 @@ as
       
     Parameter:
       p_fsm - Instance of fsm (concrete class of the type inherited from FSM_TYPE)
+      p_msg - Reference to MSG, will be created as message
+      p_msg_args - Optional parameters to pass to the log message
   
     Returns:
       Success state.
@@ -139,16 +143,23 @@ as
    */
   function set_status(
     p_fsm in out nocopy fsm_type,
+    p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null)
     return number;
 
   /**
     Procedure: set_status
-      Procedure overload
-      See <FSM.set_status>
+      Overload as procedure. Is used to set the status directly and not as a 
+      consequence of an event raised.
+      
+    Parameter:
+      p_fsm - Instance of fsm (concrete class of the type inherited from FSM_TYPE)
+      p_msg - Reference to MSG, will be created as message
+      p_msg_args - Optional parameters to pass to the log message
    */
   procedure set_status(
     p_fsm in out nocopy fsm_type,
+    p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null);
 
 
@@ -179,12 +190,12 @@ as
     Parameters:
       p_fsm - Instance of FSM_TYPE to which a note is to be saved
       p_msg - Reference to MSG, will be created as message
-      p_msg_args - MSG_ARGS instance
+      p_msg_args - Optional parameters to pass to the log message
    */
   procedure notify(
     p_fsm in out nocopy fsm_type,
     p_msg in pit_util.ora_name_type,
-    p_msg_args in msg_args);
+    p_msg_args in msg_args default null);
 
 
   /**

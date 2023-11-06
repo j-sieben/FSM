@@ -166,13 +166,13 @@ as
     case
     when p_msg is not null then
       l_message_id := p_msg;
-      l_msg_args := p_msg_args;
+      l_msg_args := case p_msg_args.count when 0 then null else p_msg_args end;
     when p_fev_id is not null then
       select fev_msg_id, msg_args(fev_name)
         into l_message_id, l_msg_args
         from fsm_events_v
        where fev_id = p_fev_id;
-    when p_fst_id = fsm_fst.fsm_ERROR then
+    when p_fst_id = fsm_fst.FSM_ERROR then
       select msg.FSM_DELIVERY_FAILED, msg_args(fst_name)
         into l_message_id, l_msg_args
         from fsm_status_v
@@ -190,7 +190,7 @@ as
     l_message := pit.get_message(
                    p_message_name => l_message_id,
                    p_msg_args => l_msg_args, 
-                   p_affected_id => to_char(p_FSM.FSM_id));
+                   p_affected_id => to_char(p_fsm.fsm_id));
     
     -- LOG
     insert into fsm_log(
@@ -204,7 +204,9 @@ as
       p_fsm.fsm_fst_id, p_fsm.fsm_fev_list, p_fsm.fsm_fcl_id,
       l_message.message_name, pit_util.cast_to_msg_args_char(l_message.message_args));
       
-    pit.leave_optional;
+    pit.leave_optional(
+      p_params => msg_params(
+                    msg_param('Message', l_message.message_text)));
   end log_change;
   
   
@@ -269,6 +271,7 @@ as
   function raise_event(
     p_fsm in out nocopy fsm_type,
     p_fev_id in fsm_events_v.fev_id%type,
+    p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null)
     return integer
   as
@@ -282,6 +285,7 @@ as
     log_change(
       p_fsm => p_fsm, 
       p_fev_id => p_fev_id,
+      p_msg => p_msg,
       p_msg_args => p_msg_args);
     p_fsm.fsm_validity := C_OK;
     
@@ -381,7 +385,8 @@ as
     pit.enter_optional(
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id),
-                    msg_param('fsm_fst_id', p_fsm.fsm_id),
+                    msg_param('fsm_fst_id', p_fsm.fsm_fst_id),
+                    msg_param('Event list', p_fsm.fsm_fev_list),
                     msg_param('p_fev_id', p_fev_id)));
                     
     -- Check if event is allowed in current state
@@ -415,6 +420,7 @@ as
    */
   function set_status(
     p_fsm in out nocopy fsm_type,
+    p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null)
     return number
   as
@@ -434,13 +440,14 @@ as
       FROM bl_fsm_active_status_event
      WHERE fst_id = p_fsm.fsm_fst_id
        AND fcl_id = p_fsm.fsm_fcl_id
-       AND ftr_raise_on_status = p_FSM.FSM_validity;
+       AND ftr_raise_on_status = p_fsm.fsm_validity;
     
     persist(p_fsm);
     
     log_change(
       p_fsm => p_fsm,
       p_fst_id => p_fsm.fsm_fst_id,
+      p_msg => p_msg,
       p_msg_args => p_msg_args);
     
     notify(p_fsm, msg.FSM_NEXT_EVENTS, msg_args(p_fsm.fsm_fev_list, p_fsm.fsm_auto_raise));
@@ -451,8 +458,8 @@ as
     return p_fsm.fsm_validity;
   exception
     when msg.PIT_ASSERTION_FAILED_ERR then
-      if p_fsm.fsm_fst_id != fsm_fst.fsm_ERROR then
-        p_fsm.fsm_fst_id := fsm_fst.fsm_ERROR;
+      if p_fsm.fsm_fst_id != fsm_fst.FSM_ERROR then
+        p_fsm.fsm_fst_id := fsm_fst.FSM_ERROR;
         
         pit.leave_mandatory;
         return set_status(p_fsm);
@@ -462,8 +469,8 @@ as
       end if;
     when others then
       pit.handle_exception(msg.PIT_SQL_ERROR);
-      if p_fsm.fsm_fst_id != fsm_fst.fsm_ERROR then
-        p_fsm.fsm_fst_id := fsm_fst.fsm_ERROR;
+      if p_fsm.fsm_fst_id != fsm_fst.FSM_ERROR then
+        p_fsm.fsm_fst_id := fsm_fst.FSM_ERROR;
         return set_status(p_fsm);
       else
         pit.leave_mandatory;
@@ -478,11 +485,12 @@ as
    */
   procedure set_status(
     p_fsm in out nocopy fsm_type,
+    p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null)
   as
     l_result binary_integer;
   begin
-    l_result := set_status(p_fsm, p_msg_args);
+    l_result := set_status(p_fsm, p_msg, p_msg_args);
   end set_status;
   
 
@@ -534,14 +542,14 @@ as
   procedure notify(
     p_fsm in out nocopy fsm_type,
     p_msg in pit_util.ora_name_type,
-    p_msg_args in msg_args)
+    p_msg_args in msg_args default null)
   as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id),
                     msg_param('p_msg', p_msg),
-                    msg_param('p_msg_args', 'msg_args')));
+                    msg_param('p_msg_args', p_msg_args)));
                     
     log_change(
       p_fsm => p_fsm,
