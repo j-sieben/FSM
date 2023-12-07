@@ -1,4 +1,6 @@
-﻿Format: 2.2
+# There is an error in this file.  Search for ERROR to find it.
+
+Format: 2.2
 
 # This is the main file you use to configure Natural Docs for your project.
 
@@ -85,6 +87,7 @@ Style: Default/Default
 # Source Code
 # ------------------------------------------------------------------------
 
+# ERROR: The source folder Y:\Documents\GitHub\FSM\FSM does not exist.
 Source Folder: ..\FSM
 
 
