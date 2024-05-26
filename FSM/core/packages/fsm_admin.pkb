@@ -638,8 +638,64 @@ as
     p_fcl_id in fsm_classes_v.fcl_id%type)
     return clob
   as
+    l_script clob;
+    C_CR constant pit_util.flag_type := chr(10);
   begin
-    return null;
+    with templates as (
+           select uttm_text template, uttm_mode
+             from utl_text_templates
+            where uttm_name = 'EXPORT_FSM'
+              and uttm_type = 'FSM')
+    select utl_text.generate_text(cursor(
+             select template, fcl_id, fcl_name, fcl_description,
+                    case fcl_active when pit_util.C_TRUE then 'true' else 'false' end fcl_active,
+                    utl_text.generate_text(cursor(
+                      select template, fsg_id, fsg_fcl_id, fsg_name, fsg_description,
+                             fsg_icon_css, fsg_name_css,
+                             case fsg_active when pit_util.C_TRUE then 'true' else 'false' end fsg_active
+                        from fsm_status_groups_v
+                       cross join templates
+                       where uttm_mode = 'FSG'
+                         and fsg_fcl_id = fcl_id
+                    ), C_CR) fsg_script,
+                    utl_text.generate_text(cursor(
+                      select template, fst_id, fst_fcl_id, fst_fsg_id, fst_msg_id, fst_pti_id, fst_name, fst_description,                             
+                             fst_retries_on_error, fst_severity, fst_retry_schedule, 
+                             coalesce(to_char(fst_retry_time), 'null') fst_retry_time, fst_icon_css, fst_name_css,
+                             case fst_active when pit_util.C_TRUE then 'true' else 'false' end fst_active
+                        from fsm_status_v
+                       cross join templates
+                       where uttm_mode = 'FST'
+                         and fst_fcl_id = fcl_id
+                    ), C_CR) fst_script,
+                    utl_text.generate_text(cursor(
+                      select template, fev_id, fev_fcl_id, fev_msg_id, fev_name, fev_description,
+                             case fev_raised_by_user when pit_util.C_TRUE then 'true' else 'false' end fev_raised_by_user,
+                             fev_command_label, fev_button_highlight, fev_confirm_message, fev_button_icon,
+                             case fev_active when pit_util.C_TRUE then 'true' else 'false' end fev_active
+                        from fsm_events_v
+                       cross join templates
+                       where uttm_mode = 'FEV'
+                         and fev_fcl_id = fcl_id
+                    ), C_CR) fev_script,
+                    utl_text.generate_text(cursor(
+                      select template, ftr_fst_id, ftr_fev_id, ftr_fcl_id, ftr_fst_list, ftr_required_role, ftr_raise_on_status,
+                             case ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_raise_automatically,                             
+                             case ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_active
+                        from fsm_transitions_v
+                       cross join templates
+                       where uttm_mode = 'FTR'
+                         and ftr_fcl_id = fcl_id
+                    ), C_CR) ftr_script
+               from fsm_classes_v
+              cross join templates
+              where uttm_mode = 'FRAME'
+                and fcl_id = p_fcl_id
+           )) resultat
+      into l_script
+      from dual;
+      
+    return l_script;
   end export_class;
   
 

@@ -42,6 +42,7 @@ prompt - create types and packages
 
 prompt . - load initial data
 @&tools.run_script initial_data
+@&tools.run_script utl_text_templates_FSM
 
 prompt . - create event and status packages
 begin
