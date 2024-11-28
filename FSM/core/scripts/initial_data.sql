@@ -81,7 +81,6 @@ begin
     p_fss_description => 'Kleinere Teilschritte',
     p_fss_html => '<span>Zusatzinformation</span>',
     p_fss_icon => '<i class="fa fa-check u-color-success"/>');
-        
       
   fsm_admin.merge_status(
     p_fst_id => 'ERROR',
@@ -89,6 +88,7 @@ begin
     p_fst_fsg_id => 'ERROR',
     p_fst_name => 'Fehler',
     p_fst_description => 'Prozess aufgrund eines Fehlers gestoppt',
+    p_fst_severity => 30,
     p_fst_msg_id => msg.FSM_FINAL_STATE);
 
 
@@ -111,6 +111,9 @@ begin
     p_fev_description => 'Keine weiteren Aktionen');
     
   commit;
+  
+  fsm_admin.create_event_package;
+  fsm_admin.create_status_package;
   
 end;
 /

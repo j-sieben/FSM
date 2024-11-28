@@ -71,6 +71,19 @@ as
     p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null)
     return integer;
+    
+    
+  /**
+    Procedure: lock_fsm
+      Method implements pessimistic locking for a given FSM instance. If called,
+      FSM locks the FSM instance for update. This lock is released after having
+      written using the persist method or upon rollback
+      
+    Parameter:
+      p_fsm_id - FSM ID
+   */
+  procedure lock_fsm(
+    p_fsm_id in out nocopy fsm_objects.fsm_id%type);
 
 
   /**

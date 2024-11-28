@@ -3,7 +3,7 @@ declare
   
   cursor sys_priv_cur is
     select column_value privilege
-      from table(char_table('CREATE VIEW', 'CREATE PROCEDURE', 'CREATE TABLE'))
+      from table(char_table('CREATE VIEW', 'CREATE PROCEDURE'/*, 'CREATE TABLE'*/))
     minus
     select privilege
       from user_sys_privs;
