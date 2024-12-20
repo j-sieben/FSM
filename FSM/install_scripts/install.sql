@@ -12,11 +12,12 @@ define core_dir=core/
 -- 2.: Default language for messages as an oracle language name (AMERICAN | GERMAN)
 @&tool_dir.init.sql &1. &2.
 
-@&install_dir.check_prerequisites.sql
-
 prompt
 prompt &section.
 prompt &h1.FSM Installation at user &INSTALL_USER.
+prompt &h1. Check installation prerequisites
+@&install_dir.check_prerequisites.sql
+
 prompt &section.
 @&core_dir.install.sql
 

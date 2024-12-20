@@ -10,7 +10,7 @@ col install_user new_val INSTALL_USER format a128
 col remote_user new_val REMOTE_USER format a128
 col default_language new_val DEFAULT_LANGUAGE format a128
 
-select upper('&1.') install_user, upper('&2.') remote_user, pit.get_default_language default_language
+select user install_user, upper('&2.') remote_user, pit.get_default_language default_language
   from dual;
    
 col ora_name_type new_val ORA_NAME_TYPE format a128
