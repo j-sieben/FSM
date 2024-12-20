@@ -9,7 +9,7 @@ set termout off
 col install_user new_val INSTALL_USER format a128
 col remote_user new_val REMOTE_USER format a128
 
-select upper('&1.') install_user,
+select user install_user,
        upper('&2.') remote_user
   from dual;
    
