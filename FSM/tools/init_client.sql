@@ -9,10 +9,15 @@ set termout off
 col install_user new_val INSTALL_USER format a128
 col remote_user new_val REMOTE_USER format a128
 
-select user install_user,
-       upper('&2.') remote_user
+
+select case when instr('&1.', '[') > 0 
+       then substr(upper('&1.'), instr('&1.', '[') + 1, length('&1.') - instr('&1.', '[') - 1)
+       else coalesce(upper('&1.'), user) end install_user, 
+       case when instr('&2.', '[') > 0 
+       then substr(upper('&2.'), instr('&2.', '[') + 1, length('&2.') - instr('&2.', '[') - 1)
+       else coalesce(upper('&2.'), user) end remote_user
   from dual;
-   
+  
 col ora_name_type new_val ORA_NAME_TYPE format a128
 select 'varchar2(' || data_length || ' byte)' ora_name_type
   from all_tab_columns

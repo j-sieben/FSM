@@ -10,7 +10,13 @@ col install_user new_val INSTALL_USER format a128
 col remote_user new_val REMOTE_USER format a128
 col default_language new_val DEFAULT_LANGUAGE format a128
 
-select user install_user, upper('&2.') remote_user, pit.get_default_language default_language
+select case when instr('&1.', '[') > 0 
+       then substr(upper('&1.'), instr('&1.', '[') + 1, length('&1.') - instr('&1.', '[') - 1)
+       else coalesce(upper('&1.'), user) end install_user, 
+       case when instr('&2.', '[') > 0 
+       then substr(upper('&2.'), instr('&2.', '[') + 1, length('&2.') - instr('&2.', '[') - 1)
+       else coalesce(upper('&2.'), user) end remote_user, 
+       pit.get_default_language default_language
   from dual;
    
 col ora_name_type new_val ORA_NAME_TYPE format a128
