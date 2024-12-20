@@ -18,11 +18,11 @@ define tool_dir=tools/
 @&tool_dir.create_synonym.sql fsm_status_severities_v
 @&tool_dir.create_synonym.sql fsm_status_v
 @&tool_dir.create_synonym.sql fsm_transitions_v
-@&tool_dir.create_synonym.sql bl_fsm_active_status_event
-@&tool_dir.create_synonym.sql bl_fsm_hierarchy
-@&tool_dir.create_synonym.sql bl_fsm_next_commands
+--@&tool_dir.create_synonym.sql bl_fsm_active_status_event
+--@&tool_dir.create_synonym.sql bl_fsm_hierarchy
+--@&tool_dir.create_synonym.sql bl_fsm_next_commands
 
 define view_dir=core/views/
-@&tool_dir.install_view bl_fsm_next_commands
-@&tool_dir.install_view bl_fsm_hierarchy
-@&tool_dir.install_view bl_fsm_active_status_event
+--@&tool_dir.install_view bl_fsm_next_commands
+--@&tool_dir.install_view bl_fsm_hierarchy
+--@&tool_dir.install_view bl_fsm_active_status_event

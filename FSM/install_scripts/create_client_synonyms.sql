@@ -7,12 +7,17 @@
   - REMOTE_USER:  database user who will be enabled to use FSM
 */
 
-set termout off
 
 @tools/init_client.sql &1. &2.
 
-prompt &s1.Checking whether FSM exists at user &INSTALL_USER.
+prompt
+prompt &section.
+prompt &h1.Registering FSM, found at &INSTALL_USER. at client &REMOTE_USER.
+prompt &section.
+prompt &h2.Checking whether FSM exists at user &INSTALL_USER.
     
+set termout off
+
 declare
   l_fsm_exists binary_integer;
 begin
@@ -29,12 +34,9 @@ begin
 end;
 /
 
+set termout on
 
-prompt
-prompt &section.
-prompt &h1.Registering FSM, found at &INSTALL_USER. at client &REMOTE_USER.
-prompt &section.
-
+prompt &h2.Creating synonyms for FSM at client &REMOTE_USER.
 @core/register_client.sql
 
 prompt &section.
