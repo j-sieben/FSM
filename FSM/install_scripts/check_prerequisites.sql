@@ -9,7 +9,7 @@ declare
       from user_sys_privs;
   
   cursor obj_priv_cur is
-    (select 'EXECUTE' privilege, 'PACKAGE' type, 'DBMS_LOCK' name
+    (select null privilege, null type, null name
       from dual)
     minus
     select privilege, type, table_name
@@ -28,10 +28,12 @@ begin
     dbms_output.put_line('- &INSTALL_USER. needs system privilege ' || s.privilege);
   end loop;
   
+  /*
   for o in obj_priv_cur loop
     l_privilege_missing := true;
     dbms_output.put_line('- &INSTALL_USER. needs ' || lower(o.privilege) || ' privilege on ' || lower(o.type) || ' ' || o.name);
   end loop;
+  */
   
   for p in pkg_cur loop
     l_privilege_missing := true;
