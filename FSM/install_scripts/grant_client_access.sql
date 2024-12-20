@@ -12,9 +12,12 @@
 prompt
 prompt &section.
 prompt &h1.Grant access to FSM to client &REMOTE_USER.
+prompt &section.
 
 @core/grant_client_access.sql
 
+prompt &section.
 prompt &h1.Finished FSM client grants
+prompt &section.
 
 exit

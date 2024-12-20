@@ -16,9 +16,12 @@ define core_dir=core/
 
 prompt
 prompt &section.
-prompt &h1.fsm Installation at user &INSTALL_USER.
+prompt &h1.FSM Installation at user &INSTALL_USER.
+prompt &section.
 @&core_dir.install.sql
 
-prompt &h1.Finished fsm-Installation
+prompt &section.
+prompt &h1.Finished FSM Installation
+prompt &section.
 
 exit

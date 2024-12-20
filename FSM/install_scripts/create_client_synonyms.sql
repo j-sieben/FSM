@@ -33,10 +33,13 @@ end;
 prompt
 prompt &section.
 prompt &h1.Registering FSM, found at &INSTALL_USER. at client &REMOTE_USER.
+prompt &section.
 
 @core/register_client.sql
 
+prompt &section.
 prompt &h1.Finished FSM client registration
+prompt &section.
 
 exit
 
