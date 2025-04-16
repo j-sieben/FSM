@@ -85,6 +85,12 @@ as
     l_pti_id := C_PTI_CLASS_PREFIX || p_fcl_id;
     
     if p_force then
+      delete from fsm_objects
+       where fsm_fst_id in (
+             select fst_id
+               from fsm_status
+              where fst_fcl_id = p_fcl_id);
+              
       delete from fsm_transitions
        where ftr_fcl_id = p_fcl_id;
       
