@@ -4,7 +4,7 @@ create table fsm_sub_classes(
 	fsc_pti_id &ORA_NAME_TYPE. constraint fsc_pti_id_nn not null, 
 	fsc_active &FLAG_TYPE. default on null &C_TRUE. constraint fsc_active_chk check (fsc_active in (&C_TRUE., &C_FALSE.)), 
 	constraint pk_fsm_sub_classes primary key (fsc_id, fsc_fcl_id),
-  constraint fk_fsc_pti_id foreign key(fsc_pti_id, fsc_id)
+  constraint fk_fsc_pti_id foreign key(fsc_pti_id, fsc_fcl_id)
     references pit_translatable_item(pti_uid, pti_upmg) on delete cascade
 ) organization index;
 
