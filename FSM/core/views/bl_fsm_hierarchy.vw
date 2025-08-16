@@ -21,8 +21,8 @@ with params as (
         ftr_fev_id event,
         fst_description status_beschreibung,
         fev_description event_beschreibung
-   from (select ftr_fcl_id, ftr_fst_id, ftr_fst_list, ftr_fst_id, ftr_fcl_id,
-                ftr_fev_id, fev_description, fst_description, c_true,
+   from (select ftr_fcl_id, ftr_fst_id, ftr_fst_list, 
+                ftr_fev_id, fev_description, fst_description, c_true, fst_initial_status,
                 fst_retries_on_error, fst_retry_schedule, fst_retry_time, ftr_raise_on_status, ftr_raise_automatically
            from fsm_transitions_v
            join fsm_status_v fst
