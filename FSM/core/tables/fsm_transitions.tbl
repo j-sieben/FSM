@@ -16,7 +16,7 @@ create table fsm_transitions(
   constraint fk_ftr_fcl_id foreign key (ftr_fcl_id)
 	  references fsm_classes (fcl_id) on delete cascade,
   constraint fk_ftr_fsc_id foreign key (ftr_fsc_id, ftr_fcl_id)
-	  references fsm_sub_classes (fst_id, fsc_fcl_id) on delete cascade
+	  references fsm_sub_classes (fsc_id, fsc_fcl_id) on delete cascade
 );
 
 comment on table fsm_transitions  is 'Assignment of the allowed events for a FSM state';
