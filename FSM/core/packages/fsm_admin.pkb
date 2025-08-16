@@ -95,6 +95,8 @@ as
      when not matched then insert (fcl_id, fcl_pti_id, fcl_active)
           values (s.fcl_id, s.fcl_pti_id, s.fcl_active);
           
+    create_sub_class(p_fcl_id);
+          
   end merge_class;
   
   procedure merge_class(
@@ -177,22 +179,20 @@ as
       p_pti_name => p_fsc_name,
       p_pti_description => p_fsc_description);
     
-    merge into fsm_classes t
+    merge into fsm_sub_classes t
     using (select p_fsc_id fsc_id,
                   p_fsc_fcl_id fsc_fcl_id,
                   l_pti_id fsc_pti_id,
                   l_active fsc_active
              from dual) s
        on (t.fsc_id = s.fsc_id
-       and t.p_fsc_fcl_id = s.p_fsc_fcl_id)
+       and t.fsc_fcl_id = s.fsc_fcl_id)
      when matched then update set
           fsc_active = s.fsc_active
-     when not matched then insert (fsc_id, p_fsc_fcl_id, fsc_pti_id, fsc_active)
-          values (s.fsc_id, s.p_fsc_fcl_id, s.fsc_pti_id, s.fsc_active);
+     when not matched then insert (fsc_id, fsc_fcl_id, fsc_pti_id, fsc_active)
+          values (s.fsc_id, s.fsc_fcl_id, s.fsc_pti_id, s.fsc_active);
           
-    create_sub_class(p_fcl_id);
-          
-  end merge_ub_class;
+  end merge_sub_class;
     
   
   /** 
@@ -682,6 +682,7 @@ as
       p_ftr_fst_id => p_row.ftr_fst_id,
       p_ftr_fev_id => p_row.ftr_fev_id,
       p_ftr_fcl_id => p_row.ftr_fcl_id,
+      p_ftr_fsc_id => p_row.ftr_fsc_id,
       p_ftr_fst_list => p_row.ftr_fst_list,
       p_ftr_raise_automatically => pit_util.to_bool(p_row.ftr_raise_automatically),
       p_ftr_raise_on_status => p_row.ftr_raise_on_status,
