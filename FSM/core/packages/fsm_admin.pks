@@ -33,6 +33,42 @@ as
   procedure delete_class(
     p_fcl_id in fsm_classes_v.fcl_id%type,
     p_force in boolean default false);
+  
+  /** 
+    Procedure: merge_sub_class
+      Creates or modifies a class.
+      
+    Parameters:
+      p_fsc_id - ID of the subclass
+      p_fsc_fcl_id - ID of the parent class
+      p_fsc_name - Plain text identifier of the subclass
+      p_fsc_description - Description of the subclass
+      p_fsc_active - Optional flag indicating whether the subclass should be used (TRUE) or not (FALSE)
+   */
+  procedure merge_sub_class(
+    p_fsc_id in fsm_sub_classes_v.fsc_id%type,
+    p_fsc_fcl_id in fsm_sub_classes_v.fsc_fcl_id%type,
+    p_fsc_name in fsm_sub_classes_v.fsc_name%type,
+    p_fsc_description in fsm_sub_classes_v.fsc_description%type,
+    p_fsc_active in boolean default true);
+    
+  procedure merge_sub_class(
+    p_row fsm_sub_classes_v%rowtype);
+    
+  
+  /** 
+    Procedure: delete_sub_class
+      Used to remove a subclass and optionally all its associated transitions
+      
+    Parameters:
+      p_fsc_id - ID of the sub_class
+      p_fsc_fcl_id - ID of the parent class
+      p_force - Optional flag indicating whether all referenced transitions should also be deleted (TRUE) or not. Default: FALSE
+   */
+  procedure delete_sub_class(
+    p_fsc_id in fsm_sub_classes_v.fsc_id%type,
+    p_fsc_fcl_id in fsm_sub_classes_v.fsc_fcl_id%type,
+    p_force in boolean default false);
        
   
   /** 
@@ -223,6 +259,7 @@ as
       p_ftr_fst_id - Reference to the status
       p_ftr_fev_id - Reference to the event
       p_ftr_fcl_id - Reference to the class
+      p_ftr_fsc_id - Reference to the sub class
       p_ftr_fst_list - ':'-separated list of status that can be reached when raising the given event
       p_ftr_raise_automatically - Optional flag to indicate whether this event is to be called automatically (TRUE) or not.
                                   If FALSE, the transition waits for the event to be fired externally.
@@ -235,6 +272,7 @@ as
     p_ftr_fst_id in fsm_transitions_v.ftr_fst_id%type,
     p_ftr_fev_id in fsm_transitions_v.ftr_fev_id%type,
     p_ftr_fcl_id in fsm_transitions_v.ftr_fcl_id%type,
+    p_ftr_fsc_id in fsm_transitions_v.ftr_fsc_id%type,
     p_ftr_fst_list in fsm_transitions_v.ftr_fst_list%type,
     p_ftr_raise_automatically in boolean,
     p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default fsm.C_OK,
@@ -257,7 +295,8 @@ as
   procedure delete_transition(
     p_ftr_fst_id in fsm_transitions_v.ftr_fst_id%type,
     p_ftr_fev_id in fsm_transitions_v.ftr_fev_id%type,
-    p_ftr_fcl_id in fsm_transitions_v.ftr_fcl_id%type);
+    p_ftr_fcl_id in fsm_transitions_v.ftr_fcl_id%type,
+    p_ftr_fsc_id in fsm_transitions_v.ftr_fsc_id%type default 'MASTER');
     
   
   /*+

@@ -1,28 +1,34 @@
 create table fsm_transitions(
-  ftr_fst_id &ora_name_type., 
-	ftr_fev_id &ora_name_type., 
-	ftr_fcl_id &ora_name_type., 
-	ftr_fst_list varchar2(1000 char), 
-	ftr_active &flag_type. default &C_TRUE.,  
+  ftr_fst_id &ora_name_type. constraint ftr_fst_id_nn not null, 
+	ftr_fev_id &ora_name_type. constraint ftr_fev_id_nn not null, 
+	ftr_fcl_id &ora_name_type. constraint ftr_fcl_id_nn not null, 
+	ftr_fsc_id &ora_name_type. default on null 'MASTER' constraint ftr_fsc_id_nn not null, 
+	ftr_fst_list varchar2(1000 char) constraint ftr_fst_list_nn not null, 
+	ftr_active &flag_type. default on null &C_TRUE. constraint ftr_active_chk check (ftr_active in (&C_TRUE., &C_FALSE.)), 
 	ftr_required_role &ora_name_type., 
-	ftr_raise_automatically &flag_type. default &C_FALSE.,
-	ftr_raise_on_status number default 0,
+	ftr_raise_automatically &flag_type. default on null &C_FALSE. constraint ftr_raise_automatically_chk check (ftr_raise_automatically in (&C_TRUE., &C_FALSE.)), 
+	ftr_raise_on_status number default on null 0 constraint ftr_raise_on_status_chk check (ftr_raise_on_status in (0, 1)),
   constraint pk_fsm_transitions primary key (ftr_fst_id, ftr_fev_id, ftr_fcl_id),
   constraint fk_ftr_fev_id foreign key (ftr_fev_id, ftr_fcl_id)
 	  references fsm_events (fev_id, fev_fcl_id) on delete cascade,
   constraint fk_ftr_fst_id foreign key (ftr_fst_id, ftr_fcl_id)
 	  references fsm_status (fst_id, fst_fcl_id) on delete cascade,
-  constraint chk_ftr_raise_on_status check (ftr_raise_on_status in (0, 1))
+  constraint fk_ftr_fcl_id foreign key (ftr_fcl_id)
+	  references fsm_classes (fcl_id) on delete cascade,
+  constraint fk_ftr_fsc_id foreign key (ftr_fsc_id, ftr_fcl_id)
+	  references fsm_sub_classes (fst_id, fsc_fcl_id) on delete cascade
 );
 
 comment on table fsm_transitions  is 'Assignment of the allowed events for a FSM state';
 comment on column fsm_transitions.ftr_fst_id is 'Primary key, reference to FSM_STATUS';
 comment on column fsm_transitions.ftr_fev_id is 'Primary key, reference to FSM_EVENTS';
+comment on column fsm_transitions.ftr_fcl_id is 'Reference to FSM_CLASSES';
+comment on column fsm_transitions.ftr_fsc_id is 'Reference to FSM_SUB_CLASSES, defaults to MASTER';
 comment on column fsm_transitions.ftr_fst_list is 'List of possible result states, :-separated list of FSM_STATUS.FST_ID.';
 comment on column fsm_transitions.ftr_active is 'Flag indicating whether an assignment should be used or not';
 comment on column fsm_transitions.ftr_required_role is 'Optional role restriction for an event, may only be thrown if user has role permission';
 comment on column fsm_transitions.ftr_raise_automatically is 'Flag indicating whether the event is automatically triggered immediately after a status is reached';
 comment on column fsm_transitions.ftr_raise_on_status is 'Defines a result state that triggers the following event. Allowed values: 0 = normal processing, 1 = event in case of error';
 
-create index idx_ftr_fev_id on fsm_transitions (ftr_fev_id, ftr_fst_id, ftr_fcl_id) ;
+create index idx_ftr_fev_id on fsm_transitions (ftr_fev_id, ftr_fst_id, ftr_fcl_id, ftr_fsc_id) ;
 

@@ -4,10 +4,12 @@ as
   C_STD_FCL constant pit_util.ora_name_type := 'FSM';
   C_FCL constant pit_util.ora_name_type := '#FCL#';
   C_PTI_CLASS_PREFIX pit_util.ora_name_type := 'FCL_';
+  C_PTI_SUB_CLASS_PREFIX pit_util.ora_name_type := 'FSC_';
   C_PTI_GROUP_PREFIX pit_util.ora_name_type := 'FSG_#FCL#_';
   C_PTI_SEVERITY_PREFIX pit_util.ora_name_type := 'FSS_#FCL#_';
   C_PTI_STATUS_PREFIX pit_util.ora_name_type := 'FST_#FCL#_';
   C_PTI_EVENT_PREFIX pit_util.ora_name_type := 'FEV_#FCL#_';
+  C_SUB_CLASS_MASTER pit_util.ora_name_type := 'MASTER';
   
   
   /* Helper */
@@ -19,6 +21,41 @@ as
     return case when p_bool then pit_util.C_TRUE else pit_util.C_FALSE end;
   end bool_to_char;
   
+  
+  /**
+    Procedure: create_sub_class
+      Method to create a default entry for a new class entry. This default entry is
+      named MASTER and is used if no sub classes are used.
+      
+    Parameter:
+      p_fcl_id - ID of the class to create a sub class for
+   */
+  procedure create_sub_class(
+    p_fcl_id in fsm_classes.fcl_id%type)
+  as
+    l_has_sub_class binary_integer;
+  begin
+  
+    select count(*)
+      into l_has_sub_class
+      from dual
+     where exists(
+           select null
+             from fsm_sub_classes
+            where fsc_id = C_SUB_CLASS_MASTER
+              and fsc_fcl_id = p_fcl_id);
+              
+    if l_has_sub_class = 0 then
+      merge_sub_class(
+        p_fsc_id => C_SUB_CLASS_MASTER,
+        p_fsc_fcl_id => p_fcl_id,
+        p_fsc_name => 'Master',
+        p_fsc_description => 'Default sub class',
+        p_fsc_active => true);
+    end if;
+    
+  end create_sub_class;
+    
   
   /* INTERFACE */    
   /**
@@ -99,6 +136,9 @@ as
        
       delete from fsm_events
        where fev_fcl_id = p_fcl_id;
+       
+      delete from fsm_sub_classes
+       where fsc_fcl_id = p_fcl_id;
     end if;
     
     delete from fsm_classes
@@ -108,7 +148,98 @@ as
       p_pti_id => l_pti_id,
       p_pti_pmg_name => p_fcl_id);
   end delete_class;  
+    
   
+  /** 
+    Procedure: merge_sub_class
+      See <FSM_ADMIN.merge_sub_class>
+   */
+  procedure merge_sub_class(
+    p_fsc_id in fsm_sub_classes_v.fsc_id%type,
+    p_fsc_fcl_id in fsm_sub_classes_v.fsc_fcl_id%type,
+    p_fsc_name in fsm_sub_classes_v.fsc_name%type,
+    p_fsc_description in fsm_sub_classes_v.fsc_description%type,
+    p_fsc_active in boolean default true)
+  as
+    l_active pit_util.flag_type;
+    l_pti_id pit_util.ora_name_type;
+  begin
+    l_active := bool_to_char(p_fsc_active);
+    l_pti_id := C_PTI_SUB_CLASS_PREFIX || p_fsc_id;
+    
+    pit_admin.merge_message_group(
+      p_pmg_name => p_fsc_fcl_id);
+    
+    pit_admin.merge_translatable_item(
+      p_pti_id => l_pti_id,
+      p_pti_pml_name => pit.get_default_language,
+      p_pti_pmg_name => p_fsc_fcl_id,
+      p_pti_name => p_fsc_name,
+      p_pti_description => p_fsc_description);
+    
+    merge into fsm_classes t
+    using (select p_fsc_id fsc_id,
+                  p_fsc_fcl_id fsc_fcl_id,
+                  l_pti_id fsc_pti_id,
+                  l_active fsc_active
+             from dual) s
+       on (t.fsc_id = s.fsc_id
+       and t.p_fsc_fcl_id = s.p_fsc_fcl_id)
+     when matched then update set
+          fsc_active = s.fsc_active
+     when not matched then insert (fsc_id, p_fsc_fcl_id, fsc_pti_id, fsc_active)
+          values (s.fsc_id, s.p_fsc_fcl_id, s.fsc_pti_id, s.fsc_active);
+          
+    create_sub_class(p_fcl_id);
+          
+  end merge_ub_class;
+    
+  
+  /** 
+    Procedure: merge_sub_class
+      See <FSM_ADMIN.merge_sub_class>
+   */
+  procedure merge_sub_class(
+    p_row fsm_sub_classes_v%rowtype)
+  as
+  begin
+    merge_sub_class(
+      p_fsc_id => p_row.fsc_id,
+      p_fsc_fcl_id => p_row.fsc_fcl_id,
+      p_fsc_name => p_row.fsc_name,
+      p_fsc_description => p_row.fsc_description,
+      p_fsc_active => pit_util.to_bool(p_row.fsc_active));
+  end merge_sub_class;
+    
+  
+  /** 
+    Procedure: delete_sub_class
+      See <FSM_ADMIN.delete_sub_class>
+   */
+  procedure delete_sub_class(
+    p_fsc_id in fsm_sub_classes_v.fsc_id%type,
+    p_fsc_fcl_id in fsm_sub_classes_v.fsc_fcl_id%type,
+    p_force in boolean default false)
+  as
+    l_pti_id pit_util.ora_name_type;
+  begin
+    l_pti_id := C_PTI_CLASS_PREFIX || p_fsc_id;
+    
+    if p_force then
+      delete from fsm_transitions
+       where ftr_fcl_id = p_fsc_fcl_id
+         and ftr_fsc_id = p_fsc_id;
+    end if;
+    
+    delete from fsm_sub_classes
+     where fsc_id = p_fsc_id;
+    
+    pit_admin.delete_translatable_item(
+      p_pti_id => l_pti_id,
+      p_pti_pmg_name => p_fsc_id);
+      
+  end delete_sub_class;  
+       
   
   /**
     Procedure: merge_status_group
@@ -502,6 +633,7 @@ as
     p_ftr_fst_id in fsm_transitions_v.ftr_fst_id%type,
     p_ftr_fev_id in fsm_transitions_v.ftr_fev_id%type,
     p_ftr_fcl_id in fsm_transitions_v.ftr_fcl_id%type,
+    p_ftr_fsc_id in fsm_transitions_v.ftr_fsc_id%type,
     p_ftr_fst_list in fsm_transitions_v.ftr_fst_list%type,
     p_ftr_raise_automatically in boolean,
     p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default fsm.C_OK,
@@ -517,6 +649,7 @@ as
     using (select p_ftr_fst_id ftr_fst_id,
                   p_ftr_fev_id ftr_fev_id,
                   p_ftr_fcl_id ftr_fcl_id,
+                  p_ftr_fsc_id ftr_fsc_id,
                   p_ftr_fst_list ftr_fst_list,
                   l_active ftr_active,
                   l_raise_automatically ftr_raise_automatically,
@@ -525,7 +658,8 @@ as
              from dual) s
        on (t.ftr_fst_id = s.ftr_fst_id
            and t.ftr_fev_id = s.ftr_fev_id
-           and t.ftr_fcl_id = s.ftr_fcl_id)
+           and t.ftr_fcl_id = s.ftr_fcl_id
+           and t.ftr_fsc_id = s.ftr_fsc_id)
      when matched then update set
           ftr_fst_list = s.ftr_fst_list,
           ftr_active = s.ftr_active,
@@ -533,10 +667,10 @@ as
           ftr_raise_on_status = s.ftr_raise_on_status,
           ftr_required_role = s.ftr_required_role
      when not matched then insert
-          (ftr_fst_id, ftr_fev_id, ftr_fcl_id, ftr_fst_list, ftr_active, 
+          (ftr_fst_id, ftr_fev_id, ftr_fcl_id, ftr_fsc_id, ftr_fst_list, ftr_active, 
            ftr_raise_automatically, ftr_raise_on_status, ftr_required_role)
           values
-          (s.ftr_fst_id, s.ftr_fev_id, s.ftr_fcl_id, s.ftr_fst_list, s.ftr_active, 
+          (s.ftr_fst_id, s.ftr_fev_id, s.ftr_fcl_id, s.ftr_fsc_id, s.ftr_fst_list, s.ftr_active, 
            s.ftr_raise_automatically, s.ftr_raise_on_status, s.ftr_required_role);
   end merge_transition;
   
@@ -563,13 +697,16 @@ as
   procedure delete_transition(
     p_ftr_fst_id in fsm_transitions_v.ftr_fst_id%type,
     p_ftr_fev_id in fsm_transitions_v.ftr_fev_id%type,
-    p_ftr_fcl_id in fsm_transitions_v.ftr_fcl_id%type)
+    p_ftr_fcl_id in fsm_transitions_v.ftr_fcl_id%type,
+    p_ftr_fsc_id in fsm_transitions_v.ftr_fsc_id%type default 'MASTER'
+)
   as
   begin
     delete from fsm_transitions
      where ftr_fst_id = p_ftr_fst_id
        and ftr_fev_id = p_ftr_fev_id
-       and ftr_fcl_id = p_ftr_fcl_id;
+       and ftr_fcl_id = p_ftr_fcl_id
+       and ftr_fsc_id = p_ftr_fsc_id;
   end delete_transition;
   
   

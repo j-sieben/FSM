@@ -10,6 +10,7 @@ prompt &h2.Create Sequences
 
 prompt &h2.Create Tables
 @&tools.check_has_table fsm_classes
+@&tools.check_has_table fsm_sub_classes
 @&tools.check_has_table fsm_status_groups
 @&tools.check_has_table fsm_events
 @&tools.check_has_table fsm_status
@@ -20,6 +21,7 @@ prompt &h2.Create Tables
 
 prompt &h2.Create Views
 @&tools.install_view fsm_classes_v
+@&tools.install_view fsm_sub_classes_v
 @&tools.install_view fsm_status_groups_v
 @&tools.install_view fsm_status_severities_v
 @&tools.install_view fsm_events_v

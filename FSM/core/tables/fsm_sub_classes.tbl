@@ -1,0 +1,18 @@
+create table fsm_sub_classes(
+  fsc_id &ORA_NAME_TYPE. constraint fsc_id_nn not null, 
+  fsc_fcl_id &ORA_NAME_TYPE. constraint fsc_fcl_id_nn not null, 
+	fsc_pti_id &ORA_NAME_TYPE. constraint fsc_pti_id_nn not null, 
+	fsc_active &FLAG_TYPE. default on null &C_TRUE. constraint fsc_active_chk check (fsc_active in (&C_TRUE., &C_FALSE.)), 
+	constraint pk_fsm_sub_classes primary key (fsc_id, fsc_fcl_id),
+  constraint fk_fsc_pti_id foreign key(fsc_pti_id, fsc_id)
+    references pit_translatable_item(pti_uid, pti_upmg) on delete cascade
+) organization index;
+
+create index idx_fsc_pti_id on fsm_sub_classes(fsc_pti_id, fsc_id);
+create index idx_fsc_fcl_id on fsm_sub_classes(fsc_fcl_id);
+
+comment on table fsm_sub_classes is 'Table for storing fsm subclasses. Subclasses are meant as an option to have more than one transition flows per class. If no subclass is required, MASTER is used.';
+comment on column fsm_sub_classes.fsc_id is 'Primary key';
+comment on column fsm_sub_classes.fsc_fcl_id is 'Primary key, Reference to FSM_CLASSES, constrains the subclass per class';
+comment on column fsm_sub_classes.fsc_pti_id is 'Translatable item, reference to PIT_TRANSLATABLE_ITEM';
+comment on column fsm_sub_classes.fsc_active is 'Flag indicating whether the class is currently used';

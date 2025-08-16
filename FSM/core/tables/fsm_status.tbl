@@ -7,9 +7,10 @@ create table fsm_status(
 	fst_retries_on_error number default 0, 
 	fst_retry_schedule &ORA_NAME_TYPE., 
 	fst_retry_time number,  
-	fst_icon_css varchar2(50 char), 
-	fst_name_css varchar2(50 char), 
-	fst_active &FLAG_TYPE. default &C_TRUE., 
+	fst_icon_css &ORA_NAME_TYPE., 
+	fst_name_css &ORA_NAME_TYPE., 
+	fst_initial_status &FLAG_TYPE. default &C_FALSE. constraint fst_initial_status_chk check (fst_initial_status in (&C_TRUE., &C_FALSE.)), 
+	fst_active &FLAG_TYPE. default &C_TRUE. constraint fst_active_chk check (fst_active in (&C_TRUE., &C_FALSE.)), 
 	constraint pk_fsm_status primary key (fst_id, fst_fcl_id),
   constraint fk_fst_fcl_id foreign key (fst_fcl_id)
 	  references fsm_classes (fcl_id) on delete cascade,
@@ -43,6 +44,7 @@ comment on column fsm_status.fst_retry_schedule is 'Optional setting: If FST_RET
 comment on column fsm_status.fst_retry_time is 'Optional setting: If FST_RETRIES_ON_ERROR > 0: How long to wait before retrying?';
 comment on column fsm_status.fst_icon_css is 'Optional icon to control the display in reports';
 comment on column fsm_status.fst_name_css is 'Optional CSS class to control the display in reports';
+comment on column fsm_status.fst_initial_status is 'Flag indicating whether this status is the first status to enter when creating a new fsm object';
 comment on column fsm_status.fst_active is 'Flag indicating whether the class is currently used';
 
 create index idx_fk_fst_fsg_id on fsm_status (fst_fsg_id);

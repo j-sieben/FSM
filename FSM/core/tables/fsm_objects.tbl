@@ -1,6 +1,7 @@
 create table fsm_objects(
   fsm_id number default on null fsm_seq.nextval constraint fsm_id_nn not null, 
 	fsm_fcl_id &ORA_NAME_TYPE. constraint fsm_fcl_id_nn not null, 
+	fsm_fsc_id &ORA_NAME_TYPE. constraint fsm_fsc_id_nn not null, 
 	fsm_fst_id &ORA_NAME_TYPE. constraint fsm_fst_id_nn not null, 
 	fsm_fev_id &ORA_NAME_TYPE., 
 	fsm_retry_schedule &ORA_NAME_TYPE., 
@@ -19,6 +20,7 @@ create table fsm_objects(
 comment on table fsm_objects is 'Table for storing abstract FSM instances (table per class, central reference to all FSM classes)';
 comment on column fsm_objects.fsm_id is 'Technical key, generated from FSM_SEQ, primary key';
 comment on column fsm_objects.fsm_fcl_id is 'Document class, reference to FSM_CLASSES';
+comment on column fsm_objects.fsm_fsc_id is 'Document class, reference to FSM_SUB_CLASSES';
 comment on column fsm_objects.fsm_fst_id is 'Current document status, reference to FSM_STATUS';
 comment on column fsm_objects.fsm_fev_id is 'Optional event to retrigger due to an error, reference to FSM_EVENTS';
 comment on column fsm_objects.fsm_retry_schedule is 'Optional name of a schedule that plans when to retrigger FSM_FEV_ID';
@@ -28,6 +30,7 @@ comment on column fsm_objects.fsm_last_change_date is 'Date of the last change o
 
 
 create index idx_fk_fsm_fcl_id on fsm_objects (fsm_fcl_id);
+create index idx_fk_fsm_fsc_id on fsm_objects (fsm_fsc_id);
 create index idx_fk_fsm_fst_id on fsm_objects (fsm_fst_id);
 create index idx_fk_fsm_fev_id on fsm_objects (fsm_fev_id);
 

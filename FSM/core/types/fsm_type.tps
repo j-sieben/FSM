@@ -2,11 +2,12 @@ create or replace type fsm_type force
 authid definer
 as object(
   fsm_id number,
-  fsm_fcl_id varchar2(50 char),
-  fsm_fst_id varchar2(50 char),
+  fsm_fcl_id &ORA_NAME_TYPE.,
+  fsm_fsc_id &ORA_NAME_TYPE.,
+  fsm_fst_id &ORA_NAME_TYPE.,
   fsm_validity number,
   fsm_fev_list varchar2(4000),
-  fsm_auto_raise char(1 byte),
+  fsm_auto_raise &FLAG_TYPE.,
   member function get_actual_status
     return varchar2,
   member function get_next_event_list

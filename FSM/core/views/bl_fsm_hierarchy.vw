@@ -11,7 +11,7 @@ with params as (
           when fst_retry_time is not null then fst_retries_on_error || ' Wdhlg., Wartezeit ' || fst_retry_time || ' Sek.'
           else fst_retries_on_error || ' Wdhlg.' end versuche,
           lpad('.', (level - 1), '.') || case ftr_raise_on_status
-          when 0 then 'wenn ' || prior fev_id || ' OK:'
+          when 0 then 'wenn ' || prior ftr_fev_id || ' OK:'
           else 'bei Fehler:' end on_error,
         ftr_fst_id status,
         case
@@ -21,7 +21,9 @@ with params as (
         ftr_fev_id event,
         fst_description status_beschreibung,
         fev_description event_beschreibung
-   from (select *
+   from (select ftr_fcl_id, ftr_fst_id, ftr_fst_list, ftr_fst_id, ftr_fcl_id,
+                ftr_fev_id, fev_description, fst_description, c_true,
+                fst_retries_on_error, fst_retry_schedule, fst_retry_time, ftr_raise_on_status, ftr_raise_automatically
            from fsm_transitions_v
            join fsm_status_v fst
              on ftr_fst_id = fst_id
@@ -33,7 +35,7 @@ with params as (
              on ftr_active = C_TRUE
             and fst_active = C_TRUE
             and fev_active = C_TRUE) ftr
-  start with ftr_fst_id in ('CREATED', 'IMPORTED')
+  start with fst_initial_status = C_TRUE
 connect by nocycle instr(prior ftr_fst_list, ftr_fst_id) > 0 and ftr_fcl_id = prior ftr_fcl_id
   order siblings by ftr_fst_id;
   

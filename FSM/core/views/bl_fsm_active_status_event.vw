@@ -2,7 +2,7 @@ create or replace view bl_fsm_active_status_event as
 with params as (
        select /*+ no_merge */ pit_util.C_TRUE C_TRUE
          from dual)
-select fst_id, fev_id, ftr_fcl_id fcl_id,
+select fst_id, fev_id, ftr_fcl_id fcl_id, ftr_fsc_id fsc_id,
        fst_name, fst_description, fst_msg_id,
        fev_name, fev_description, fev_command_label, fev_msg_id,
        ftr_required_role, ftr_raise_automatically, ftr_raise_on_status

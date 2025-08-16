@@ -9,6 +9,7 @@ select fsm_id, fev_id, fev_command_label, fev_description, ftr_required_role, fe
    and fsm_fcl_id = fev_fcl_id
   join fsm_transitions_v
     on fsm_fcl_id = ftr_fcl_id
+   and fsm_fsc_id = ftr_fsc_id
    and fsm_fst_id = ftr_fst_id
    and fev_id = ftr_fev_id
   join params
