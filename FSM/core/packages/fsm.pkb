@@ -201,12 +201,12 @@ as
     insert into fsm_log(
       fsl_id, fsl_fsm_id, fsl_user_name, fsl_session_id,
       fsl_log_date, fsl_msg_text, fsl_severity,
-      fsl_fst_id, fsl_fev_list, fsl_fcl_id,
+      fsl_fst_id, fsl_fev_list, fsl_fcl_id, fsl_fsc_id,
       fsl_msg_id, fsl_msg_args)
     values(
       fsm_log_seq.nextval, to_number(l_message.affected_id), l_message.user_name, l_message.session_id,
       current_timestamp, l_message.message_text, l_message.severity,
-      p_fsm.fsm_fst_id, p_fsm.fsm_fev_list, p_fsm.fsm_fcl_id,
+      p_fsm.fsm_fst_id, p_fsm.fsm_fev_list, p_fsm.fsm_fcl_id, p_fsm.fsm_fsc_id,
       l_message.message_name, pit_util.cast_to_msg_args_char(l_message.message_args));
 
     pit.leave_optional(
