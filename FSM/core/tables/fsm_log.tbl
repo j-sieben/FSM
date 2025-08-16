@@ -9,13 +9,16 @@ create table fsm_log(
 	fsl_fst_id &ORA_NAME_TYPE., 
 	fsl_fev_list varchar2(200 char), 
 	fsl_fcl_id &ORA_NAME_TYPE. constraint fsl_fcl_id_nn not null, 
+	fsl_fsc_id &ORA_NAME_TYPE. constraint fsl_fsc_id_nn not null, 
 	fsl_msg_id &ORA_NAME_TYPE. constraint fsl_msg_id_nn not null, 
 	fsl_msg_args msg_args_char,
   constraint pk_fsm_log primary key (fsl_id),
   constraint fsl_fsm_id foreign key (fsl_fsm_id)
 	  references fsm_objects (fsm_id) on delete cascade,
   constraint fsl_fcl_id foreign key (fsl_fcl_id)
-	  references fsm_classes (fcl_id) on delete cascade
+	  references fsm_classes (fcl_id) on delete cascade,
+  constraint fsl_fsc_id foreign key (fsl_fsc_id, fsl_fcl_id)
+	  references fsm_sub_classes (fsc_id, fsc_fcl_id) on delete cascade
 );
 
 comment on table fsm_log is 'Logging table for the finite state machine, populated by PIT output module PIT_FSM';
@@ -29,9 +32,11 @@ comment on column fsm_log.fsl_severity is 'Severity of the log entry, fi Milesto
 comment on column fsm_log.fsl_fst_id is 'Actual state the FSM object is in';
 comment on column fsm_log.fsl_fev_list is 'List of allowed events that can be raised on the FSM object';
 comment on column fsm_log.fsl_fcl_id is 'Type of the FSM object, reference to FSM_CLASSES';
+comment on column fsm_log.fsl_fsc_id is 'Subtype of the FSM object, reference to FSM_SUB_CLASSES';
 comment on column fsm_log.fsl_msg_id is 'Name of the PIT message, used to display the log in a different language';
 comment on column fsm_log.fsl_msg_args is 'Optional message arguments';
 
 create index idx_fsl_log_date on fsm_log (fsl_log_date);
 create index idx_fsl_fsm_id on fsm_log (fsl_fsm_id);
 create index idx_fsl_fcl_id on fsm_log (fsl_fcl_id);
+create index idx_fsl_fsc_id on fsm_log (fsl_fsc_id);

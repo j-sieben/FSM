@@ -108,6 +108,7 @@ q'{  fsm_admin.merge_transition(\CR\}' ||
 q'{    p_ftr_fst_id => '#FTR_FST_ID#',\CR\}' || 
 q'{    p_ftr_fev_id => '#FTR_FEV_ID#',\CR\}' || 
 q'{    p_ftr_fcl_id => '#FTR_FCL_ID#',\CR\}' || 
+q'{    p_ftr_fsc_id => '#FTR_FSC_ID#',\CR\}' || 
 q'{    p_ftr_fst_list => '#FTR_FST_LIST#',\CR\}' || 
 q'{    p_ftr_required_role => '#FTR_REQUIRED_ROLE#',\CR\}' || 
 q'{    p_ftr_raise_automatically => #FTR_RAISE_AUTOMATICALLY#,\CR\}' || 

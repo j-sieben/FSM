@@ -278,6 +278,7 @@ as
     merge into fsm_objects t
     using (select p_fsm.fsm_id fsm_id,
                   p_fsm.fsm_fcl_id fsm_fcl_id,
+                  p_fsm.fsm_fsc_id fsm_fsc_id,
                   p_fsm.fsm_fst_id fsm_fst_id,
                   coalesce(p_fsm.fsm_validity, C_OK) fsm_validity,
                   p_fsm.fsm_fev_list fsm_fev_list,
@@ -289,8 +290,8 @@ as
           t.fsm_validity = s.fsm_validity,
           t.fsm_fev_list = s.fsm_fev_list,
           t.fsm_last_change_date = s.fsm_last_change_date
-     when not matched then insert(fsm_id, fsm_fcl_id, fsm_fst_id, fsm_validity, fsm_fev_list, fsm_last_change_date)
-          values(s.fsm_id, s.fsm_fcl_id, s.fsm_fst_id, s.fsm_validity, s.fsm_fev_list, s.fsm_last_change_date);
+     when not matched then insert(fsm_id, fsm_fcl_id, fsm_fsc_id, fsm_fst_id, fsm_validity, fsm_fev_list, fsm_last_change_date)
+          values(s.fsm_id, s.fsm_fcl_id, s.fsm_fsc_id, s.fsm_fst_id, s.fsm_validity, s.fsm_fev_list, s.fsm_last_change_date);
 
     pit.leave_mandatory;
   end persist;

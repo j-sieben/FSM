@@ -823,7 +823,7 @@ as
                          and fev_fcl_id = fcl_id
                     ), C_CR) fev_script,
                     utl_text.generate_text(cursor(
-                      select template, ftr_fst_id, ftr_fev_id, ftr_fcl_id, ftr_fst_list, ftr_required_role, ftr_raise_on_status,
+                      select template, ftr_fst_id, ftr_fev_id, ftr_fcl_id, tr_fsc_id, ftr_fst_list, ftr_required_role, ftr_raise_on_status,
                              case ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_raise_automatically,                             
                              case ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_active
                         from fsm_transitions_v
