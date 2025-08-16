@@ -1,5 +1,5 @@
 create or replace force view fsm_objects_v as 
-select fsm_id, fsm_fcl_id, 
+select fsm_id, fsm_fcl_id, fsm_fsc_id,
        fst_id fsm_fst_id, fst_name fsm_fst_name, fst_name_css fsm_fst_name_css, fst_icon_css fsm_fst_icon_css, 
        fsg_id fsm_fsg_id, fsg_name fsm_fsg_name, fsg_name_css fsm_fsg_name_css, fsg_icon_css fsm_fsg_icon_css,
        fsm_fev_id, fsm_fev_list, fsm_retry_schedule, fsm_validity, fsm_last_change_date
