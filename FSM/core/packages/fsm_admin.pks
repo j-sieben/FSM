@@ -166,7 +166,8 @@ as
       p_fst_retry_time - Optional duration in seconds the retry is hold back
       p_fst_icon_css - Optional CSS-class to decorate status with an icon
       p_fst_name_css - Optional CSS-class to decorate status name
-      p_fst_active - Optional flag to indicate whether this event is used (TRUE) or not (FALSE). Defaults to TRUE.
+      p_fst_initial_status - Optional flag to indicate whether this status is the first to enter at creation time (TRUE) or not (FALSE). Defaults to FALSE.
+      p_fst_active - Optional flag to indicate whether this status is used (TRUE) or not (FALSE). Defaults to TRUE.
    */
   procedure merge_status(
     p_fst_id in fsm_status_v.fst_id%type,
@@ -181,6 +182,7 @@ as
     p_fst_retry_time in fsm_status_v.fst_retry_time%type default null,
     p_fst_icon_css in fsm_status_v.fst_icon_css%type default null,
     p_fst_name_css in fsm_status_v.fst_name_css%type default null,
+    p_fst_initial_status in boolean default false,
     p_fst_active in boolean default true);
     
   procedure merge_status(

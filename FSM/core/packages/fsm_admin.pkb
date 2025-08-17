@@ -415,11 +415,14 @@ as
     p_fst_retry_time in fsm_status_v.fst_retry_time%type default null,
     p_fst_icon_css in fsm_status_v.fst_icon_css%type default null,
     p_fst_name_css in fsm_status_v.fst_name_css%type default null,
+    p_fst_initial_status in boolean default false,
     p_fst_active in boolean default true)
   as
+    l_initial_status pit_util.flag_type;
     l_active pit_util.flag_type;
     l_pti_id pit_util.ora_name_type;
   begin
+    l_initial_status := bool_to_char(p_fst_initial_status);
     l_active := bool_to_char(p_fst_active);
     l_pti_id := replace(C_PTI_STATUS_PREFIX, C_FCL, p_fst_fcl_id) || p_fst_id;
     
@@ -451,6 +454,7 @@ as
                   p_fst_retry_time fst_retry_time,
                   p_fst_icon_css fst_icon_css,
                   p_fst_name_css fst_name_css,
+                  l_initial_status fst_initial_status,
                   l_active fst_active
              from dual) s
        on (t.fst_id = s.fst_id and t.fst_fcl_id = s.fst_fcl_id)
@@ -462,12 +466,13 @@ as
           t.fst_retry_time = s.fst_retry_time,
           t.fst_icon_css = s.fst_icon_css,
           t.fst_name_css = s.fst_name_css,
+          t.fst_initial_status = s.fst_initial_status,
           t.fst_active = s.fst_active
      when not matched then insert
-          (fst_id, fst_fcl_id, fst_fsg_id, fst_msg_id, fst_pti_id, fst_active,
+          (fst_id, fst_fcl_id, fst_fsg_id, fst_msg_id, fst_pti_id, fst_initial_status, fst_active,
            fst_retries_on_error, fst_retry_schedule, fst_retry_time, fst_icon_css, fst_name_css)
           values
-          (s.fst_id, s.fst_fcl_id, s.fst_fsg_id, s.fst_msg_id, s.fst_pti_id, s.fst_active,
+          (s.fst_id, s.fst_fcl_id, s.fst_fsg_id, s.fst_msg_id, s.fst_pti_id, s.fst_initial_status, s.fst_active,
            s.fst_retries_on_error, s.fst_retry_schedule, s.fst_retry_time, s.fst_icon_css, s.fst_name_css);
   end merge_status;
   
@@ -488,6 +493,7 @@ as
       p_fst_retry_time => p_row.fst_retry_time,
       p_fst_icon_css => p_row.fst_icon_css,
       p_fst_name_css => p_row.fst_name_css,
+      p_fst_initial_status => pit_util.to_bool(p_row.fst_initial_status),
       p_fst_active => pit_util.to_bool(p_row.fst_active));
   end merge_status;
   
@@ -823,7 +829,7 @@ as
                          and fev_fcl_id = fcl_id
                     ), C_CR) fev_script,
                     utl_text.generate_text(cursor(
-                      select template, ftr_fst_id, ftr_fev_id, ftr_fcl_id, tr_fsc_id, ftr_fst_list, ftr_required_role, ftr_raise_on_status,
+                      select template, ftr_fst_id, ftr_fev_id, ftr_fcl_id, ftr_fsc_id, ftr_fst_list, ftr_required_role, ftr_raise_on_status,
                              case ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_raise_automatically,                             
                              case ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_active
                         from fsm_transitions_v
