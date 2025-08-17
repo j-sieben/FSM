@@ -651,6 +651,7 @@ as
   begin
     l_active := bool_to_char(p_ftr_active);
     l_raise_automatically := bool_to_char(p_ftr_raise_automatically);
+    
     merge into fsm_transitions t
     using (select p_ftr_fst_id ftr_fst_id,
                   p_ftr_fev_id ftr_fev_id,
@@ -781,6 +782,37 @@ as
   
   
   /**
+    Procedure: check_metadata
+      See <FSM_ADMIN.check_metadata>
+   */
+  procedure check_metadata(
+    p_fcl_id in fsm_objects_v.fsm_fcl_id%type)
+  as
+    cursor fsc_cur (p_fcl_id in fsm_objects_v.fsm_fcl_id%type) is
+      select distinct ftr_fcl_id, ftr_fsc_id
+        from fsm_transitions
+       where ftr_fcl_id = p_fcl_id;
+    l_count binary_integer;
+  begin
+  
+    for fsc in fsc_cur(p_fcl_id) loop
+      select count(distinct fst_id)
+        into l_count
+        from fsm_transitions
+        join fsm_status
+          on ftr_fst_id = fst_id
+       where ftr_fcl_id = fsc.ftr_fcl_id
+         and ftr_fsc_id = fsc.ftr_fsc_id
+         and fst_initial_status = (select pit_util.C_TRUE from dual);
+      
+      pit.assert(l_count > 0, msg.FSM_NO_INITIAL_STATUS);
+      pit.assert(l_count = 1, msg.FSM_TOO_MANY_INITIALS);
+    end loop;
+    
+  end check_metadata;
+  
+  
+  /**
     Procedure: export_class
       See <FSM_ADMIN.export_class>
    */
@@ -800,6 +832,14 @@ as
              select template, fcl_id, fcl_name, fcl_description,
                     case fcl_active when pit_util.C_TRUE then 'true' else 'false' end fcl_active,
                     utl_text.generate_text(cursor(
+                      select template, fsc_id, fsc_fcl_id, fsc_name, fsc_description,
+                             case fsc_active when pit_util.C_TRUE then 'true' else 'false' end fsc_active
+                        from fsm_sub_classes_v
+                       cross join templates
+                       where uttm_mode = 'FSC'
+                         and fsc_fcl_id = fcl_id
+                    ), C_CR) fsc_script,
+                    utl_text.generate_text(cursor(
                       select template, fsg_id, fsg_fcl_id, fsg_name, fsg_description,
                              fsg_icon_css, fsg_name_css,
                              case fsg_active when pit_util.C_TRUE then 'true' else 'false' end fsg_active
@@ -812,6 +852,7 @@ as
                       select template, fst_id, fst_fcl_id, fst_fsg_id, fst_msg_id, fst_pti_id, fst_name, fst_description,                             
                              fst_retries_on_error, fst_severity, fst_retry_schedule, 
                              coalesce(to_char(fst_retry_time), 'null') fst_retry_time, fst_icon_css, fst_name_css,
+                             case fst_initial_status when pit_util.C_TRUE then 'true' else 'false' end fst_initial_status,
                              case fst_active when pit_util.C_TRUE then 'true' else 'false' end fst_active
                         from fsm_status_v
                        cross join templates

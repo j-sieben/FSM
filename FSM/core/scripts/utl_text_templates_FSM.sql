@@ -17,6 +17,9 @@ q'{    p_fcl_name => '#FCL_NAME#',\CR\}' ||
 q'{    p_fcl_description => q'[#FCL_DESCRIPTION#]',\CR\}' || 
 q'{    p_fcl_active => #FCL_ACTIVE#);\CR\}' || 
 q'{  \CR\}' || 
+q'{  -- Sub classes\CR\}' || 
+q'{  #FSC_SCRIPT#\CR\}' || 
+q'{  \CR\}' || 
 q'{  -- Statusgroups\CR\}' || 
 q'{  #FSG_SCRIPT#\CR\}' || 
 q'{  \CR\}' || 
@@ -32,13 +35,29 @@ q'{  \CR\}' ||
 q'{  commit;\CR\}' || 
 q'{  \CR\}' || 
 q'{  fsm_admin.create_event_package;\CR\}' || 
-q'{  fsm_admin.create_status_package;\CR\}' || 
+q'{  fsm_admin.create_status_package;\CR\}' ||
+q'{  fsm_admin.check_metadata('#FCL_ID#');\CR\}' ||
 q'{end;\CR\}' || 
 q'{/}',
     p_uttm_log_text => q'{}',
     p_uttm_log_severity => 70
   );
 
+  utl_text_admin.merge_template(
+    p_uttm_name => 'EXPORT_FSM',
+    p_uttm_type => 'FSM',
+    p_uttm_mode => 'FSC',
+    p_uttm_text => q'{\CR\}' || 
+q'{  fsm_admin.merge_sub_class(\CR\}' || 
+q'{    p_fsc_id => '#FSC_ID#',\CR\}' || 
+q'{    p_fsc_fcl_id => '#FSC_ID#',\CR\}' || 
+q'{    p_fsc_name => '#FSC_NAME#',\CR\}' || 
+q'{    p_fsc_description => q'[#FSC_DESCRIPTION#]',\CR\}' || 
+q'{    p_fsc_active => #FSC_ACTIVE#);}',
+    p_uttm_log_text => q'{}',
+    p_uttm_log_severity => 70
+  );
+  
   utl_text_admin.merge_template(
     p_uttm_name => 'EXPORT_FSM',
     p_uttm_type => 'FSM',
@@ -74,6 +93,7 @@ q'{    p_fst_retry_schedule => '#FST_RETRY_SCHEDULE#',\CR\}' ||
 q'{    p_fst_retry_time => #FST_RETRY_TIME#,\CR\}' || 
 q'{    p_fst_icon_css => '#FST_ICON_CSS#',\CR\}' || 
 q'{    p_fst_name_css => '#FST_NAME_CSS#',\CR\}' || 
+q'{    p_fst_initial_status => #FST_INITIAL_STATUS#,\CR\}' || 
 q'{    p_fst_active => #FST_ACTIVE#);}',
     p_uttm_log_text => q'{}',
     p_uttm_log_severity => 70

@@ -324,7 +324,27 @@ begin
     p_pms_pml_name => 'GERMAN',
     p_error_number => null
   );
-	
+  
+  pit_admin.merge_message(
+    p_pms_name => 'FSM_NO_INITIAL_STATUS',
+    p_pms_pmg_name => 'FSM',
+    p_pms_text => q'^Kein initialer Status definiert.^',
+    p_pms_description => q'^FSM benötigt einen initialen Status, in den eine neu erstellte Instanz geht. Dieser muss durch das Flag FSM_INITIAL_STATUS = TRUE definiert und in einer Transition referenziert werden.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
+  
+  pit_admin.merge_message(
+    p_pms_name => 'FSM_TOO_MANY_INITIALS',
+    p_pms_pmg_name => 'FSM',
+    p_pms_text => q'^Initialer Status ist nicht eindeutig.^',
+    p_pms_description => q'^Es darf nur einen initialen Status pro Klasse/Subklasse geben, da FSM diesen Status automatisiert auswählen können muss.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
+  
   commit;
   pit_admin.create_message_package;
 end;

@@ -314,6 +314,21 @@ as
   
   
   /**
+    Procedure: check_metadata
+      Nethod checks whether the metadata inserted for a class/subclass are consistent.
+      
+    Parameter:
+      p_fcl_id - ID of the class to check
+      
+    Throws:
+      FSM_NO_INITIAL_STATUS_ERR - if no initial status is defined
+      FSM_TOO_MANY_INITIALS_ERR - if more than one initial status is defined
+   */
+  procedure check_metadata(
+    p_fcl_id in fsm_objects_v.fsm_fcl_id%type);
+  
+  
+  /**
     Procedure export_class
       Method to export a class including all referenced messages. Creates an export script with all meta data for a FSM
       

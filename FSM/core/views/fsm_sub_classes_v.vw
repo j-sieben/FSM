@@ -3,5 +3,5 @@ select fsc_id, fsc_fcl_id, pti_name fsc_name, pti_description fsc_description, f
   from fsm_sub_classes
   join pit_translatable_item_v
     on fsc_pti_id = pti_id
-   and fsc_id = pti_pmg_name;
+   and fsc_fcl_id = pti_pmg_name;
  
