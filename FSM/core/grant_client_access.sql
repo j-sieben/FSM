@@ -11,6 +11,7 @@ define tool_dir=tools/
 
 -- Views
 @&tool_dir.grant_access_with_grant_option.sql read fsm_classes_v
+@&tool_dir.grant_access_with_grant_option.sql read fsm_sub_classes_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_events_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_log_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_objects_v

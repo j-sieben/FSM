@@ -16,4 +16,4 @@ select fsm_id, fev_id, fev_command_label, fev_description, ftr_required_role, fe
     on fev_raised_by_user = C_TRUE
  where fev_id not in ('NIL');
  
-comment on table bl_fsm_next_commands is 'BL view to prepare a list query with all possible next commands for a fiven FSM instance';
+comment on table bl_fsm_next_commands is 'BL view to prepare a list query with all possible next commands for a given FSM instance';

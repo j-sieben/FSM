@@ -474,6 +474,7 @@ as
            p_fsm.fsm_auto_raise
       from bl_fsm_active_status_event
      where fst_id = p_fsm.fsm_fst_id
+       and fsc_id = p_fsm.fsm_fsc_id
        and fcl_id = p_fsm.fsm_fcl_id
        and ftr_raise_on_status = p_fsm.fsm_validity;
 
@@ -550,6 +551,7 @@ as
       into l_next_fst_list
       from fsm_transitions
      where ftr_fst_id = p_fsm.fsm_fst_id
+       and ftr_fsc_id = p_fsm.fsm_fsc_id
        and ftr_fev_id = p_fev_id
        and ftr_fcl_id in (p_fsm.fsm_fcl_id, 'FSM');
     if instr(l_next_fst_list, C_DELIMITER) = 0 then

@@ -1,8 +1,8 @@
 @tools/set_folders core
 
 prompt &h2.Create Default Messages
-@&tools.run_language_script create_messages
-@&tools.run_language_script TranslatableItemsGroup_FSM
+--@&tools.run_language_script create_messages
+--@&tools.run_language_script TranslatableItemsGroup_FSM
 
 prompt &h2.Create Sequences
 @&tools.check_has_sequence fsm_seq

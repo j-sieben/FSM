@@ -11,6 +11,7 @@ define tool_dir=tools/
 
 -- Views
 @&tool_dir.create_synonym.sql fsm_classes_v
+@&tool_dir.create_synonym.sql fsm_sub_classes_v
 @&tool_dir.create_synonym.sql fsm_events_v
 @&tool_dir.create_synonym.sql fsm_log_v
 @&tool_dir.create_synonym.sql fsm_objects_v

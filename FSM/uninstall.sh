@@ -3,8 +3,8 @@ echo -n "Enter owner schema of FSM [ENTER] "
 read OWNER
 echo ${OWNER}
 
-echo -n "Enter password for ${OWNER} [ENTER] "
-read PWD
+read -s -p "Enter password for ${OWNER} [ENTER] " PWD
+echo 
 
 echo -n "Enter service name of the database or PDB [ENTER] "
 read SERVICE
