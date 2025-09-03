@@ -22,8 +22,8 @@ create table fsm_transitions(
 comment on table fsm_transitions  is 'Assignment of the allowed events for a FSM state';
 comment on column fsm_transitions.ftr_fst_id is 'Primary key, reference to FSM_STATUS';
 comment on column fsm_transitions.ftr_fev_id is 'Primary key, reference to FSM_EVENTS';
-comment on column fsm_transitions.ftr_fcl_id is 'Reference to FSM_CLASSES';
-comment on column fsm_transitions.ftr_fsc_id is 'Reference to FSM_SUB_CLASSES, defaults to MASTER';
+comment on column fsm_transitions.ftr_fcl_id is 'Primary key, Reference to FSM_CLASSES';
+comment on column fsm_transitions.ftr_fsc_id is 'Primary key, Reference to FSM_SUB_CLASSES, defaults to MASTER';
 comment on column fsm_transitions.ftr_fst_list is 'List of possible result states, :-separated list of FSM_STATUS.FST_ID.';
 comment on column fsm_transitions.ftr_active is 'Flag indicating whether an assignment should be used or not';
 comment on column fsm_transitions.ftr_required_role is 'Optional role restriction for an event, may only be thrown if user has role permission';
