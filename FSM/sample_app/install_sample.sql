@@ -22,6 +22,9 @@ prompt &h2.Create tables and initial data
 @&tool_dir.check_has_table fsm_requests
 @&tool_dir.check_has_table demo_users
 
+prompt &h3.Create type declarations
+@&tool_dir.install_type_spec fsm_req_type
+
 prompt &h3.Create initial status, events and transitions
 @&script_dir.create_fsm_data.sql
 
@@ -39,9 +42,6 @@ prompt &h3.Create Views
 @&tool_dir.install_view fsm_requests_vw
 @&tool_dir.install_view fsm_requestors_vw
 @&tool_dir.install_view fsm_request_types_vw
-
-prompt &h3.Create type declarations
-@&tool_dir.install_type_spec fsm_req_type
 
 prompt &h3.Create package declarations
 @&tool_dir.install_package_spec fsm_req

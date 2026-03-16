@@ -2,6 +2,26 @@ set define off
 
 begin
   utl_text_admin.merge_template(
+    p_uttm_name => 'FSM_PACKAGE',
+    p_uttm_type => 'FSM',
+    p_uttm_mode => 'FRAME',
+    p_uttm_text => q'{create or replace package #PKG_NAME# as\CR\}' ||
+q'{#CONSTANTS#\CR\}' ||
+q'{end #PKG_NAME#;\CR\}',
+    p_uttm_log_text => q'{}',
+    p_uttm_log_severity => 70
+  );
+
+  utl_text_admin.merge_template(
+    p_uttm_name => 'FSM_PACKAGE',
+    p_uttm_type => 'FSM',
+    p_uttm_mode => 'CONST',
+    p_uttm_text => q'{  #FCL_ID#_#ITEM_ID# constant varchar2(128 byte) := '#ITEM_ID#';}',
+    p_uttm_log_text => q'{}',
+    p_uttm_log_severity => 70
+  );
+
+  utl_text_admin.merge_template(
     p_uttm_name => 'EXPORT_FSM',
     p_uttm_type => 'FSM',
     p_uttm_mode => 'FRAME',
@@ -13,6 +33,7 @@ q'{    p_force => true);\CR\}' ||
 q'{    \CR\}' || 
 q'{  fsm_admin.merge_class(\CR\}' || 
 q'{    p_fcl_id => '#FCL_ID#',\CR\}' || 
+q'{    p_fcl_type_name => '#FCL_TYPE_NAME#',\CR\}' || 
 q'{    p_fcl_name => '#FCL_NAME#',\CR\}' || 
 q'{    p_fcl_description => q'[#FCL_DESCRIPTION#]',\CR\}' || 
 q'{    p_fcl_active => #FCL_ACTIVE#);\CR\}' || 
@@ -91,9 +112,13 @@ q'{    p_fst_severity => #FST_SEVERITY#,\CR\}' ||
 q'{    p_fst_retries_on_error => #FST_RETRIES_ON_ERROR#,\CR\}' || 
 q'{    p_fst_retry_schedule => '#FST_RETRY_SCHEDULE#',\CR\}' || 
 q'{    p_fst_retry_time => #FST_RETRY_TIME#,\CR\}' || 
+q'{    p_fst_warn_interval => #FST_WARN_INTERVAL|interval '|' day to second|null#,\CR\}' || 
+q'{    p_fst_alert_interval => #FST_ALERT_INTERVAL|interval '|' day to second|null#,\CR\}' || 
+q'{    p_fst_escalation_basis => '#FST_ESCALATION_BASIS#',\CR\}' || 
 q'{    p_fst_icon_css => '#FST_ICON_CSS#',\CR\}' || 
 q'{    p_fst_name_css => '#FST_NAME_CSS#',\CR\}' || 
 q'{    p_fst_initial_status => #FST_INITIAL_STATUS#,\CR\}' || 
+q'{    p_fst_terminal_status => #FST_TERMINAL_STATUS#,\CR\}' || 
 q'{    p_fst_active => #FST_ACTIVE#);}',
     p_uttm_log_text => q'{}',
     p_uttm_log_severity => 70
@@ -133,7 +158,8 @@ q'{    p_ftr_fst_list => '#FTR_FST_LIST#',\CR\}' ||
 q'{    p_ftr_required_role => '#FTR_REQUIRED_ROLE#',\CR\}' || 
 q'{    p_ftr_raise_automatically => #FTR_RAISE_AUTOMATICALLY#,\CR\}' || 
 q'{    p_ftr_raise_on_status => #FTR_RAISE_ON_STATUS#,\CR\}' || 
-q'{    p_ftr_active => #FTR_ACTIVE#);}',
+q'{    p_ftr_active => #FTR_ACTIVE#,\CR\}' || 
+q'{    p_run_checks => false);}',
     p_uttm_log_text => q'{}',
     p_uttm_log_severity => 70
   );

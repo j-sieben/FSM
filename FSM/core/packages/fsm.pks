@@ -227,6 +227,36 @@ as
 
 
   /**
+    Function: get_escalation_state
+      Evaluates the configured duration thresholds for the current status of an FSM instance.
+
+    Parameters:
+      p_fsm_id - ID of the FSM instance
+
+    Returns:
+      One of OK, WARN or ALERT depending on the configured thresholds.
+   */
+  function get_escalation_state(
+    p_fsm_id in fsm_objects.fsm_id%type)
+    return varchar2;
+
+
+  /**
+    Function: get_escalation_reference_date
+      Returns the timestamp used as the baseline for escalation evaluation.
+
+    Parameters:
+      p_fsm_id - ID of the FSM instance
+
+    Returns:
+      Date of the last status change or the last activity, depending on the status configuration.
+   */
+  function get_escalation_reference_date(
+    p_fsm_id in fsm_objects.fsm_id%type)
+    return date;
+
+
+  /**
     Procedure: finalize
       "Destructor", cleans up the object
    */

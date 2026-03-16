@@ -40,9 +40,11 @@ as
     l_result integer;
   begin
     -- if fsm_pkg.allows_event(self, p_fev_id) then
-    self.fsm_validity := fsm_req.raise_event(self, p_fev_id);
+    l_result := fsm_req.raise_event(self, p_fev_id);
+    self.fsm_validity := l_result;
     if self.fsm_validity != 0 then
       self.retry(p_fev_id);
+      l_result := self.fsm_validity;
     end if;
     -- end if;
     return l_result;

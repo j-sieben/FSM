@@ -282,7 +282,7 @@ as
       end case;
     else
       pit.warn(msg.fsm_EVENT_NOT_ALLOWED, msg_args(p_fev_id, p_req.fsm_fst_id), p_req.fsm_id);
-      g_result := fsm.C_OK;
+      g_result := fsm.C_ERROR;
     end if;
     
     pit.leave_mandatory;
@@ -302,7 +302,7 @@ as
     l_result binary_integer;
   begin
     l_req := fsm_req_type(p_req_id);
-    l_result := l_req.raise_event(p_req_id);
+    l_result := l_req.raise_event(p_fev_id);
     pit.assert(l_result = 0);
   end raise_event;
     

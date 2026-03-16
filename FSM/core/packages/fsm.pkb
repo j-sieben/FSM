@@ -24,6 +24,7 @@ as
    */
   procedure persist_retry(
     p_fsm in out nocopy fsm_type,
+    p_fev_id in fsm_events_v.fev_id%type,
     p_retry_schedule in fsm_objects.fsm_retry_schedule%type)
   as
     pragma autonomous_transaction;
@@ -31,16 +32,50 @@ as
     pit.enter_detailed('persist_retry',
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id),
+                    msg_param('p_fev_id', p_fev_id),
                     msg_param('p_retry_schedule', p_retry_schedule)));
 
     update fsm_objects
        set fsm_validity = p_fsm.fsm_validity,
+           fsm_fev_id = p_fev_id,
            fsm_retry_schedule = p_retry_schedule
      where fsm_id = p_fsm.fsm_id;
     commit;
 
     pit.leave_detailed;
   end persist_retry;
+
+
+  /*
+    Procedure: force_error_status
+      Last-resort fallback that persists the FSM instance in status FSM_ERROR
+      without relying on transition metadata.
+
+    Parameters:
+      p_fsm - FSM instance
+   */
+  procedure force_error_status(
+    p_fsm in out nocopy fsm_type)
+  as
+    pragma autonomous_transaction;
+  begin
+    update fsm_objects
+       set fsm_fst_id = fsm_fst.FSM_ERROR,
+           fsm_validity = C_ERROR,
+           fsm_fev_list = null,
+           fsm_last_change_date = sysdate,
+           fsm_status_change_date = sysdate
+     where fsm_id = p_fsm.fsm_id;
+
+    p_fsm.fsm_fst_id := fsm_fst.FSM_ERROR;
+    p_fsm.fsm_validity := C_ERROR;
+    p_fsm.fsm_fev_list := null;
+
+    commit;
+  exception
+    when others then
+      rollback;
+  end force_error_status;
 
 
   /*
@@ -121,7 +156,7 @@ as
     p_fsm.fsm_fev_list := l_event;
     p_fsm.fsm_validity := C_ERROR;
 
-    persist_retry(p_fsm, null);
+    persist_retry(p_fsm, l_event, null);
 
     l_result := p_fsm.raise_event(l_event);
     pit.leave_optional;
@@ -129,6 +164,8 @@ as
     when no_data_found then
       -- Throw generic error
       l_result := p_fsm.raise_event(fsm_fev.FSM_ERROR);
+    when others then
+      force_error_status(p_fsm);
   end proceed_with_error_event;
 
 
@@ -215,6 +252,40 @@ as
   end log_change;
 
 
+  /*
+    Function: handle_set_status_error
+      Handles the fallback from an arbitrary status to FSM_ERROR and enforces
+      a hard error status if this fallback is already exhausted.
+
+    Parameters:
+      p_fsm - FSM instance
+      p_leave - Controls whether PIT.LEAVE_MANDATORY must be called before recursion
+
+    Returns:
+      C_ERROR or the result of setting FSM_ERROR.
+   */
+  function handle_set_status_error(
+    p_fsm in out nocopy fsm_type,
+    p_leave in boolean default false)
+    return number
+  as
+  begin
+    if p_fsm.fsm_fst_id != fsm_fst.FSM_ERROR then
+      p_fsm.fsm_fst_id := fsm_fst.FSM_ERROR;
+      if p_leave then
+        pit.leave_mandatory;
+      end if;
+      return set_status(p_fsm);
+    else
+      force_error_status(p_fsm);
+      if p_leave then
+        pit.leave_mandatory;
+      end if;
+      return C_ERROR;
+    end if;
+  end handle_set_status_error;
+
+
   /**
     Group: Interface
    */
@@ -269,12 +340,27 @@ as
   procedure persist(
     p_fsm in out nocopy fsm_type)
   as
+    l_status_change_date fsm_objects.fsm_status_change_date%type;
   begin
     pit.enter_mandatory('persist',
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id)));
 
     p_fsm.fsm_id := coalesce(p_fsm.fsm_id, fsm_seq.nextval);
+
+    begin
+      select case
+               when fsm_fst_id = p_fsm.fsm_fst_id then fsm_status_change_date
+               else sysdate
+             end
+        into l_status_change_date
+        from fsm_objects
+       where fsm_id = p_fsm.fsm_id;
+    exception
+      when no_data_found then
+        l_status_change_date := sysdate;
+    end;
+
     merge into fsm_objects t
     using (select p_fsm.fsm_id fsm_id,
                   p_fsm.fsm_fcl_id fsm_fcl_id,
@@ -282,16 +368,20 @@ as
                   p_fsm.fsm_fst_id fsm_fst_id,
                   coalesce(p_fsm.fsm_validity, C_OK) fsm_validity,
                   p_fsm.fsm_fev_list fsm_fev_list,
-                  sysdate fsm_last_change_date
+                  sysdate fsm_last_change_date,
+                  l_status_change_date fsm_status_change_date
              from dual) s
        on (t.fsm_id = s.fsm_id)
      when matched then update set
           t.fsm_fst_id = s.fsm_fst_id,
+          t.fsm_fev_id = null,
+          t.fsm_retry_schedule = null,
           t.fsm_validity = s.fsm_validity,
           t.fsm_fev_list = s.fsm_fev_list,
-          t.fsm_last_change_date = s.fsm_last_change_date
-     when not matched then insert(fsm_id, fsm_fcl_id, fsm_fsc_id, fsm_fst_id, fsm_validity, fsm_fev_list, fsm_last_change_date)
-          values(s.fsm_id, s.fsm_fcl_id, s.fsm_fsc_id, s.fsm_fst_id, s.fsm_validity, s.fsm_fev_list, s.fsm_last_change_date);
+          t.fsm_last_change_date = s.fsm_last_change_date,
+          t.fsm_status_change_date = s.fsm_status_change_date
+     when not matched then insert(fsm_id, fsm_fcl_id, fsm_fsc_id, fsm_fst_id, fsm_fev_id, fsm_retry_schedule, fsm_validity, fsm_fev_list, fsm_last_change_date, fsm_status_change_date)
+          values(s.fsm_id, s.fsm_fcl_id, s.fsm_fsc_id, s.fsm_fst_id, null, null, s.fsm_validity, s.fsm_fev_list, s.fsm_last_change_date, s.fsm_status_change_date);
 
     pit.leave_mandatory;
   end persist;
@@ -354,8 +444,7 @@ as
         join fsm_status fst
           on fsm.fsm_fst_id = fst.fst_id
          and fsm.fsm_fcl_id = fst.fst_fcl_id
-       where fsm.fsm_id = p_fsm.fsm_id
-         and fsm.fsm_validity != fsm.C_ERROR;
+       where fsm.fsm_id = p_fsm.fsm_id;
     l_validity fsm_objects.fsm_validity%type;
   begin
     pit.enter_mandatory('retry',
@@ -365,7 +454,9 @@ as
                     msg_param('p_fev_id', p_fev_id)));
 
     for fsm in fsm_cur(p_fsm.fsm_id) loop
-      if fsm.fst_retries_on_error > C_ERROR then
+      if fsm.fsm_validity = C_ERROR then
+        proceed_with_error_event(p_fsm);
+      elsif fsm.fst_retries_on_error > C_ERROR then
         pit.raise_verbose(msg.FSM_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_TRUE), p_fsm.fsm_id);
         -- take retry into account
         -- fsm_VALIDITY may have one of the following values:
@@ -376,10 +467,9 @@ as
         when C_OK then
           -- retry not yet scheduled
           p_fsm.fsm_validity := fsm.fst_retries_on_error + 1;
-          persist_retry(p_fsm, fsm.fst_retry_schedule);
+          persist_retry(p_fsm, p_fev_id, fsm.fst_retry_schedule);
           re_fire_event(p_fsm, p_fev_id, fsm.fst_retry_time, 1);
         when C_ERROR then
-          -- STUB, can not possibly happen
           proceed_with_error_event(p_fsm);
         when 2 then
           proceed_with_error_event(p_fsm);
@@ -390,7 +480,7 @@ as
           else
             p_fsm.notify(msg.FSM_RETRY_WARN);
           end if;
-          persist_retry(p_fsm, fsm.fst_retry_schedule);
+          persist_retry(p_fsm, p_fev_id, fsm.fst_retry_schedule);
           l_validity := fsm.fst_retries_on_error - fsm.fsm_validity + 1;
           re_fire_event(p_fsm, p_fev_id, fsm.fst_retry_time, l_validity);
         end case;
@@ -494,24 +584,12 @@ as
     return p_fsm.fsm_validity;
   exception
     when msg.PIT_ASSERTION_FAILED_ERR then
-      if p_fsm.fsm_fst_id != fsm_fst.FSM_ERROR then
-        p_fsm.fsm_fst_id := fsm_fst.FSM_ERROR;
-
-        pit.leave_mandatory;
-        return set_status(p_fsm);
-      else
-        pit.leave_mandatory;
-        return C_ERROR;
-      end if;
+      return handle_set_status_error(
+               p_fsm => p_fsm,
+               p_leave => true);
     when others then
       pit.handle_exception(msg.PIT_SQL_ERROR);
-      if p_fsm.fsm_fst_id != fsm_fst.FSM_ERROR then
-        p_fsm.fsm_fst_id := fsm_fst.FSM_ERROR;
-        return set_status(p_fsm);
-      else
-        pit.leave_mandatory;
-        return C_ERROR;
-      end if;
+      return handle_set_status_error(p_fsm => p_fsm);
   end set_status;
 
 
@@ -628,6 +706,80 @@ as
     pit.leave_mandatory;
     return l_result;
   end to_string;
+
+
+  /*
+    Function: get_escalation_reference_date
+      See <FSM.get_escalation_reference_date>
+   */
+  function get_escalation_reference_date(
+    p_fsm_id in fsm_objects.fsm_id%type)
+    return date
+  as
+    l_reference_date date;
+  begin
+    select case fst_escalation_basis
+             when 'EVENT' then fsm_last_change_date
+             else coalesce(fsm_status_change_date, fsm_last_change_date)
+           end
+      into l_reference_date
+      from fsm_objects
+      join fsm_status
+        on fsm_fst_id = fst_id
+       and fsm_fcl_id = fst_fcl_id
+     where fsm_id = p_fsm_id;
+
+    return l_reference_date;
+  exception
+    when no_data_found then
+      return null;
+  end get_escalation_reference_date;
+
+
+  /*
+    Function: get_escalation_state
+      See <FSM.get_escalation_state>
+   */
+  function get_escalation_state(
+    p_fsm_id in fsm_objects.fsm_id%type)
+    return varchar2
+  as
+    l_reference_date date;
+    l_warn_interval interval day to second;
+    l_alert_interval interval day to second;
+    l_elapsed interval day to second;
+  begin
+    select case fst_escalation_basis
+             when 'EVENT' then fsm_last_change_date
+             else coalesce(fsm_status_change_date, fsm_last_change_date)
+           end,
+           fst_warn_interval,
+           fst_alert_interval
+      into l_reference_date,
+           l_warn_interval,
+           l_alert_interval
+      from fsm_objects
+      join fsm_status
+        on fsm_fst_id = fst_id
+       and fsm_fcl_id = fst_fcl_id
+     where fsm_id = p_fsm_id;
+
+    if l_warn_interval is null or l_alert_interval is null or l_reference_date is null then
+      return 'OK';
+    end if;
+
+    l_elapsed := systimestamp - cast(l_reference_date as timestamp);
+    if l_elapsed >= l_alert_interval then
+      return 'ALERT';
+    elsif l_elapsed >= l_warn_interval then
+      return 'WARN';
+    else
+      return 'OK';
+    end if;
+  exception
+    when no_data_found then
+      return null;
+  end get_escalation_state;
 
 
   /*

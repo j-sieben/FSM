@@ -1,6 +1,6 @@
 -- Deinstallation script for FSM client installation
 
-@tools/init_client.sql
+@tools/init_client.sql &1. &2.
 
 define core_dir=core/
 

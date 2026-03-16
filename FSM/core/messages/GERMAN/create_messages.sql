@@ -29,7 +29,7 @@ begin
     p_pms_name => 'FSM_NEXT_STATUS_NU',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'~Nächster Status nach "#1#" konnte nicht ermittelt werden, da er nicht eindeutig ist.~',
-    p_pms_description => q'^Wird der nächste Status automatisch berechnet, muss sichergestellt sein, dass nur ein resultierender Status ermittelt wird, die Berechnung muss deterministisch sein.^',
+    p_pms_description => q'^Die Transition erlaubt nicht die automatische Ermittlung des nächsten Status. Stellen Sie sicher, dass die Auswertung deterministisch ist, wenn Sie den nächsten Status automatisiert ermitteln lassen.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
@@ -39,7 +39,7 @@ begin
     p_pms_name => 'FSM_EVENT_NOT_ALLOWED',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^Ereignis "#1#" ist im aktuellen Status "#2#" nicht erlaubt.^',
-    p_pms_description => q'^Das angeforderte Ereignis ist laut Transistionstabelle nicht erlaubt. Stellen Sie sicher, dass alle erlaubten Transitionen erfasst wurden oder vermeiden Sie, ein nicht zugewiesenes Ereigenis auszulösen.^',
+    p_pms_description => q'^Das angeforderte Ereignis ist laut Transitionstabelle nicht erlaubt. Stellen Sie sicher, dass alle erlaubten Transitionen erfasst wurden, oder vermeiden Sie, ein nicht zugewiesenes Ereignis auszulösen.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
@@ -58,7 +58,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => 'FSM_HAS_AUTO_EVENT',
     p_pms_pmg_name => 'FSM',
-    p_pms_text => q'^Status "#1#" hat bereits einen automatischen Ereignis und erlaubt keine manuellen Ereigniss.^',
+    p_pms_text => q'^Status "#1#" hat bereits ein automatisches Ereignis und erlaubt keine manuellen Ereignisse.^',
     p_pms_description => q'^Wird einem Status ein automatisch auslösendes Ereignis zugeordnet, dürfen nicht parallel auch manuell auslösende Ereignisse zugeordnet werden.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -79,7 +79,7 @@ begin
     p_pms_name => 'FSM_INVALID_EVENT',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^Handler für das fsm-Ereignis "#1#" ist in Status "#2#" nicht erlaubt.^',
-    p_pms_description => q'^Das angeforderte Ereignis ist im aktuellen Status der Instanz nicht erlaubt. Stellen Sie sicher, dass alle erforderlichen Ereignisse in den Transitionen erfasst sind oder vermeiden Sie das auslösen nicht erlaubter Ereignisse.^',
+    p_pms_description => q'^Das angeforderte Ereignis ist im aktuellen Status der Instanz nicht erlaubt. Stellen Sie sicher, dass alle erforderlichen Ereignisse in den Transitionen erfasst sind oder vermeiden Sie das Auslösen nicht erlaubter Ereignisse.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
@@ -89,7 +89,7 @@ begin
     p_pms_name => 'FSM_MANUAL_AUTO_EVENT',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^Status "#1#" hat sowohl automatische als auch manuelle Ereignisse.^',
-    p_pms_description => q'^Ein Status mit einem automatisch auslösenden Ereignis farf keine manuell ausgelösten Ereignisse besitzen.^',
+    p_pms_description => q'^Ein Status mit einem automatisch auslösenden Ereignis darf keine manuell ausgelösten Ereignisse besitzen.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
@@ -134,21 +134,11 @@ begin
     p_pms_pml_name => 'GERMAN',
     p_error_number => null
   );
-  
-  pit_admin.merge_message(
-    p_pms_name => 'FSM_NEXT_STATUS_NU',
-    p_pms_pmg_name => 'FSM',
-    p_pms_text => q'~Nächster Status nach "#1#" konnte nicht ermittelt werden, da er nicht eindeutig ist.~',
-    p_pms_description => q'^Die Transition erlaubt nicht die automatische Ermittlung des nächsten Status. Stellen Sie sicher, dass die Auswertung deterministisch ist, wenn Sie den nächsten Status automatisiert ermitteln lassen.^',
-    p_pms_pse_id => 30,
-    p_pms_pml_name => 'GERMAN',
-    p_error_number => -20000
-  );
 
   pit_admin.merge_message(
     p_pms_name => 'FSM_NO_PL_SCOPE',
     p_pms_pmg_name => 'FSM',
-    p_pms_text => q'^PL/Scope ist für dieses Instanz nicht aktiviert, verwende eine weniger sichere Strategie zum Prüfen des Packages.^',
+    p_pms_text => q'^PL/Scope ist für diese Instanz nicht aktiviert, verwende eine weniger sichere Strategie zum Prüfen des Packages.^',
     p_pms_description => q'^^',
     p_pms_pse_id => 40,
     p_pms_pml_name => 'GERMAN',
@@ -159,7 +149,7 @@ begin
     p_pms_name => 'FSM_PACKAGE_MISSING',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^Ereignis-Handler-Package für die Klasse "#1#" fehlt.^',
-    p_pms_description => q'^Eine fsm-Klasse erfordert immer auch ein Package, das die Ereignis-HGandler implementiert.^',
+    p_pms_description => q'^Eine FSM-Klasse erfordert immer auch ein Package, das die Ereignis-Handler implementiert.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -201
@@ -269,18 +259,17 @@ begin
     p_pms_name => 'UNABLE_TO_ACHIEVE_STATUS',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^Aufgrund eines Fehlers konnte Status "#1#" nicht erreicht werden.^',
-    p_pms_description => q'^Tritt ein Fehler auf, kann fsm den nächsten Status nicht erreichen. Stattdessen geht das Objekt in einen Fehlerstatus.^',
+    p_pms_description => q'^Tritt ein Fehler auf, kann FSM den nächsten Status nicht erreichen. Stattdessen geht das Objekt in einen Fehlerstatus.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
   );
 
-  
   pit_admin.merge_message(
     p_pms_name => 'FSM_SQL_ERROR',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^FSM #1#, ID: #2#, Ereignis: "#3#"^',
-    p_pms_description => q'^Generische Nachricht für SQL-Fehlermeldung während der fsm-Verarbeitung.^',
+    p_pms_description => q'^Generische Nachricht für SQL-Fehlermeldungen während der FSM-Verarbeitung.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
@@ -308,7 +297,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => 'FSM_FINAL_STATE',
     p_pms_pmg_name => 'FSM',
-    p_pms_text => q'^fsm hat die Vearbeitung abgeschlossen.^',
+    p_pms_text => q'^FSM hat die Verarbeitung abgeschlossen.^',
     p_pms_description => q'^^',
     p_pms_pse_id => 40,
     p_pms_pml_name => 'GERMAN',
@@ -318,7 +307,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => 'FSM_DELIVERY_FAILED',
     p_pms_pmg_name => 'FSM',
-    p_pms_text => q'^fsm-Vearbeitung fehlgeschlagen.^',
+    p_pms_text => q'^FSM-Verarbeitung fehlgeschlagen.^',
     p_pms_description => q'^^',
     p_pms_pse_id => 40,
     p_pms_pml_name => 'GERMAN',
@@ -340,6 +329,36 @@ begin
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^Initialer Status ist nicht eindeutig.^',
     p_pms_description => q'^Es darf nur einen initialen Status pro Klasse/Subklasse geben, da FSM diesen Status automatisiert auswählen können muss.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'FSM_MULTIPLE_AUTO_EVENTS',
+    p_pms_pmg_name => 'FSM',
+    p_pms_text => q'^Status "#1#" in Subklasse "#2#" besitzt mehrere automatisch auszulösende Ereignisse für Ergebnis "#3#".^',
+    p_pms_description => q'^Pro Status, Subklasse und Ergebniscode darf es höchstens ein automatisch auszulösendes Ereignis geben. Andernfalls wäre der nächste automatisch auszuführende Schritt nicht eindeutig.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'FSM_UNREACHABLE_STATUS',
+    p_pms_pmg_name => 'FSM',
+    p_pms_text => q'^Status "#1#" der Klasse "#2#" ist nicht erreichbar.^',
+    p_pms_description => q'^Der Status ist aktiv, kann aber aus keinem initialen Status über die aktiven Transitionen der Klasse erreicht werden.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'FSM_DEAD_END_STATUS',
+    p_pms_pmg_name => 'FSM',
+    p_pms_text => q'^Status "#1#" der Klasse "#2#" ist eine Sackgasse.^',
+    p_pms_description => q'^Der Status ist erreichbar, besitzt aber keine aktive ausgehende Transition. Terminale Zustände sollten daher explizit modelliert werden, zum Beispiel über ein NIL-Ereignis.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000

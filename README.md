@@ -1,210 +1,156 @@
 # FSM Finite State Machine
 
-Light weight Finite-State machine implementation to dynamically control Business Flows
+Lightweight finite-state machine infrastructure for Oracle databases and PL/SQL.
 
-Despite of other implementations of this pattern this implementation is aimed to be used as a utility to include the functionality in your applications without the need for big frameworks.
+The project is designed as a reusable utility schema. Applications define their own concrete FSM types and local business logic, while the generic runtime, metadata model and logging stay centralized.
 
-## What it is and what it is not
+## Why Use a Finite-State Machine
+A finite-state machine models a process as a small set of well-defined states and explicit transitions between them.
 
-Basically, a Finite State Machine is a design pattern to implement an abstract machine that can only be in a finite number of states, allowing only one state at a time. If it changes its state, an event has occurred that has triggered the state change. So a finite state machine may be defined as a list of states it is allowed to be in and a number of events that trigger a state change. Along with this, conditional logic can be implemented to decide when and which event shall occur. For a better explanation see [this](https://en.wikipedia.org/wiki/Finite-state_machine) article on Wikipedia.
+Instead of scattering workflow logic across many flags, timestamps and procedural checks, the process is described in terms of:
 
-This implementation tries to make the design pattern available within Oracle databases by implementing it in PL/SQL. Plus, some normally existing addons are left out in order to make the pattern small and easy to use. One of the left out addons is the possibility to externally define the flow of states and the transitions between them with a graphical tool and some kind of (mostly XML based) expression language. To keep things simpler, the states, events and allowed transitions are stored in database tables whereas the conditional logic is implemented by »event listeners« (quoted because there really is no such thing as an event in PL/SQL) within a PL/SQL package which fire if an event is raised. So please don't mix a FSM up with something like Flow Control Charts rendered in BPMN. Although there are similarities, BPMN focusses on visualization of business processes whereas `FSM` implmenents work flows within the database. If you are more interested in this type of implementations, you may want to explore [Flows for APEX](https://github.com/flowsforapex/apex-flowsforapex).
+- the current state of an object
+- the events that may occur in that state
+- the allowed target states after such an event
 
-Implementing a Finite State Machine only makes sense in complex environments where you want to separate control of the workflow from the business objects you are working with. It only makes sense if you can foresee that you will be dealing with more than one business object going through a workflow. If you have one single business object only, the complexity of abstracting out the functionality may not be worth the effort.
+That gives two immediate benefits:
 
-In complex environments, other important points have to be obeyed:
+- the current processing stage becomes easy to query
+- the allowed next steps become explicit and centrally controlled
 
-- Security concerns mandates that the application may not be the owner of the tables and business logic
-- Internationalization mandates that all meta data, such as the names of the states and events, as well as the log entries has to be translatable
-- Seperating out a Finite State Machine is advisable only if it can be reused in different business environments. It is therefore best suited in a generich utility schema
+This is particularly useful in database-centric systems where processes are long-lived, auditable and shared by multiple applications.
 
-These points result in a more complex data model, a separation into several schemas with the respective burdon of maintaining access grants and the like. Therefore, FSM ist not a simple "click and run" installation but requires some more in depth understanding of how it is coded and how to use it.
+## What It Is
+`FSM` provides:
 
-That said, implementing a Finite State Machine in PL/SQL has some additional challenges to offer, mainly, because PL/SQL is not an object oriented programming language. The challenge is to add some kind of programming paradigma that allows to stabilize the coding and not base it on convention programming. The only option to achieve this in PL/SQL I am aware of is using objects and their ability to create something that is similar to an interface in OO languages.
+- metadata-driven states, events and transitions
+- an abstract runtime type `FSM_TYPE`
+- concrete SQL subtypes per business object
+- event handling in PL/SQL packages
+- centralized logging through PIT
+- generated constant packages for statuses and events
+- retry, error fallback and status escalation support
 
-## Implementation
+This makes it suitable for workflows where:
 
-`FSM` is implemented in a specifically adopted version for databases. Databases are exceptionally well at storing status, events and transitions as well as any history of changes a `FSM` object has undergone. As the database offers a robust persistence engine, an implementation of a finite state machine in a database is also very robust and may span long times as well as very short time periods. Logging of status changes or any errors that may occur is simple and straightforward.
+- more than one business object needs the same state-machine mechanism
+- process control should be separated from business data
+- workflow state must remain queryable inside the database
 
-As explained above, `FSM` uses objects to stabilize the code basis. What this means is that an abstract object type `FSM_TYPE` is provided that offers all necessary methods to receive events, change status and log any movement along the allowed path of transitions as well as errors. If you want to control your concrete business object, you create an object for it that inherits from that central `FSM_TYPE`. This way, your new business object "knows" how to move in a transition tree, it can react to events and calculate the next status. Also, all logging is done automatically. You only add the attributes you need for you business object.
+## What It Is Not
+`FSM` is not:
 
-But what is the advantage of using object types here? First, objects allow for inheritance. This is useful as you can implement all the logic that is common for any type of business object that you want to enhance with a workflow solution can share this code basis easily. 
-Secondly, in a workflow environment the control over the flow is taken over by the finite state machine. Therefore, the machine has to call business functionality for a given business object. It's not easy to do this with a central, generalized package, as this package doesn't know which package it has to call. Inheritance is the key to solve this issue: A concrete objects inherits all common workflow functionality from the abstract parent, but is free to call whatever package it requires to implement the logic for a specific business object. Plus, it can extend the list of attributes above those required for a moving object within the finite state machine, allowing it to behave like a complete business object.
+- a BPMN engine
+- a graphical workflow modeler
+- a generic rule engine
+- a no-code process framework
 
-As for logging `FSM` relies on [PIT](https://github.com/j-sieben/PIT) to be present. If you don't want to use PIT as the logging mechanism, a severe change to the code is required which may not be feasible.
-`FSM_ADMIN_PKG` utilizes [UTL_TEXT](https://github.com/j-sieben/UTL_TEXT) as a code generator. This dependency does make sense but is easy to remove.
+The state graph is data-driven, but the business decision logic remains in PL/SQL.
 
-## How to work with it
+## Core Concepts
+The runtime is built around the abstract type `FSM_TYPE`. Concrete types inherit from it and implement the business-specific behavior through packages.
 
-Basic idea is to provide a user defined type `FSM_TYPE` that encapsulates all `FSM` related functionality. As usual, I don't implement the logic within the type body but delegate this to a package to take advantage of the more powerful possibilities of packages over types. The idea is to limit object orientation to what cannot be developed in PL/SQL, namely the ability to implement an interface and inheritance. This decision is somewhat arbitrary. If you want to reduce code size and overall amount of objects, you may feel comfortable adding the logic directy into the object type body. Keep in mind though, the nor private variables, nor private methods are supported. The advantage of this approach is that the types and type bodies are mostly trivial and could even be generated by a code generator.
+For readers who do not work with Oracle object types every day, the relevant point is this:
 
-Package `fsm` implements the details. It's main focus is to
+- `FSM_TYPE` is the generic base contract
+- a concrete subtype such as `FSM_REQ_TYPE` represents one business-specific FSM implementation
+- the subtype itself is usually thin and delegates its work to a package
 
-- control the status the `FSM` instance is at
-- throw (or rethrow) events if they are to be raised automatically
-- log any movement of the `FSM`
+The object type is therefore not used as an object-oriented domain model in the broad sense. It is mainly used to express inheritance and to give the runtime a stable, typed contract.
 
-The type has the following implementation:
+The main metadata tables are:
 
-```
-create or replace type fsm_type
-authid definer
-as object(
-  fsm_id number,
-  fsm_fcl_id varchar2(50 char),
-  fsm_fst_id varchar2(50 char),
-  fsm_validity number,
-  fsm_fev_list varchar2(4000),
-  fsm_auto_raise char(1 byte),
-  member function get_actual_status
-    return varchar2,
-  member function get_next_event_list
-    return varchar2,
-  member function get_validity
-    return varchar2,
-  member function raise_event(
-    self in out nocopy fsm_type,
-    p_fev_id in varchar2)
-    return number,
-  member procedure retry(
-    self in out nocopy fsm_type,
-    p_fev_id in varchar2),
-  member function set_status(
-    self in out nocopy fsm_type,
-    p_fst_id in varchar2)
-    return number,
-  member procedure notify(
-    self in out nocopy fsm_type,
-    p_msg in varchar2,
-    p_msg_args in msg_args default null),
-  member function to_string
-    return varchar2,
-  member procedure finalize(
-    self in out nocopy fsm_type)
-) not instantiable not final;
-```
+- `FSM_CLASSES`
+- `FSM_STATUS`
+- `FSM_EVENT`
+- `FSM_TRANSITIONS`
 
-Some important details: The type references a class (attribute `FSM_FCL_ID`). This class distinguishes several types of business objects. You define a class for every type of object you want to control with `FSM`. An example would be `REQ` for a request object that is managed by `FSM`, as can be seen in the sample application. Some member functions are offered to work with the `FSM` instance, but is important to understand that you can't work with `FSM_TYPE` directly, as it is missing any attributes for your specific use case.
+The main runtime tables are:
 
-You may wonder, why you shouldn't just work with this type, as you can separate the business objects by the class attribute. Problem here is that this type would not know which package to call to run your business logic (this would depend on the value of the class attribute). Most frameworks overcome this problem by implementing calls to business logic package with dynamic PL/SQL, resulting in hard to find errors if the dynamic code does not work. Having a type per object class overcomes this problem, as the type body knows who it is working for and therefore is able to call the business logic directly. The main advantage is stability, as this code is part of the dependency chain and will get invalid if the underlying business logic changes.
+- `FSM_OBJECTS`
+- `FSM_LOG`
 
-To work with `FSM`, you start by defining an object type that derives from `FSM_TYPE`. In our sample application I use the following type:
+## Escalation Support
+Statuses may define two expected durations:
 
-```
-create or replace type fsm_req_type under fsm_type(
-  req_rtp_id varchar2(50 char),
-  req_rre_id varchar2(50 char),
-  req_text varchar2(1000 char),
-  constructor function fsm_req_type(
-    self in out nocopy fsm_req_type,
-    p_req_id in number default null,
-    p_req_rtp_id in varchar2,
-    p_req_rre_id in varchar2,
-    p_req_text in varchar2)
-    return self as result,
-  constructor function fsm_req_type(
-    self in out nocopy fsm_req_type,
-    p_fsm_id in number)
-    return self as result,
-  overriding member function raise_event(
-    self in out nocopy fsm_req_type,
-    p_fev_id in varchar2)
-    return number,
-  overriding member function set_status(
-    self in out nocopy fsm_req_type,
-    p_fst_id in varchar2)
-    return number
-);
-```
+- `FST_WARN_INTERVAL`
+- `FST_ALERT_INTERVAL`
 
-As you can see, this type adds all specific attributes you need. In total, the object type now supports all generic attributes from `FSM_TYPE` plus your additional attributes. These attributes can be stored in whichever table you like, there is no specific requirement and they may even span more than one table. Seen from this table, `FSM` is unvisible. There is no requirement to change your data model or the storage logic by any means. It's more that  `FSM` adds functionality on top of your business objects.
+The comparison basis is configured in `FST_ESCALATION_BASIS`:
 
-Next step is to define the status the object can take. It is advisable to think in small steps here, like `CREATED`, `INITIALIZED` and so on. Being finely granulated here pays off as the code to move from one status to the other is becoming even simpler the smaller the steps are. All status are stored at table `FSM_STATUS`. After having defined all your status, call method `fsm.CREATE_STATUS_PACKAGE` to create a package specification with constants for all status. They will have the naming convention `<CLASS>_<STATUS>`, so a status for class `REQ` named `INITIALIZE` will lead to a constant `REQ_INITIALIZED` within packge `FSM_FST` that is generated by the above call. Using this package instead of the hardcoded status names will prevent typos and therefore stabilize your code.
+- `STATUS`: compare `sysdate` to the last status change
+- `EVENT`: compare `sysdate` to the last activity/event
 
-To move from status to status, you need to define Events. When thinking about the status it's quite natural to think about the events that are required to move around. All events are stored at table `FSM_EVENT`. After having defined all events, call method `fsm.CREATE_EVENT_PACKAGE` analogous to the status to create a respective package `FSM_FEV` with constants for all events.
+The runtime uses two timestamps in `FSM_OBJECTS`:
 
-The last meta data you need to define is called a transition. A transition combines a start status with an event and one or more target statuses. Transitions define the possible pathes from a start status to an end status. As an example, imagine a status of CREATED that receives an event called INITIALIZE. If this happens, a method is called that does the initialization on the business object, and if this was successfull, the state moves to INITIALIZED. From that state, two events may be allowed: CHECK and CANCEL. Based on the event that is raised on the object, the next step is then CHECKED or CANCELLED.
+- `FSM_LAST_CHANGE_DATE`: last relevant activity or event
+- `FSM_STATUS_CHANGE_DATE`: last actual status change
 
-To implement logic, I always create a separate package for this. Reason is that the objects serve the sole purpose of adding the inheritance and interface mechanism, whereas all business logic is implemented in plain PL/SQL package. I also benefit from the more powerful options a package has, such as private methods or global private variables. In our example, this package is called `FSM_REQ`. Main task is to 
+This allows the framework to distinguish between:
 
-- organize the persistence of the specific attributes
-- provide event handlers that handle incoming events and set the object to the next status.
+- a process that remains in the same state but still emits progress or heartbeat events
+- a process that remains in the same state and has become silent
 
-Here is a simple example of such an event handler:
+This supports both common cases:
 
-```
-  function raise_initialize(
-    p_req in out nocopy fsm_req_type)
-    return binary_integer
-  as
-  begin
-    pit.enter_optional('raise_initialize');    
-    -- Logic goes here:
-    -- - Things that have to be done for this status change (fi send a mail etc.), normally implemented as calls to a business layer
+- an object should leave a status within an expected time
+- an object remains in a status but must emit heartbeat or progress events
 
-    -- Start by setting the validity of the FSM instance to TRUE
-    p_req.fsm_validity := fsm.C_OK;
+`FSM_OBJECTS_V` exposes the derived state as `STATUS_STATE` with values `OK`, `WARN` or `ALERT`.
 
-    -- - Logic to decide on the next status to achieve
-    g_result := p_req.set_status(fsm_fst.REQ_IN_PROCESS);
-    
-    pit.leave_optional;
-    return g_result;
-  end raise_initialize;
-```
+This turns the FSM into more than a pure transition engine. It also becomes a monitoring aid for stalled or silent processes.
 
-You will find that most of the time only trivial logic is required. This sounds funny at first thought, but the reason for this is that being in a specific status by itself is valuable information. Think about a SQL query that tries to find finalized requests. It's very easy to tell the finalized requests from the requests in work by simply looking at their status. No additional work is required for this. In normal programming style, this information needs to be stored separately or decided by additional logic. Plus, metadata adds important knowledge, such as which events are allowed next.
+## Error Handling and Retry
+The runtime has a controlled failure path:
 
-To start, you may even create a default event handler for all transitions that have only one status as the target status (only if you have a choice of target status, you are required to provide the respective decision logic). To allow for that, package `FSM` provides a method called `fsm.get_next_status(<FSM instance>, <event>)` that calculates the next status the `FSM` can go to. Here's an example of such a default event handler:
+- invalid events are treated as errors
+- `SET_STATUS` falls back to `FSM_ERROR` if normal processing fails
+- if even that path cannot be executed, a hard fallback forces the object into `FSM_ERROR`
 
-```
-  function raise_default(
-    p_req in out nocopy fsm_req_type,
-    p_fev_id in fsm_event.fev_id%type)
-    return binary_integer
-  as
-  begin
-    pit.enter_optional('raise_default',
-      p_params => msg_params(msg_param('p_fev_id', p_fev_id)));
-      
-    p_req.fsm_validity := fsm.C_OK;
-    g_result := p_req.set_status(
-                  fsm.get_next_status(
-                    p_fsm => p_req, 
-                    p_fev_id => p_fev_id);
-    
-    pit.leave_optional;
-    return g_result;
-  end raise_default;
-```
+Retries persist the failed event and retry schedule in `FSM_OBJECTS`. The current implementation performs retries synchronously.
 
-Should the logic become more complex, it is advisable to extract this logic into a business logic package and call the respective methods from here. The goal of the separation is to keep any logic that you would need even without the use of the `FSM` away from the `FSM` packages. This way, the business logic remains separated from the state control. To handle the events raised, method `fsm_req.raise_event` contains a simple `CASE` switch that points the incoming event to the right helper method:
+The important design decision here is that the framework tries to leave an object in a deterministic technical state, even when business logic, metadata or follow-up transitions fail.
 
-```
-    ...
-    -- process event
-    if is_allowed_event(p_req, p_fev_id) then
-      -- Event switch
-      case p_fev_id
-      when fsm_fev.REQ_INITIALIZE then
-        g_result := raise_initialize(p_req);
-      < other events >
-      else
-        -- fallback to default handler
-        raise_default(
-          p_req => p_req,
-          p_fev_id => p_fev_id);
-      end case;
-    else
-      pit.warn(msg.fsm_EVENT_NOT_ALLOWED, msg_args(p_fev_id, p_req.fsm_fst_id), p_req.fsm_id);
-      g_result := fsm.C_ERROR;
-    end if;
-```
+## Visibility of Concrete FSM Classes
+Concrete classes are linked to their implementing SQL subtype via `FSM_CLASSES.FCL_TYPE_NAME`.
 
-If you examine the code, you will understand that the `FSM` »knows« which events are allowed to be raised. This information is taken from the meta data you provide (It's a list of all events referenced at the transition entries for the actual status) and it is updated with every status change. Therefore it is easy to tell allowed events from the invalid events.
+Visibility is derived from Oracle type privileges:
 
-That's about it. You now can run your code and it will follow the guided tours you set up with your transitions. Happy coding!
+- a class is visible if its implementing type is visible in `ALL_TYPES`
+- visibility can be delegated with `EXECUTE` on the concrete type
+- the base class `FSM` remains globally visible
+
+This means that applications only see the FSM classes whose implementing types are available to them.
+
+That visibility model is intentionally based on Oracle privileges instead of a second custom authorization model inside the FSM metadata.
+
+## Design Approach
+The project deliberately uses SQL object inheritance only where it adds value:
+
+- `FSM_TYPE` defines a stable contract
+- concrete subtypes bind the runtime to a specific business domain
+- the actual implementation lives in packages
+
+This keeps the object bodies simple and allows the package layer to use private procedures, helper functions and better structured PL/SQL.
+
+For non-trivial processes, the recommended split is:
+
+- `FSM` core package: generic runtime behavior
+- concrete `FSM_*` package: event orchestration and persistence
+- local `BL_*` package: business decisions and domain logic
+
+That split matters because decision logic and state-machine control are not the same thing:
+
+- the business layer decides what happened
+- the FSM layer decides how that result is represented as a state transition
+
+## Dependencies
+- [PIT](https://github.com/j-sieben/PIT) is required for logging and assertions.
+- [UTL_TEXT](https://github.com/j-sieben/UTL_TEXT) is used by `FSM_ADMIN` for code generation.
+
+## Documentation
+- Overview: [Doc/Overview.md](Doc/Overview.md)
+- Detailed walkthrough: [Doc/How_it_works.md](Doc/How_it_works.md)
 
 ## Disclaimer
-
-This code is YOYO software. It's free in any respect, you may redistribute it, change it, adopt it or do whatever you like. If extensions should seem to make sense, let me know, I will do my best to incorporate it. Please accept that it's impossible for me to offer support of any kind. Should an error occur, please let me know, I will gladly correct it.
+This code is YOYO software. You may use, modify and redistribute it freely. No support commitment is implied.

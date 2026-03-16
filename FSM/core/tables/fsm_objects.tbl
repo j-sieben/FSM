@@ -8,6 +8,7 @@ create table fsm_objects(
 	fsm_validity number, 
 	fsm_fev_list varchar2(500 char), 
 	fsm_last_change_date date, 
+	fsm_status_change_date date,
 	constraint pk_fsm_objects primary key (fsm_id),
   constraint fk_fsm_fcl_id foreign key (fsm_fcl_id)
 	  references fsm_classes (fcl_id),
@@ -26,7 +27,8 @@ comment on column fsm_objects.fsm_fev_id is 'Optional event to retrigger due to 
 comment on column fsm_objects.fsm_retry_schedule is 'Optional name of a schedule that plans when to retrigger FSM_FEV_ID';
 comment on column fsm_objects.fsm_validity is 'Current validity of fsm 0 = OK, 1 = Error, >1 = Error, [FSM_VALIDITY - 1] further attempts will follow';
 comment on column fsm_objects.fsm_fev_list is 'List of currently allowed next events';
-comment on column fsm_objects.fsm_last_change_date is 'Date of the last change of the object';
+comment on column fsm_objects.fsm_last_change_date is 'Date of the last successful activity or event affecting the object.';
+comment on column fsm_objects.fsm_status_change_date is 'Date of the last actual status change of the object.';
 
 
 create index idx_fk_fsm_fcl_id on fsm_objects (fsm_fcl_id);

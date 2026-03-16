@@ -7,9 +7,13 @@ create table fsm_status(
 	fst_retries_on_error number default 0, 
 	fst_retry_schedule &ORA_NAME_TYPE., 
 	fst_retry_time number,  
+	fst_warn_interval interval day to second,
+	fst_alert_interval interval day to second,
+	fst_escalation_basis &ORA_NAME_TYPE. default on null 'STATUS' constraint fst_escalation_basis_chk check (fst_escalation_basis in ('STATUS', 'EVENT')),
 	fst_icon_css &ORA_NAME_TYPE., 
 	fst_name_css &ORA_NAME_TYPE., 
 	fst_initial_status &FLAG_TYPE. default &C_FALSE. constraint fst_initial_status_chk check (fst_initial_status in (&C_TRUE., &C_FALSE.)), 
+	fst_terminal_status &FLAG_TYPE. default &C_FALSE. constraint fst_terminal_status_chk check (fst_terminal_status in (&C_TRUE., &C_FALSE.)),
 	fst_active &FLAG_TYPE. default &C_TRUE. constraint fst_active_chk check (fst_active in (&C_TRUE., &C_FALSE.)), 
 	constraint pk_fsm_status primary key (fst_id, fst_fcl_id),
   constraint fk_fst_fcl_id foreign key (fst_fcl_id)
@@ -30,6 +34,10 @@ create table fsm_status(
         and (fst_retries_on_error > 0 and (fst_retry_schedule is null or fst_retry_time is null))
        )
     ),
+  constraint chk_fst_escalation_interval check (
+       (fst_warn_interval is null and fst_alert_interval is null)
+    or (fst_warn_interval is not null and fst_alert_interval is not null and fst_warn_interval < fst_alert_interval)
+    ),
   constraint chk_fst_retry_time check (fst_retry_time between 0 and 60)
 ) organization index;
 
@@ -42,9 +50,13 @@ comment on column fsm_status.fst_pti_id is 'Translatable item, Reference to PIT_
 comment on column fsm_status.fst_retries_on_error is 'How many retries should be made in case of error? Default: 0';
 comment on column fsm_status.fst_retry_schedule is 'Optional setting: If FST_RETRIES_ON_ERROR > 0: Which schedule should be used to make a retry';
 comment on column fsm_status.fst_retry_time is 'Optional setting: If FST_RETRIES_ON_ERROR > 0: How long to wait before retrying?';
+comment on column fsm_status.fst_warn_interval is 'Optional lower threshold for the expected duration in this status before escalation to WARN.';
+comment on column fsm_status.fst_alert_interval is 'Optional upper threshold for the expected duration in this status before escalation to ALERT.';
+comment on column fsm_status.fst_escalation_basis is 'Determines whether elapsed time is measured from the last status change (STATUS) or the last successful event/activity (EVENT).';
 comment on column fsm_status.fst_icon_css is 'Optional icon to control the display in reports';
 comment on column fsm_status.fst_name_css is 'Optional CSS class to control the display in reports';
 comment on column fsm_status.fst_initial_status is 'Flag indicating whether this status is the first status to enter when creating a new fsm object';
+comment on column fsm_status.fst_terminal_status is 'Flag indicating whether this status is a terminal/final status of the workflow';
 comment on column fsm_status.fst_active is 'Flag indicating whether the class is currently used';
 
 create index idx_fk_fst_fsg_id on fsm_status (fst_fsg_id);

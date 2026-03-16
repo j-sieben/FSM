@@ -2,6 +2,7 @@ begin
 
   fsm_admin.merge_class(
     p_fcl_id => 'REQ',
+    p_fcl_type_name => 'FSM_REQ_TYPE',
     p_fcl_name => 'Berechtigungsanforderung',
     p_fcl_description => 'Anforderung für eine Datenbankberechtigung');
     
@@ -11,7 +12,8 @@ begin
     p_fst_fcl_id => 'REQ',
     p_fst_msg_id => 'REQ_GRANTED',
     p_fst_name => 'Genehmigt',
-    p_fst_description => 'Die Anfrage wurde genehmigt');
+    p_fst_description => 'Die Anfrage wurde genehmigt',
+    p_fst_terminal_status => true);
     
   fsm_admin.merge_status(
     p_fst_id => 'CREATED',
@@ -19,7 +21,8 @@ begin
     p_fst_fcl_id => 'REQ',
     p_fst_msg_id => 'FSM_STATUS_CHANGED',
     p_fst_name => 'Antrag erstellt',
-    p_fst_description => 'Der Antrag wurde erstellt');
+    p_fst_description => 'Der Antrag wurde erstellt',
+    p_fst_initial_status => true);
     
   fsm_admin.merge_status(
     p_fst_id => 'GRANT_AUTOMATICALLY',
@@ -59,7 +62,8 @@ begin
     p_fst_fcl_id => 'REQ',
     p_fst_msg_id => 'REQ_REJECTED',
     p_fst_name => 'Abgelehnt',
-    p_fst_description => 'Der Antrag wurde abgelehnt');
+    p_fst_description => 'Der Antrag wurde abgelehnt',
+    p_fst_terminal_status => true);
     
   fsm_admin.merge_event(
     p_fev_id => 'CHECK',
@@ -113,28 +117,32 @@ begin
     p_ftr_fev_id => 'INITIALIZE',
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => 'IN_PROCESS',
-    p_ftr_raise_automatically => true);
+    p_ftr_raise_automatically => true,
+    p_run_checks => false);
     
   fsm_admin.merge_transition(
     p_ftr_fst_id => 'IN_PROCESS',
     p_ftr_fev_id => 'CHECK',
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => 'GRANT_AUTOMATICALLY:GRANT_MANUALLY:GRANT_SUPERVISOR',
-    p_ftr_raise_automatically => true);
+    p_ftr_raise_automatically => true,
+    p_run_checks => false);
     
   fsm_admin.merge_transition(
     p_ftr_fst_id => 'GRANT_AUTOMATICALLY',
     p_ftr_fev_id => 'GRANT',
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => 'GRANTED',
-    p_ftr_raise_automatically => true);
+    p_ftr_raise_automatically => true,
+    p_run_checks => false);
     
   fsm_admin.merge_transition(
     p_ftr_fst_id => 'GRANT_MANUALLY',
     p_ftr_fev_id => 'GRANT',
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => 'GRANTED',
-    p_ftr_raise_automatically => false);
+    p_ftr_raise_automatically => false,
+    p_run_checks => false);
     
   fsm_admin.merge_transition(
     p_ftr_fst_id => 'GRANT_SUPERVISOR',
@@ -142,14 +150,16 @@ begin
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => 'GRANTED',
     p_ftr_required_role => 'SUPERVISOR',
-    p_ftr_raise_automatically => false);
+    p_ftr_raise_automatically => false,
+    p_run_checks => false);
     
   fsm_admin.merge_transition(
     p_ftr_fst_id => 'GRANT_MANUALLY',
     p_ftr_fev_id => 'REJECT',
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => 'REJECTED',
-    p_ftr_raise_automatically => false);
+    p_ftr_raise_automatically => false,
+    p_run_checks => false);
     
   fsm_admin.merge_transition(
     p_ftr_fst_id => 'GRANT_SUPERVISOR',
@@ -157,25 +167,29 @@ begin
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => 'REJECTED',
     p_ftr_required_role => 'SUPERVISOR',
-    p_ftr_raise_automatically => false);
+    p_ftr_raise_automatically => false,
+    p_run_checks => false);
     
   fsm_admin.merge_transition(
     p_ftr_fst_id => 'GRANTED',
     p_ftr_fev_id => 'NIL',
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => '',
-    p_ftr_raise_automatically => false);
+    p_ftr_raise_automatically => false,
+    p_run_checks => false);
     
   fsm_admin.merge_transition(
     p_ftr_fst_id => 'REJECTED',
     p_ftr_fev_id => 'NIL',
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => '',
-    p_ftr_raise_automatically => false);
+    p_ftr_raise_automatically => false,
+    p_run_checks => false);
   
   commit;
   
   fsm_admin.create_event_package;
   fsm_admin.create_status_package;
+  fsm_admin.check_metadata('REQ');
 end;
 /

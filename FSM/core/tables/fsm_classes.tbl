@@ -1,8 +1,10 @@
 create table fsm_classes(
   fcl_id &ORA_NAME_TYPE. constraint fcl_id_nn not null, 
 	fcl_pti_id &ORA_NAME_TYPE. constraint fcl_pti_id_nn not null, 
+	fcl_type_name &ORA_NAME_TYPE. constraint fcl_type_name_nn not null,
 	fcl_active &FLAG_TYPE. default on null &C_TRUE. constraint fcl_active_nn not null, 
 	constraint pk_fsm_classes primary key (fcl_id),
+  constraint uq_fsm_classes_type_name unique (fcl_type_name),
   constraint fk_fcl_pti_id foreign key(fcl_pti_id, fcl_id)
     references pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_fcl_active check (fcl_active is not null),
@@ -14,4 +16,5 @@ create index idx_fcl_pti_id on fsm_classes(fcl_pti_id, fcl_id);
 comment on table fsm_classes is 'Table for storing fsm classes';
 comment on column fsm_classes.fcl_id is 'Primary key';
 comment on column fsm_classes.fcl_pti_id is 'Translatable item, reference to PIT_TRANSLATABLE_ITEM';
+comment on column fsm_classes.fcl_type_name is 'Name of the implementing SQL object type. Used to derive class ownership from ALL_TYPES.';
 comment on column fsm_classes.fcl_active is 'Flag indicating whether the class is currently used';

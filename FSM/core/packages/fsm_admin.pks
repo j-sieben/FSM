@@ -8,12 +8,14 @@ as
       
     Parameters:
       p_fcl_id - ID of the class
+      p_fcl_type_name - Name of the implementing SQL object type. Must exist as an instantiable subtype of FSM_TYPE
       p_fcl_name - Plain text identifier of the class
       p_fcl_description - Description of the class
       p_fcl_active - Optional flag indicating whether the class should be used (TRUE) or not (FALSE)
    */
   procedure merge_class(
     p_fcl_id in fsm_classes_v.fcl_id%type,
+    p_fcl_type_name in fsm_classes_v.fcl_type_name%type,
     p_fcl_name in fsm_classes_v.fcl_name%type,
     p_fcl_description in fsm_classes_v.fcl_description%type,
     p_fcl_active in boolean default true);
@@ -164,9 +166,13 @@ as
       p_fst_retries_on_error - Optional number of retries allowed to enter this status
       p_fst_retry_schedule - Optional schedule if a retry is executed. Controls when this retry takes place
       p_fst_retry_time - Optional duration in seconds the retry is hold back
+      p_fst_warn_interval - Optional lower threshold before the status is considered WARN
+      p_fst_alert_interval - Optional upper threshold before the status is considered ALERT
+      p_fst_escalation_basis - Determines whether elapsed time is measured from status entry (STATUS) or from the last successful event/activity (EVENT)
       p_fst_icon_css - Optional CSS-class to decorate status with an icon
       p_fst_name_css - Optional CSS-class to decorate status name
       p_fst_initial_status - Optional flag to indicate whether this status is the first to enter at creation time (TRUE) or not (FALSE). Defaults to FALSE.
+      p_fst_terminal_status - Optional flag to indicate whether this status is terminal/final (TRUE) or not (FALSE). Defaults to FALSE.
       p_fst_active - Optional flag to indicate whether this status is used (TRUE) or not (FALSE). Defaults to TRUE.
    */
   procedure merge_status(
@@ -180,9 +186,13 @@ as
     p_fst_retries_on_error in fsm_status_v.fst_retries_on_error%type default 0,
     p_fst_retry_schedule in fsm_status_v.fst_retry_schedule%type default null,
     p_fst_retry_time in fsm_status_v.fst_retry_time%type default null,
+    p_fst_warn_interval in fsm_status_v.fst_warn_interval%type default null,
+    p_fst_alert_interval in fsm_status_v.fst_alert_interval%type default null,
+    p_fst_escalation_basis in fsm_status_v.fst_escalation_basis%type default 'STATUS',
     p_fst_icon_css in fsm_status_v.fst_icon_css%type default null,
     p_fst_name_css in fsm_status_v.fst_name_css%type default null,
     p_fst_initial_status in boolean default false,
+    p_fst_terminal_status in boolean default false,
     p_fst_active in boolean default true);
     
   procedure merge_status(
@@ -261,7 +271,7 @@ as
       p_ftr_fst_id - Reference to the status
       p_ftr_fev_id - Reference to the event
       p_ftr_fcl_id - Reference to the class
-      p_ftr_fsc_id - Reference to the sub class
+      p_ftr_fsc_id - Reference to the sub class. Defaults to MASTER
       p_ftr_fst_list - ':'-separated list of status that can be reached when raising the given event
       p_ftr_raise_automatically - Optional flag to indicate whether this event is to be called automatically (TRUE) or not.
                                   If FALSE, the transition waits for the event to be fired externally.
@@ -269,17 +279,19 @@ as
                               in case of an error (C_ERROR). Defaults to fsm.C_OK
       p_ftr_required_role - Optional reference to a role that is required to perform this transition
       p_ftr_active - Optional flag to indicate whether this transition is actually used. Defaults to TRUE
+      p_run_checks - Optional flag to defer metadata checks during bulk installation. Defaults to TRUE
    */
  procedure  merge_transition(
     p_ftr_fst_id in fsm_transitions_v.ftr_fst_id%type,
     p_ftr_fev_id in fsm_transitions_v.ftr_fev_id%type,
     p_ftr_fcl_id in fsm_transitions_v.ftr_fcl_id%type,
-    p_ftr_fsc_id in fsm_transitions_v.ftr_fsc_id%type,
+    p_ftr_fsc_id in fsm_transitions_v.ftr_fsc_id%type default 'MASTER',
     p_ftr_fst_list in fsm_transitions_v.ftr_fst_list%type,
     p_ftr_raise_automatically in boolean,
     p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default fsm.C_OK,
     p_ftr_required_role in fsm_transitions_v.ftr_required_role%type default null,
-    p_ftr_active in boolean default true);
+    p_ftr_active in boolean default true,
+    p_run_checks in boolean default true);
     
   procedure merge_transition(
     p_row fsm_transitions_v%rowtype);
@@ -315,7 +327,7 @@ as
   
   /**
     Procedure: check_metadata
-      Nethod checks whether the metadata inserted for a class/subclass are consistent.
+      Method checks whether the metadata inserted for a class are consistent.
       
     Parameter:
       p_fcl_id - ID of the class to check
@@ -323,6 +335,9 @@ as
     Throws:
       FSM_NO_INITIAL_STATUS_ERR - if no initial status is defined
       FSM_TOO_MANY_INITIALS_ERR - if more than one initial status is defined
+      FSM_MULTIPLE_AUTO_EVENTS_ERR - if more than one event is raised automatically from the same status
+      FSM_UNREACHABLE_STATUS_ERR - if an active status cannot be reached from any initial status
+      FSM_DEAD_END_STATUS_ERR - if a reachable status has no active outgoing transition
    */
   procedure check_metadata(
     p_fcl_id in fsm_objects_v.fsm_fcl_id%type);
@@ -344,4 +359,3 @@ as
   
 end fsm_admin;
 /
-

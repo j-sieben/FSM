@@ -5,9 +5,11 @@
 define TOOLKIT=FSM
 
 -- Params:
--- 1.: APEX workspace name
--- 1.: APP ID
-@tools/init_apex.sql &1. &2.
+-- 1.: Name of the business logic owner of FSM
+-- 2.: Name of the APEX app owner of FSM
+-- 3.: APEX workspace name
+-- 4.: APP ID
+@tools/init_apex.sql &1. &2. &3. &4.
 
 define tool_dir=tools/
 define sample_dir=sample_app/

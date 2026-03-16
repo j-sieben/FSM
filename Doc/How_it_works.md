@@ -1,14 +1,37 @@
-# How it works
-Let's look at the moving parts in more detail. As an example, I'd like to show you a simple use case of an request for a grant.
+# How It Works
+This document explains the runtime flow of the project using the sample application as a reference.
 
-## Create a concrete class
-To create a new concrete `FSM` you inherit from `FSM_TYPE` and create a concrete class `FSM_ORDER`. I don't want to go into the details of attributes you want to store with this instance, say you store things like the kind of request `req_rtp_id`, the person who wants the grant `req_rre_id` and a text `req_text`. For the this example the attributes really don't matter.
+It is aimed at readers who understand PL/SQL, but may not be deeply familiar with finite-state machines or Oracle object inheritance.
 
-Create a package called `FSM_REQ_PKG` to hold the `FSM` related logic and optionally a second package called `BL_REQ` to hold the business logic around the request process. Type `FSM_REQ_TYPE` will need to overwrite the abstract methods `RAISE_EVENT` and `SET_STATUS` and eventually `FINALIZE` if you need a specific destructor. As this method is a concrete method, it's mandatory to provide two constructor methods: One with all relevant attributes in place and a second that only takes the `FSM_ID` as a parameter to re-create the instance from the persistence layer. All type methods simply call methods in package `FSM_ORDER_PKG`.
+## Before Looking at the Mechanics
+A finite-state machine always answers three questions:
 
-As an example, review the following code from the samples folder (`fsm` is assumed as the name for the finite state machine):
+- Where is the object right now
+- Which events are allowed next
+- Which status may result from such an event
 
-```
+This project answers those questions through a combination of metadata and code:
+
+- metadata defines the legal process graph
+- code implements the business action and, where necessary, the decision logic
+
+That split is the central design principle of this repository.
+
+## 1. Create a Concrete FSM Type
+Every concrete implementation starts with a SQL subtype of `FSM_TYPE`.
+
+It is not required that the concrete subtype adds new attributes of its own.
+
+The minimal requirement is that the implementation can map the internal `FSM_ID` to the identifier of the underlying business object. That mapping is what allows the FSM runtime to re-create the concrete instance and reconnect it to the business data.
+
+So there are two valid implementation styles:
+
+- a subtype with additional business attributes cached on the object itself
+- a subtype without additional attributes, where `FSM_ID` is used to look up the business object through local persistence logic
+
+Example:
+
+```sql
 create or replace type fsm_req_type under fsm_type(
   req_rtp_id varchar2(50 char),
   req_rre_id varchar2(50 char),
@@ -33,46 +56,237 @@ create or replace type fsm_req_type under fsm_type(
 );
 ```
 
-It is important to create this class `under fsm_type` as this is the inheritance mechanism supported by SQL. By overriding the `raise_event` and `set_status` methods you open a way into your own implementation within package `FSM_REQ_PKG`.
+The subtype adds business-specific attributes. The generic runtime attributes remain in `FSM_TYPE`.
 
-## Create the database objects
-Besides the type and the package, you need a table or a combination of tables to store an instance of `FSM_REQUEST`. I don't advice to simply use an object oriented table and have a column of type `FSM_REQ_TYPE` as the downside of this approach is a significantly harder SQL access to data within the orders. I consider a »traditional« relational table to be the best option for storing data, even if it's used within an object.
+These additional attributes are optional. They are useful if the object should temporarily carry business data in memory during event processing, but they are not required by the framework itself.
 
-The tables obviously need columns for all order attributes you want to store plus a reference to table `FSM_OBJECT` (if you don't want to use the primary key value for `FSM` as well) which stores the attributes of `FSM_REQ_TYPE` defined in the abstract type `FSM_TYPE`. To make it easy to work with those tables, I suggest a view that combines those two tables to one.
+The type body should stay thin. In this project, type methods delegate to a package such as `FSM_REQ`.
 
-Add a line at table `FSM_CLASS` with the value `REQ` for the internal name of the new `FSM` machine.
+This is an important design choice. Oracle type bodies are comparatively limited. Packages offer better support for helper methods, encapsulation and larger procedural implementations. The object type exists mainly to provide inheritance and a stable method contract.
 
-## Define Status, Events and Transitions
-Now follows the central part. Our order has defined some status (`CREATED|GRANTED|IN_PRCESS`), each of which have to be inserted into table `FSM_STATUS`. Make sure to reference class `REQ` with each status and event. This later defines the constants that get created upon (re-)creation of the status and event packages. You may want to review the sample code, file `create_initial_data.sql` to review how this is done.
+## 2. Register the Class
+After creating the SQL subtype, register the class in `FSM_CLASSES` through `FSM_ADMIN.MERGE_CLASS`.
 
-In table `FSM_TRANSITIONS` you define the transitions by combining the status and the events which are allowed to be raised within that specific status. For the sake of our example, say that status `CREATED` is the default status the `FSM` sets after creation. So in the constructor method you either set the latest status the `FSM` had (if you re-create it from the persistence layer) or you set the initial status by calling the newly created instance's `SET_STATUS` method.
+Important fields:
 
-To define that the request will go to a check process after creation automatically, you insert a line into `FSM_TRANSITIONS` stating that from status `CREATED` only event `INITIALIZED` is allowed and that is raised automatically (by setting column `FSE_RAISE_AUTOMATICALLY` to `Y`). Make sure that column `FSE_RAISE_ON_STATUS` is set to `0` to assure that this event is raised if status `CREATED` could be achieved without errors. Fill in the (list of) status that may possibly come out of the event. You don't need to cater for error events if you don't want anything special to happen. There is a standard `ERROR` event that gets raised should something happen.
+- `FCL_ID`: business class identifier
+- `FCL_TYPE_NAME`: implementing SQL subtype
 
-Error events are used for defined call back strategies. So fi if your order gets to a state of manually checking it if the automatic check fails, you may define that an automatic event is raised when status is `1` by including a line for the status, the event, the outcome status and column `FSE_RAISE_ON_STATUS`set to `1`.
+`FSM_ADMIN` validates that `FCL_TYPE_NAME`:
 
-The same strategy may apply for the next step. You may also want to process the request automatically. This then leads to a second line in this table with respective values.
+- exists in `ALL_TYPES`
+- is a subtype of `FSM_TYPE`
+- is instantiable for concrete classes
 
-## Create the status and event packages
-In order to avoid hard coded status and event names in the resulting code, package `FSM_ADMIN` provides two methods to create an event and a status package. These packages simply take the events and status entered so far and wrap them into two packages called `FSM_FEV` and `FSM_FST`. These packages define constants for all defined events and status, prefixed by their class type. So in our example, constants like `fsm_fst.REQ_CHECKED` for a status or `fsm_fev.REQ_IN_PROCESS` for an event get created. Make sure to create these packages whenever you change settings at `FSM_STATUS` or `FSM_EVENT` to make sure that these packages resemble the latest version.
+The install order matters. The SQL subtype must exist before `MERGE_CLASS` is called.
 
-## Add event handlers to package `FSM_REQ_PKG`
-Main duty of method `RAISE_EVENT` of package `FSM_REQ_PKG` is to provide two things: 
--  A case switch that analyzes the event passed in and 
--  an internal helper method for any event that gets called by the event handler. 
+Conceptually:
 
-An event handler has two duties:
-- Call the business logic that needs to be executed if this event occurs. Normally these methods reside in package `BL_REQ` or any other package you see fit.
-- Decide upon the next status the machine will reach. You may have only one choice here, in which case you can get the next status by calling a helper method called `fsm_pkg.get_next_status` rather than hard coding it into your event handler. Alternatively you may also decide upon one of more possible next status based on the outcome of your business logic.
+- the SQL type says "this implementation exists"
+- the metadata says "this implementation participates in the FSM framework"
 
-In any case, any event handler is expected to call method `set_status` on the active `FSM` and return the result of this to the calling environment. Should it turn out that the business logic does not allow for a new status, return `fsm_pkg.C_FALSE` to indicate this.
+## 3. Store Runtime Data
+Business attributes are stored in the local application tables. Generic FSM runtime data is stored in `FSM_OBJECTS`.
 
-## Done!
-That's it, your `FSM` is now ready to work. If you ask yourself what the benefit of all this is, just imagine what you have to do if a new status has to be added to the scene or if more events come into play. Basically, all you need to do is add them to the respective tables and provide event handlers for it. As any event handler focusses on one clearly defined business case only, complexity is decreased. Why and when a certain status is reached, is now data driven and can be easily changed or adjusted over time.
+Typical setup:
 
-I found it extremely valuable to be able to quickly change this. I recall that within a process, suddenly the requirement popped up to be able to cancel a process at a very specific state. That's not a problem with this approach: Simply add a `CANCEL` event at the respective point in the chain of transitions and provide an event handler for it. Concentrating on one problem at a time makes many work flow oriented systems easier to maintain.
+- local application table for the business object
+- `FSM_OBJECTS` for generic FSM data
+- local view joining both
 
-## What's more?
-One big advantage is that based on the separation of business logic and `FSM` logic, all logging is done consistently and completely. The data captured here is also a valuable source for other business logic: You may fi calculate which buttons or menu entries to show based on the actual status of a `FSM` or based on the history captured in the log so far.
+`FSM_OBJECTS` stores:
 
-To cater for this more easily, any event may have additional attributes to control the look and feel of a command on the UI. It also allows for a command name that might be used to call functionality on the UI. If you take APEX as an example, these attributes allow you to label a button, control it's visibility classes and have an action called if you click on it. As APEX supports creating UI elements based on metadata, information from `FSM` may control the list of buttons directly.
+- `FSM_ID`
+- class and current status
+- allowed next events
+- retry state
+
+## 4. Define Statuses, Events and Transitions
+The process model is defined by metadata:
+
+- `FSM_STATUS`
+- `FSM_EVENT`
+- `FSM_TRANSITIONS`
+
+Transitions describe:
+
+- which event is allowed in a given status
+- which target statuses are allowed
+- whether an event is raised automatically
+- whether it is an error callback transition
+
+The FSM engine uses this metadata to:
+
+- derive the allowed event list for the current status
+- validate incoming events
+- determine whether an automatic follow-up event has to be raised
+
+This keeps the legal process path data-driven. The framework does not hard-code the graph of allowed movements in the package logic.
+
+## 5. Generate Constant Packages
+`FSM_ADMIN` can generate:
+
+- `FSM_FST` for statuses
+- `FSM_FEV` for events
+
+Use these constants instead of hard-coded string literals. That keeps the implementation stable and avoids typo-based runtime errors.
+
+In practice this is more important than it sounds. A large part of FSM-related defects are simple identifier mismatches. Generated constants reduce that risk considerably.
+
+## 6. Implement Event Handling
+The concrete package, for example `FSM_REQ`, receives the incoming event and dispatches it to a handler.
+
+A typical event handler does two things:
+
+- call the local business logic
+- decide which target status should be reached
+
+Those two duties should not be confused.
+
+The business logic answers a domain question such as:
+
+- was the request approved
+- is the external system reachable
+- is the progress already complete
+
+The FSM package then translates that result into the next process state.
+
+Simple case:
+
+```sql
+function raise_default(
+  p_req in out nocopy fsm_req_type,
+  p_fev_id in varchar2)
+  return binary_integer
+as
+begin
+  p_req.fsm_validity := fsm.c_ok;
+  return p_req.set_status(
+           fsm.get_next_status(
+             p_fsm => p_req,
+             p_fev_id => p_fev_id));
+end raise_default;
+```
+
+Complex case:
+
+- the handler calls a `BL_*` package
+- the business logic returns a decision or target status
+- the handler calls `SET_STATUS` with the outcome
+
+This keeps the FSM package responsible for orchestration, while business packages remain focused on domain rules.
+
+That separation becomes especially useful when several different events depend on the same business decision logic.
+
+## 7. Runtime Flow
+At runtime the flow is:
+
+1. load or create a concrete FSM object
+2. call `RAISE_EVENT`
+3. validate that the event is allowed
+4. execute local business logic
+5. set `FSM_VALIDITY`
+6. call `SET_STATUS`
+7. persist runtime data
+8. log the movement
+9. optionally auto-raise the next event
+
+The important point is that the FSM does not replace business logic. It wraps business logic with a controlled transition mechanism.
+
+If the event does not lead to a status change, persistence still updates the activity timestamp. This is required for event-based escalation checks.
+
+That is the mechanism that supports progress-style events in long-running states.
+
+## 8. Escalation Checks
+Statuses may define:
+
+- `FST_WARN_INTERVAL`
+- `FST_ALERT_INTERVAL`
+- `FST_ESCALATION_BASIS`
+
+`FST_ESCALATION_BASIS` decides which timestamp is compared with `SYSDATE`:
+
+- `STATUS`: use the last status change
+- `EVENT`: use the last activity/event
+
+The required timestamps are stored in `FSM_OBJECTS`:
+
+- `FSM_LAST_CHANGE_DATE`: updated whenever a relevant event is persisted
+- `FSM_STATUS_CHANGE_DATE`: updated only when the status really changes
+
+Without this distinction, the framework cannot tell the difference between:
+
+- "the process is still active in the same state"
+- "the process is stuck in the same state"
+
+`FSM_OBJECTS_V` derives `STATUS_STATE`:
+
+- `OK`
+- `WARN`
+- `ALERT`
+
+This supports both a waiting state and a heartbeat or progress state.
+
+So a state can now carry an operational expectation, not just a semantic meaning.
+
+## 9. Error Handling
+The engine is defensive by design.
+
+- Invalid events are treated as errors.
+- If a status change fails, `SET_STATUS` tries to move the object into `FSM_ERROR`.
+- If the normal error transition path also fails, the runtime uses a hard fallback and forces the object into `FSM_ERROR`.
+
+This ensures that technical failures do not leave an object in an undefined state.
+
+In other words: the framework prefers a visible technical error over a silently inconsistent workflow position.
+
+## 10. Retry Handling
+Retries are metadata-driven.
+
+If a transition fails and retries are configured for the status, the runtime persists:
+
+- the failed event
+- the retry schedule
+- the retry state
+
+The current implementation retries synchronously. The persisted attributes are already structured so that a later asynchronous dispatcher job can pick them up.
+
+This is a pragmatic intermediate state. The metadata and persistence model already support a cleaner asynchronous retry mechanism, but the current implementation keeps the execution model simple.
+
+## 11. Visibility of Classes
+Class visibility is based on the implementing type, not on an owner column in the metadata.
+
+A class is visible if:
+
+- it is the base class `FSM`, or
+- its `FCL_TYPE_NAME` is visible in `ALL_TYPES`
+
+This means a concrete class becomes visible to another schema if the owner grants `EXECUTE` on the implementing SQL type.
+
+That gives a practical visibility model:
+
+- a schema sees its own FSM implementations
+- an application schema sees another schema's FSM implementation only if the type was granted explicitly
+
+This is preferable to introducing a second custom visibility model in metadata. Oracle privileges already express exactly the sharing semantics the framework needs.
+
+## 12. Recommended Structure
+For maintainability, keep the layers separated:
+
+- `FSM` package: generic runtime behavior
+- `FSM_<CLASS>` package: persistence and event orchestration
+- `BL_<CLASS>` package: business decisions
+
+Use the FSM package to control state, not to hold all domain logic.
+
+If the event-handler package grows into a full business layer, the benefits of the FSM abstraction start to erode.
+
+## 13. Sample Application
+The sample application demonstrates this pattern with `FSM_REQ_TYPE`.
+
+It shows:
+
+- how a concrete subtype is created
+- how the class is registered
+- how statuses, events and transitions are installed
+- how event handlers call business logic and set the resulting status

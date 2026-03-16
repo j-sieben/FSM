@@ -19,6 +19,14 @@ prompt &h2.Create Tables
 @&tools.check_has_table fsm_log
 @&tools.check_has_table fsm_status_severities
 
+prompt &h2.Align Table Definitions
+@&table_dir.alter_fsm_classes.sql
+@&table_dir.alter_fsm_status.sql
+@&table_dir.alter_fsm_objects.sql
+
+prompt &h2.Cleanup Generated Objects
+@&tools.run_script cleanup_generated_objects
+
 prompt &h2.Create Views
 @&tools.install_view fsm_classes_v
 @&tools.install_view fsm_sub_classes_v

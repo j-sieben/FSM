@@ -7,7 +7,7 @@ define TOOLKIT=FSM
 -- Params:
 -- 1.: Name of the database owner of the Toolkit
 -- 2.: Default language for messages as an oracle language name (AMERICAN | GERMAN)
-@tools/init.sql
+@tools/init.sql &1. &1.
 
 define core_dir=core/
 
