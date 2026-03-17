@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("cla",["Function"],[["class_has_active_transitions",,[[,,,,0,"File:core/packages/fsm_admin.pkb:class_has_active_transitions"]]]]);

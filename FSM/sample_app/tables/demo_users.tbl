@@ -1,3 +1,14 @@
+/**
+  Table: DEMO_USERS
+    Table to hold demo users with roles.
+
+  Columns:
+    usr_id (`varchar2(50 char)`) - Primary key.
+    usr_name (`varchar2(100 char)`) - Display name.
+    usr_description (`varchar2(200 char)`) - Optional description.
+    usr_role (`varchar2(50 char)`) - Role attached to the user.
+ */
+
 create table demo_users(
   usr_id varchar2(50 char),
   usr_name varchar2(100 char),

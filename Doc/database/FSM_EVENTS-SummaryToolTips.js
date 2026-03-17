@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("Database:FSM_EVENTS",{68:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table to store FSM event definitions per class type.</div></div>"});

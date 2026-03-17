@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("File:core/tables/fsm_log.tbl",{67:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Logging table for the finite state machine, populated by PIT output module PIT_FSM.</div></div>"});

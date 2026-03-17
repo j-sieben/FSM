@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("Database:FSM_SUB_CLASSES","FSM_SUB_CLASSES");NDSummary.OnSummaryLoaded("Database:FSM_SUB_CLASSES",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[73,0,0,"FSM_SUB_CLASSES"]]);

@@ -1,0 +1,1 @@
+﻿NDContentPage.OnToolTipsLoaded({65:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table for storing FSM classes.</div></div>",71:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table for summarizing statuses into groups for easier evaluation.</div></div>"});

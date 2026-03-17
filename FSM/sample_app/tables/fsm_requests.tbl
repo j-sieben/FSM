@@ -1,3 +1,19 @@
+/**
+  Table: FSM_REQUESTS
+    Table storing concrete attributes for type FSM_REQ.
+
+  Columns:
+    req_id (`number`) - Primary key, reference to FSM_OBJECTS.
+    req_rtp_id (`varchar2(50 char)`) - Request type, reference to FSM_REQUEST_TYPES.
+    req_rre_id (`varchar2(50 char)`) - Requesting person, reference to FSM_REQUESTORS.
+    req_text (`varchar2(1000 char)`) - Text the requestor entered for the request.
+
+  Dependencies:
+    req_id - references <FSM_OBJECTS> (fsm_id)
+    req_rre_id - references <FSM_REQUESTORS> (rre_id)
+    req_rtp_id - references <FSM_REQUEST_TYPES> (rtp_id)
+ */
+
 create table fsm_requests(
   req_id number, 
 	req_rtp_id varchar2(50 char), 

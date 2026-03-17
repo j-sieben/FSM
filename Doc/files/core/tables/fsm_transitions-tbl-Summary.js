@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("File:core/tables/fsm_transitions.tbl","fsm_transitions.tbl");NDSummary.OnSummaryLoaded("File:core/tables/fsm_transitions.tbl",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[70,0,0,"FSM_TRANSITIONS","FSM_TRANSITIONS"]]);

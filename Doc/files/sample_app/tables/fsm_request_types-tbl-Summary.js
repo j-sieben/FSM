@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("File:sample_app/tables/fsm_request_types.tbl","fsm_request_types.tbl");NDSummary.OnSummaryLoaded("File:sample_app/tables/fsm_request_types.tbl",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[3,0,0,"FSM_REQUEST_TYPES","FSM_REQUEST_TYPES"]]);

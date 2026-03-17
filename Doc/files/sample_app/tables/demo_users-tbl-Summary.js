@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("File:sample_app/tables/demo_users.tbl","demo_users.tbl");NDSummary.OnSummaryLoaded("File:sample_app/tables/demo_users.tbl",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[1,0,0,"DEMO_USERS","DEMO_USERS"]]);

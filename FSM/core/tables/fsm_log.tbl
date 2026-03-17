@@ -1,3 +1,28 @@
+/**
+  Table: FSM_LOG
+    Logging table for the finite state machine, populated by PIT output module PIT_FSM.
+
+  Columns:
+    fsl_id (`number`) - Primary key, populated by PIT.
+    fsl_fsm_id (`number`) - ID of the referenced FSM object.
+    fsl_user_name (according to `pit_util.ora_name_type`) - Username that created this log entry.
+    fsl_session_id (`varchar2(64 byte)`) - Session ID of the session that created this entry.
+    fsl_log_date (`timestamp(6)`) - Timestamp of the log entry.
+    fsl_msg_text (`clob`) - Generated message text.
+    fsl_severity (`number`) - Severity of the log entry.
+    fsl_fst_id (according to `pit_util.ora_name_type`) - Actual state the FSM object is in.
+    fsl_fev_list (`varchar2(200 char)`) - List of allowed events that can be raised on the FSM object.
+    fsl_fcl_id (according to `pit_util.ora_name_type`) - Type of the FSM object, reference to FSM_CLASSES.
+    fsl_fsc_id (according to `pit_util.ora_name_type`) - Subtype of the FSM object, reference to FSM_SUB_CLASSES.
+    fsl_msg_id (according to `pit_util.ora_name_type`) - Name of the PIT message, used to display the log in a different language.
+    fsl_msg_args (`msg_args_char`) - Optional message arguments.
+
+  Dependencies:
+    fsl_fsm_id - references <FSM_OBJECTS> (fsm_id)
+    fsl_fcl_id - references <FSM_CLASSES> (fcl_id)
+    fsl_fsc_id, fsl_fcl_id - references <FSM_SUB_CLASSES> (fsc_id, fsc_fcl_id)
+ */
+
 create table fsm_log(	
   fsl_id number constraint fsl_id_nn not null, 
 	fsl_fsm_id number constraint fsl_fsm_id_nn not null, 

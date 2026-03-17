@@ -1,3 +1,17 @@
+/**
+  Table: FSM_CLASSES
+    Table for storing FSM classes.
+
+  Columns:
+    fcl_id (according to `pit_util.ora_name_type`) - Primary key.
+    fcl_pti_id (according to `pit_util.ora_name_type`) - Translatable item, reference to PIT_TRANSLATABLE_ITEM.
+    fcl_type_name (according to `pit_util.ora_name_type`) - Name of the implementing SQL object type. Used to derive class ownership from ALL_TYPES.
+    fcl_active (according to `pit_util.flag_type`) - Flag indicating whether the class is currently used.
+
+  Dependencies:
+    fcl_pti_id, fcl_id - references <PIT_TRANSLATABLE_ITEM> (pti_uid, pti_upmg)
+ */
+
 create table fsm_classes(
   fcl_id &ORA_NAME_TYPE. constraint fcl_id_nn not null, 
 	fcl_pti_id &ORA_NAME_TYPE. constraint fcl_pti_id_nn not null, 

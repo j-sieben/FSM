@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("Database:FSM_OBJECTS","FSM_OBJECTS");NDSummary.OnSummaryLoaded("Database:FSM_OBJECTS",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[72,0,0,"FSM_OBJECTS"]]);

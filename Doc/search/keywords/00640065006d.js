@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("dem",["DatabaseTable"],[["DEMO_USERS",,[[,,,,0,"File:sample_app/tables/demo_users.tbl:DEMO_USERS","Database:DEMO_USERS"]]]]);

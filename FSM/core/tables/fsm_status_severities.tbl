@@ -1,3 +1,19 @@
+/**
+  Table: FSM_STATUS_SEVERITIES
+    Table for storing GUI information for severity filtering.
+
+  Columns:
+    fss_id (`number`) - Technical key, equivalent to MESSAGE_SEVERITY.
+    fss_fcl_id (according to `pit_util.ora_name_type`) - Technical key for the class, defaults to FSM.
+    fss_pti_id (according to `pit_util.ora_name_type`) - Severity name.
+    fss_html (`varchar2(200 char)`) - HTML snippet, long form.
+    fss_icon (`varchar2(200 char)`) - HTML snippet, status icon.
+
+  Dependencies:
+    fss_fcl_id - references <FSM_CLASSES> (fcl_id)
+    fss_pti_id, fss_fcl_id - references <PIT_TRANSLATABLE_ITEM> (pti_uid, pti_upmg)
+ */
+
 create table fsm_status_severities(
   fss_id number, 
 	fss_fcl_id &ORA_NAME_TYPE. default on null 'FSM' constraint fss_pmg_name_nn not null,

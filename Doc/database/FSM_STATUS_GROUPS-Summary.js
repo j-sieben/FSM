@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("Database:FSM_STATUS_GROUPS","FSM_STATUS_GROUPS");NDSummary.OnSummaryLoaded("Database:FSM_STATUS_GROUPS",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[71,0,0,"FSM_STATUS_GROUPS"]]);

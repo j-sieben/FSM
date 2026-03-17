@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("Database:FSM_CLASSES",{65:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table for storing FSM classes.</div></div>"});

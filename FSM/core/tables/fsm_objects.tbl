@@ -1,3 +1,25 @@
+/**
+  Table: FSM_OBJECTS
+    Table for storing abstract FSM instances as the central reference to all FSM classes.
+
+  Columns:
+    fsm_id (`number`) - Technical key, generated from FSM_SEQ, primary key.
+    fsm_fcl_id (according to `pit_util.ora_name_type`) - Document class, reference to FSM_CLASSES.
+    fsm_fsc_id (according to `pit_util.ora_name_type`) - Document subclass, used to distinguish transition flows per class.
+    fsm_fst_id (according to `pit_util.ora_name_type`) - Current document status, reference to FSM_STATUS.
+    fsm_fev_id (according to `pit_util.ora_name_type`) - Optional event to retrigger due to an error, reference to FSM_EVENTS.
+    fsm_retry_schedule (according to `pit_util.ora_name_type`) - Optional schedule name defining when FSM_FEV_ID is retriggered.
+    fsm_validity (`number`) - Current validity of the FSM: 0 = OK, 1 = Error, values above 1 indicate additional retries will follow.
+    fsm_fev_list (`varchar2(500 char)`) - List of currently allowed next events.
+    fsm_last_change_date (`date`) - Date of the last successful activity or event affecting the object.
+    fsm_status_change_date (`date`) - Date of the last actual status change of the object.
+
+  Dependencies:
+    fsm_fcl_id - references <FSM_CLASSES> (fcl_id)
+    fsm_fev_id, fsm_fcl_id - references <FSM_EVENTS> (fev_id, fev_fcl_id)
+    fsm_fst_id, fsm_fcl_id - references <FSM_STATUS> (fst_id, fst_fcl_id)
+ */
+
 create table fsm_objects(
   fsm_id number default on null fsm_seq.nextval constraint fsm_id_nn not null, 
 	fsm_fcl_id &ORA_NAME_TYPE. constraint fsm_fcl_id_nn not null, 

@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("File:sample_app/tables/fsm_request_types.tbl",{3:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Request type lookup used by the sample application.</div></div>"});

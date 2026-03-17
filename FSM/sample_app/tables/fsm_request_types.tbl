@@ -1,3 +1,13 @@
+/**
+  Table: FSM_REQUEST_TYPES
+    Request type lookup used by the sample application.
+
+  Columns:
+    rtp_id (`varchar2(50 char)`) - Primary key.
+    rtp_pti_id (according to `pit_util.ora_name_type`) - Reference to a translatable item.
+    rtp_active (`char(1 byte)`) - Flag to indicate whether the request type is currently in use.
+ */
+
 create table fsm_request_types(
   rtp_id varchar2(50 char), 
 	rtp_pti_id varchar2(128 byte), 

@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("File:core/tables/fsm_status_groups.tbl","fsm_status_groups.tbl");NDSummary.OnSummaryLoaded("File:core/tables/fsm_status_groups.tbl",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[71,0,0,"FSM_STATUS_GROUPS","FSM_STATUS_GROUPS"]]);

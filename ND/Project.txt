@@ -1,6 +1,4 @@
-# There is an error in this file.  Search for ERROR to find it.
-
-Format: 2.2
+﻿Format: 2.3.1
 
 # This is the main file you use to configure Natural Docs for your project.
 
@@ -8,8 +6,8 @@ Format: 2.2
 # Project Information
 # ------------------------------------------------------------------------
 
-Title: APEX Dynamic Controller (ADC)
-Subtitle: An APEX Dynamic Action Plugin to add dynamic activities based on use cases
+Title: Finite State Machine (FSM)
+Subtitle: A PL/SQL framework for implementing finite state machines in Oracle Database
 
 Copyright: © ConDeS GmbH & Co. KG
 
@@ -87,7 +85,6 @@ Style: Default/Default
 # Source Code
 # ------------------------------------------------------------------------
 
-# ERROR: The source folder Y:\Documents\GitHub\FSM\FSM does not exist.
 Source Folder: ..\FSM
 
 
@@ -166,7 +163,7 @@ Source Folder: ..\FSM
 # Generated Documentation
 # ------------------------------------------------------------------------
 
-HTML Output Folder: ..\DOC
+HTML Output Folder: ..\Doc
 
 
 # This is where you tell Natural Docs what kind of documentation you want

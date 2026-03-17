@@ -1,1 +1,0 @@
-﻿NDSearch.OnPrefixDataLoaded("sql",["Type"],[["SQL",,[["FSM","PL/SQL subtypes",,,0,"File:core/packages/fsm.pks:FSM.PL/SQL_subtypes","SQLClass:FSM:PL/SQL_subtypes"]]]]);

@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("File:sample_app/tables/fsm_requestors.tbl",{4:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table for dummy requestors used by the sample application.</div></div>"});

@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("File:sample_app/tables/fsm_requestors.tbl","fsm_requestors.tbl");NDSummary.OnSummaryLoaded("File:sample_app/tables/fsm_requestors.tbl",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[4,0,0,"FSM_REQUESTORS","FSM_REQUESTORS"]]);

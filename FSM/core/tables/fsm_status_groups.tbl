@@ -1,3 +1,20 @@
+/**
+  Table: FSM_STATUS_GROUPS
+    Table for summarizing statuses into groups for easier evaluation.
+
+  Columns:
+    fsg_id (according to `pit_util.ora_name_type`) - Primary key.
+    fsg_fcl_id (according to `pit_util.ora_name_type`) - Primary key, reference to FSM_CLASSES.
+    fsg_pti_id (according to `pit_util.ora_name_type`) - Translatable item, reference to PIT_TRANSLATABLE_ITEM.
+    fsg_icon_css (according to `pit_util.ora_name_type`) - Optional icon for controlling the display in reports.
+    fsg_name_css (according to `pit_util.ora_name_type`) - Optional CSS class to control report display.
+    fsg_active (according to `pit_util.flag_type`) - Flag indicating whether the status group is active.
+
+  Dependencies:
+    fsg_fcl_id - references <FSM_CLASSES> (fcl_id)
+    fsg_pti_id, fsg_fcl_id - references <PIT_TRANSLATABLE_ITEM> (pti_uid, pti_upmg)
+ */
+
 create table fsm_status_groups(
   fsg_id &ORA_NAME_TYPE.,
   fsg_fcl_id &ORA_NAME_TYPE.constraint fsg_fcl_id_nn not null,

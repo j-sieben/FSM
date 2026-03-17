@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("File:core/tables/fsm_status.tbl",{69:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table for storing FSM status definitions per class type.</div></div>"});

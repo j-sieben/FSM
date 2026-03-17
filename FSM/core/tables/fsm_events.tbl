@@ -1,3 +1,24 @@
+/**
+  Table: FSM_EVENTS
+    Table to store FSM event definitions per class type.
+
+  Columns:
+    fev_id (according to `pit_util.ora_name_type`) - Primary key.
+    fev_fcl_id (according to `pit_util.ora_name_type`) - Primary key, reference to FSM_CLASSES.
+    fev_msg_id (according to `pit_util.ora_name_type`) - Name of a message to be used for logging, reference to PIT_MESSAGE.
+    fev_pti_id (according to `pit_util.ora_name_type`) - Translatable item, reference to PIT_TRANSLATABLE_ITEM.
+    fev_raised_by_user (according to `pit_util.flag_type`) - Flag to indicate whether command is raisable by user, in contrast to job-only events.
+    fev_button_highlight (according to `pit_util.flag_type`) - Flag to indicate whether the command button shall be highlighted.
+    fev_confirm_message (`varchar2(200 char)`) - Optional message shown before the action takes place.
+    fev_button_icon (`varchar2(50 char)`) - Optional CSS class or URL to an icon.
+    fev_active (according to `pit_util.flag_type`) - Flag to indicate whether the event is currently in use.
+
+  Dependencies:
+    fev_fcl_id - references <FSM_CLASSES> (fcl_id)
+    fev_msg_id - references <PIT_MESSAGE> (pms_id)
+    fev_pti_id, fev_fcl_id - references <PIT_TRANSLATABLE_ITEM> (pti_uid, pti_upmg)
+ */
+
 create table fsm_events (
   fev_id &ORA_NAME_TYPE. constraint fev_id_nn not null, 
 	fev_fcl_id &ORA_NAME_TYPE. constraint fev_fcl_id_nn not null, 

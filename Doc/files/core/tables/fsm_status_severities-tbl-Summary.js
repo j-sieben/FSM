@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("File:core/tables/fsm_status_severities.tbl","fsm_status_severities.tbl");NDSummary.OnSummaryLoaded("File:core/tables/fsm_status_severities.tbl",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[66,0,0,"FSM_STATUS_SEVERITIES","FSM_STATUS_SEVERITIES"]]);

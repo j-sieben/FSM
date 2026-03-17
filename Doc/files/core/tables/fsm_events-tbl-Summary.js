@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("File:core/tables/fsm_events.tbl","fsm_events.tbl");NDSummary.OnSummaryLoaded("File:core/tables/fsm_events.tbl",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[68,0,0,"FSM_EVENTS","FSM_EVENTS"]]);

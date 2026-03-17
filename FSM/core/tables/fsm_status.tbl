@@ -1,3 +1,32 @@
+/**
+  Table: FSM_STATUS
+    Table for storing FSM status definitions per class type.
+
+  Columns:
+    fst_id (according to `pit_util.ora_name_type`) - Primary key.
+    fst_fcl_id (according to `pit_util.ora_name_type`) - Primary key, reference to FSM_CLASSES.
+    fst_fsg_id (according to `pit_util.ora_name_type`) - Optional grouping criterion, reference to FSM_STATUS_GROUPS.
+    fst_msg_id (according to `pit_util.ora_name_type`) - Name of the message to be used for logging, reference to PIT_MESSAGE.
+    fst_pti_id (according to `pit_util.ora_name_type`) - Translatable item, reference to PIT_TRANSLATABLE_ITEM.
+    fst_retries_on_error (`number`) - Number of retries to perform in case of error. Default: 0.
+    fst_retry_schedule (according to `pit_util.ora_name_type`) - Optional schedule to use when retries are enabled.
+    fst_retry_time (`number`) - Optional waiting time before retrying.
+    fst_warn_interval (`interval day to second`) - Optional lower threshold for escalation to WARN.
+    fst_alert_interval (`interval day to second`) - Optional upper threshold for escalation to ALERT.
+    fst_escalation_basis (according to `pit_util.ora_name_type`) - Determines whether elapsed time is measured from the last status change or the last successful event.
+    fst_icon_css (according to `pit_util.ora_name_type`) - Optional icon to control the display in reports.
+    fst_name_css (according to `pit_util.ora_name_type`) - Optional CSS class to control the display in reports.
+    fst_initial_status (according to `pit_util.flag_type`) - Flag indicating whether this status is the initial status of a new FSM object.
+    fst_terminal_status (according to `pit_util.flag_type`) - Flag indicating whether this status is terminal.
+    fst_active (according to `pit_util.flag_type`) - Flag indicating whether the status is currently used.
+
+  Dependencies:
+    fst_fcl_id - references <FSM_CLASSES> (fcl_id)
+    fst_fsg_id, fst_fcl_id - references <FSM_STATUS_GROUPS> (fsg_id, fsg_fcl_id)
+    fst_msg_id - references <PIT_MESSAGE> (pms_id)
+    fst_pti_id, fst_fcl_id - references <PIT_TRANSLATABLE_ITEM> (pti_uid, pti_upmg)
+ */
+
 create table fsm_status(
   fst_id &ORA_NAME_TYPE., 
 	fst_fcl_id &ORA_NAME_TYPE., 

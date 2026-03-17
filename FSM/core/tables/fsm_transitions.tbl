@@ -1,3 +1,25 @@
+/**
+  Table: FSM_TRANSITIONS
+    Assignment of the allowed events for an FSM state.
+
+  Columns:
+    ftr_fst_id (according to `pit_util.ora_name_type`) - Primary key, reference to FSM_STATUS.
+    ftr_fev_id (according to `pit_util.ora_name_type`) - Primary key, reference to FSM_EVENTS.
+    ftr_fcl_id (according to `pit_util.ora_name_type`) - Primary key, reference to FSM_CLASSES.
+    ftr_fsc_id (according to `pit_util.ora_name_type`) - Primary key, reference to FSM_SUB_CLASSES, defaults to MASTER.
+    ftr_fst_list (`varchar2(1000 char)`) - List of possible result states as a colon-separated list of FSM_STATUS.FST_ID values.
+    ftr_active (according to `pit_util.flag_type`) - Flag indicating whether an assignment should be used.
+    ftr_required_role (according to `pit_util.ora_name_type`) - Optional role restriction for an event.
+    ftr_raise_automatically (according to `pit_util.flag_type`) - Flag indicating whether the event is triggered automatically after a status is reached.
+    ftr_raise_on_status (`number`) - Defines which result state triggers the following event. Allowed values: 0 = normal processing, 1 = error processing.
+
+  Dependencies:
+    ftr_fev_id, ftr_fcl_id - references <FSM_EVENTS> (fev_id, fev_fcl_id)
+    ftr_fst_id, ftr_fcl_id - references <FSM_STATUS> (fst_id, fst_fcl_id)
+    ftr_fcl_id - references <FSM_CLASSES> (fcl_id)
+    ftr_fsc_id, ftr_fcl_id - references <FSM_SUB_CLASSES> (fsc_id, fsc_fcl_id)
+ */
+
 create table fsm_transitions(
   ftr_fst_id &ora_name_type. constraint ftr_fst_id_nn not null, 
 	ftr_fev_id &ora_name_type. constraint ftr_fev_id_nn not null, 

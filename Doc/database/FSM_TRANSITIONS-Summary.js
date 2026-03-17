@@ -1,0 +1,1 @@
+﻿NDFramePage.OnPageTitleLoaded("Database:FSM_TRANSITIONS","FSM_TRANSITIONS");NDSummary.OnSummaryLoaded("Database:FSM_TRANSITIONS",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[70,0,0,"FSM_TRANSITIONS"]]);

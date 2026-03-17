@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("File:sample_app/tables/demo_users.tbl",{1:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table to hold demo users with roles.</div></div>"});

@@ -1,3 +1,13 @@
+/**
+  Table: FSM_REQUESTORS
+    Table for dummy requestors used by the sample application.
+
+  Columns:
+    rre_id (`varchar2(50 char)`) - Primary key.
+    rre_name (`varchar2(100 char)`) - Display name.
+    rre_description (`varchar2(200 char)`) - Optional description.
+ */
+
 create table fsm_requestors(
   rre_id varchar2(50 char), 
 	rre_name varchar2(100 char), 

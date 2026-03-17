@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("Database:FSM_REQUESTS",{2:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table storing concrete attributes for type FSM_REQ.</div></div>"});

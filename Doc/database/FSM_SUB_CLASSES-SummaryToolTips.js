@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("Database:FSM_SUB_CLASSES",{73:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table for storing FSM subclasses. Subclasses allow multiple transition flows per class. If no subclass is required, MASTER is used.</div></div>"});

@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("File:core/tables/fsm_transitions.tbl",{70:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Assignment of the allowed events for an FSM state.</div></div>"});

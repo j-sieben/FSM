@@ -1,0 +1,1 @@
+﻿NDSummary.OnToolTipsLoaded("File:core/tables/fsm_status_groups.tbl",{71:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table for summarizing statuses into groups for easier evaluation.</div></div>"});
