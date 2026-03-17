@@ -13,8 +13,8 @@ declare
            where object_name in (
                  'FSM_TYPE', -- Typen
                  'FSM_ADMIN', 'FSM', 'FSM_FST', 'FSM_FEV', -- Packages
-                 'BL_FSM_ACTIVE_STATUS_EVENT', 'FSM_FSL_LOG_V', 'BL_FSM_HIERARCHY', 'BL_FSM_NEXT_COMMANDS', 'FSM_OBJECTS_V', 
-                 'FSM_CLASSES_V', 'FSM_EVENTS_V', 'FSM_STATUS_GROUPS_V', 'FSM_STATUS_SEVERITIES_V', 'FSM_STATUS_V', 'FSM_TRANSITIONS_V', -- Views
+                 'BL_FSM_NEXT_COMMANDS', 'BL_FSM_HIERARCHY', 'BL_FSM_HIEARCHY', 'BL_FSM_MERMAID_EDGES', 'FSM_OBJECTS_V',
+                 'FSM_CLASSES_V', 'FSM_SUB_CLASSES_V', 'FSM_EVENTS_V', 'FSM_LOG_V', 'FSM_FSL_LOG_V', 'FSM_STATUS_GROUPS_V', 'FSM_STATUS_SEVERITIES_V', 'FSM_STATUS_V', 'FSM_TRANSITIONS_V', -- Views
                  '', -- Tabellen
                  '',  -- Synonyme
                  'FSM_TYPE', 'FSM_LOG_SEQ' -- Sequenzen

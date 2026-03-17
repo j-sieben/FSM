@@ -331,6 +331,7 @@ as
       
     Parameter:
       p_fcl_id - ID of the class to check
+      p_fsc_id - ID of the subclass to check
       
     Throws:
       FSM_NO_INITIAL_STATUS_ERR - if no initial status is defined
@@ -340,7 +341,8 @@ as
       FSM_DEAD_END_STATUS_ERR - if a reachable status has no active outgoing transition
    */
   procedure check_metadata(
-    p_fcl_id in fsm_objects_v.fsm_fcl_id%type);
+    p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+    p_fsc_id in fsm_objects_v.fsm_fsc_id%type);
   
   
   /**
@@ -355,6 +357,23 @@ as
    */
   function export_class(
     p_fcl_id in fsm_classes_v.fcl_id%type)
+    return clob;
+
+
+  /**
+    Function: get_class_diagram
+      Generates a Mermaid flowchart for a class/subclass configuration.
+
+    Parameters:
+      p_fcl_id - ID of the class
+      p_fsc_id - ID of the subclass, defaults to MASTER
+
+    Returns:
+      Mermaid flowchart text as CLOB
+   */
+  function get_class_diagram(
+    p_fcl_id in fsm_classes_v.fcl_id%type,
+    p_fsc_id in fsm_sub_classes_v.fsc_id%type default 'MASTER')
     return clob;
   
 end fsm_admin;

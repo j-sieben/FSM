@@ -21,65 +21,6 @@ as
     return case when p_bool then pit_util.C_TRUE else pit_util.C_FALSE end;
   end bool_to_char;
 
-
-  /*
-    Procedure: validate_class_type
-      Validates whether a class type exists and is suitable as an FSM implementation type.
-
-    Parameters:
-      p_fcl_id - ID of the FSM class
-      p_fcl_type_name - Name of the implementing SQL object type
-   */
-  procedure validate_class_type(
-    p_fcl_id in fsm_classes.fcl_id%type,
-    p_fcl_type_name in fsm_classes.fcl_type_name%type)
-  as
-    l_type_count pls_integer;
-    l_fsm_owner all_types.owner%type;
-    l_type_owner all_types.owner%type;
-    l_instantiable all_types.instantiable%type;
-    l_is_subtype pls_integer;
-  begin
-    select max(owner)
-      into l_fsm_owner
-      from all_types
-     where type_name = 'FSM_TYPE';
-
-    select count(*)
-      into l_type_count
-      from all_types
-     where type_name = upper(p_fcl_type_name);
-    pit.assert(l_type_count = 1);
-
-    select owner, instantiable
-      into l_type_owner, l_instantiable
-      from all_types
-     where type_name = upper(p_fcl_type_name);
-
-    select count(*)
-      into l_is_subtype
-      from (
-        select owner, type_name
-          from all_types
-         start with owner = l_type_owner
-                and type_name = upper(p_fcl_type_name)
-        connect by prior supertype_owner = owner
-               and prior supertype_name = type_name
-      )
-     where owner = l_fsm_owner
-       and type_name = 'FSM_TYPE';
-    pit.assert(l_is_subtype = 1);
-
-    if p_fcl_id = C_STD_FCL then
-      pit.assert(upper(p_fcl_type_name) = 'FSM_TYPE');
-      pit.assert(l_type_owner = l_fsm_owner);
-    else
-      pit.assert(l_instantiable = 'YES');
-      pit.assert(l_type_owner != l_fsm_owner);
-    end if;
-  end validate_class_type;
-  
-  
   /**
     Procedure: create_sub_class
       Method to create a default entry for a new class entry. This default entry is
@@ -115,8 +56,21 @@ as
   end create_sub_class;
 
 
+  /**
+    Function: class_has_active_transitions
+      Checks whether a class/subclass configuration has active transitions and
+      therefore requires metadata validation.
+
+    Parameters:
+      p_fcl_id - ID of the class to inspect
+      p_fsc_id - ID of the subclass to inspect
+
+    Returns:
+      TRUE if active transitions exist for the given class/subclass
+   */
   function class_has_active_transitions(
-    p_fcl_id in fsm_classes.fcl_id%type)
+    p_fcl_id in fsm_classes.fcl_id%type,
+    p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
     return boolean
   as
     l_count pls_integer;
@@ -125,20 +79,316 @@ as
       into l_count
       from fsm_transitions
      where ftr_fcl_id = p_fcl_id
+       and ftr_fsc_id = p_fsc_id
        and ftr_active = pit_util.C_TRUE;
 
     return l_count > 0;
   end class_has_active_transitions;
 
 
+  /**
+    Procedure: check_metadata_if_needed
+      Triggers metadata validation only if the class/subclass configuration
+      already contains active transitions.
+
+    Parameters:
+      p_fcl_id - ID of the class to inspect
+      p_fsc_id - ID of the subclass to inspect
+   */
   procedure check_metadata_if_needed(
+    p_fcl_id in fsm_classes.fcl_id%type,
+    p_fsc_id in fsm_sub_classes.fsc_id%type default 'MASTER')
+  as
+  begin
+    if class_has_active_transitions(p_fcl_id, p_fsc_id) then
+      check_metadata(p_fcl_id, p_fsc_id);
+    end if;
+  end check_metadata_if_needed;
+
+
+  /**
+    Procedure: check_metadata_for_class
+      Triggers metadata validation for all subclasses of a class that already
+      contain active transitions.
+
+    Parameters:
+      p_fcl_id - ID of the class to inspect
+   */
+  procedure check_metadata_for_class(
     p_fcl_id in fsm_classes.fcl_id%type)
   as
   begin
-    if class_has_active_transitions(p_fcl_id) then
-      check_metadata(p_fcl_id);
-    end if;
-  end check_metadata_if_needed;
+    for rec in (
+      select distinct ftr_fsc_id
+        from fsm_transitions
+       where ftr_fcl_id = p_fcl_id
+         and ftr_active = pit_util.C_TRUE)
+    loop
+      check_metadata_if_needed(p_fcl_id, rec.ftr_fsc_id);
+    end loop;
+  end check_metadata_for_class;
+
+
+  /**
+    Procedure: report_multiple_auto_events
+      Reports invalid metadata if more than one automatic event is defined for the
+      same status/subclass/result-status combination.
+
+    Parameters:
+      p_fcl_id - ID of the class to inspect
+      p_fsc_id - ID of the subclass to inspect
+   */
+  procedure report_multiple_auto_events(
+    p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+    p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
+  as
+    cursor multiple_auto_cur(
+      p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+      p_fsc_id in fsm_objects_v.fsm_fsc_id%type) 
+    is
+      select ftr_fst_id, ftr_fsc_id, ftr_raise_on_status
+        from (
+          select ftr_fst_id, ftr_fsc_id, ftr_raise_on_status
+            from fsm_transitions
+           where ftr_fcl_id = p_fcl_id
+             and ftr_fsc_id = p_fsc_id
+             and ftr_active = pit_util.C_TRUE
+             and ftr_raise_automatically = pit_util.C_TRUE
+           group by ftr_fst_id, ftr_fsc_id, ftr_raise_on_status
+          having count(distinct ftr_fev_id) > 1);
+  begin
+    for finding in multiple_auto_cur(p_fcl_id, p_fsc_id) loop
+      pit.raise_error(
+        msg.FSM_MULTIPLE_AUTO_EVENTS,
+        msg_args(finding.ftr_fst_id, finding.ftr_fsc_id, to_char(finding.ftr_raise_on_status)));
+    end loop;
+  end report_multiple_auto_events;
+
+
+  /**
+    Procedure: check_initial_statuses
+      Ensures that exactly one initial status exists for the given class/subclass
+      configuration.
+
+    Parameters:
+      p_fcl_id - ID of the class to inspect
+      p_fsc_id - ID of the subclass to inspect
+   */
+  procedure check_initial_statuses(
+    p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+    p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
+  as
+    l_count binary_integer;
+  begin
+    select count(distinct fst_id)
+      into l_count
+      from fsm_transitions
+      join fsm_status
+        on ftr_fst_id = fst_id
+     where ftr_active = pit_util.C_TRUE
+       and fst_active = pit_util.C_TRUE
+       and fst_initial_status = (select pit_util.C_TRUE from dual)
+       and ftr_fcl_id = p_fcl_id
+       and ftr_fsc_id = p_fsc_id;
+    
+    pit.assert(l_count > 0, msg.FSM_NO_INITIAL_STATUS);
+    pit.assert(l_count = 1, msg.FSM_TOO_MANY_INITIALS);
+  end check_initial_statuses;
+
+
+  /**
+    Procedure: report_unreachable_statuses
+      Reports active statuses that cannot be reached from the configured initial
+      status within the given class/subclass configuration.
+
+    Parameters:
+      p_fcl_id - ID of the class to inspect
+      p_fsc_id - ID of the subclass to inspect
+   */
+  procedure report_unreachable_statuses(
+    p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+    p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
+  as
+    cursor unreachable_status_cur(
+      p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+      p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
+    is
+      with active_statuses as (
+             select fst_id
+               from fsm_status
+              where fst_fcl_id = p_fcl_id
+                and fst_active = pit_util.C_TRUE),
+           active_transitions as (
+             select ftr_fst_id, ftr_fst_list
+               from fsm_transitions
+              where ftr_fcl_id = p_fcl_id
+                and ftr_fsc_id = p_fsc_id
+                and ftr_active = pit_util.C_TRUE),
+           edges as (
+             select distinct at.ftr_fst_id source_status,
+                    regexp_substr(at.ftr_fst_list, '[^:]+', 1, level) target_status
+               from active_transitions at
+             connect by regexp_substr(at.ftr_fst_list, '[^:]+', 1, level) is not null
+                    and prior sys_guid() is not null
+                    and prior at.ftr_fst_id = at.ftr_fst_id
+                    and prior at.ftr_fst_list = at.ftr_fst_list),
+           initials as (
+             select fst_id
+               from fsm_status
+              where fst_fcl_id = p_fcl_id
+                and fst_active = pit_util.C_TRUE
+                and fst_initial_status = pit_util.C_TRUE),
+           reachable_statuses as (
+             select fst_id status_id
+               from initials
+             union
+             select distinct target_status
+               from edges
+              start with source_status in (
+                    select fst_id
+                      from initials)
+            connect by nocycle prior target_status = source_status)
+      select fst_id
+        from (select fst_id
+                from active_statuses
+              minus
+              select status_id
+                from reachable_statuses);
+  begin
+    for finding in unreachable_status_cur(p_fcl_id, p_fsc_id) loop
+      pit.raise_error(
+        msg.FSM_UNREACHABLE_STATUS,
+        msg_args(finding.fst_id, p_fcl_id));
+    end loop;
+  end report_unreachable_statuses;
+
+
+  /**
+    Procedure: report_dead_ends
+      Reports reachable, non-terminal statuses that do not have an active outgoing
+      transition within the given class/subclass configuration.
+
+    Parameters:
+      p_fcl_id - ID of the class to inspect
+      p_fsc_id - ID of the subclass to inspect
+   */
+  procedure report_dead_ends(
+    p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+    p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
+  as
+    cursor dead_ends_cur(
+      p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+      p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
+    is
+      with active_transitions as (
+             select ftr_fst_id, ftr_fst_list
+               from fsm_transitions
+              where ftr_fcl_id = p_fcl_id
+                and ftr_fsc_id = p_fsc_id
+                and ftr_active = pit_util.C_TRUE),
+           edges as (
+             select distinct ftr_fst_id source_status,
+                    regexp_substr(ftr_fst_list, '[^:]+', 1, level) target_status
+               from active_transitions
+             connect by regexp_substr(ftr_fst_list, '[^:]+', 1, level) is not null
+                    and prior sys_guid() is not null
+                    and prior ftr_fst_id = ftr_fst_id
+                    and prior ftr_fst_list = ftr_fst_list),
+           initials as (
+             select fst_id
+               from fsm_status
+              where fst_fcl_id = p_fcl_id
+                and fst_active = pit_util.C_TRUE
+                and fst_initial_status = pit_util.C_TRUE),
+           reachable_statuses as (
+             select fst_id
+               from initials
+             union
+             select distinct target_status
+               from edges
+              start with source_status in (
+                    select fst_id
+                      from initials)
+            connect by nocycle prior target_status = source_status)
+      select rs.fst_id
+        from reachable_statuses rs
+        join fsm_status st
+          on st.fst_id = rs.fst_id
+         and st.fst_fcl_id = p_fcl_id
+       where not exists (
+             select 1
+               from active_transitions at
+              where at.ftr_fst_id = rs.fst_id)
+         and st.fst_terminal_status = pit_util.C_FALSE;
+  begin
+    for finding in dead_ends_cur(p_fcl_id, p_fsc_id) loop
+      pit.raise_error(
+        msg.FSM_DEAD_END_STATUS,
+        msg_args(finding.fst_id, p_fcl_id));
+    end loop;
+  end report_dead_ends;
+
+
+  /**
+    Procedure: create_constant_package_for
+      Generates and compiles a constant package from the configured UTL_TEXT
+      templates. Depending on the requested package name, constants for all
+      active events or all active statuses are emitted.
+
+    Parameters:
+      p_pkg_name - Name of the package to generate, supported values are
+                   FSM_FEV and FSM_FST
+   */
+  procedure create_constant_package_for(
+    p_pkg_name in varchar2
+  )
+  as
+    l_sql_text clob;
+  begin
+    with templates as (
+           select uttm_text template, uttm_mode
+             from utl_text_templates
+            where uttm_name = 'FSM_PACKAGE'
+              and uttm_type = 'FSM')
+    select case p_pkg_name
+             when 'FSM_FEV' then
+               utl_text.generate_text(cursor(
+                 select frame.template, p_pkg_name pkg_name,
+                        utl_text.generate_text(cursor(
+                          select template,
+                                 upper(fev_fcl_id) fcl_id,
+                                 upper(fev_id) item_id
+                            from fsm_events
+                           cross join templates
+                           where uttm_mode = 'CONST'
+                             and fev_active = pit_util.C_TRUE
+                           order by fev_fcl_id, fev_id
+                        ), fsm.C_CR) constants
+                   from templates frame
+                  where frame.uttm_mode = 'FRAME')
+               )
+             when 'FSM_FST' then
+               utl_text.generate_text(cursor(
+                 select frame.template, p_pkg_name pkg_name,
+                        utl_text.generate_text(cursor(
+                          select template,
+                                 upper(fst_fcl_id) fcl_id,
+                                 upper(fst_id) item_id
+                            from fsm_status
+                           cross join templates
+                           where uttm_mode = 'CONST'
+                             and fst_active = pit_util.C_TRUE
+                           order by fst_fcl_id, fst_id
+                        ), fsm.C_CR) constants
+                   from templates frame
+                  where frame.uttm_mode = 'FRAME')
+               )
+           end
+      into l_sql_text
+      from dual;
+
+    execute immediate l_sql_text;
+  end create_constant_package_for;
     
   
   /* INTERFACE */    
@@ -158,9 +408,10 @@ as
   begin
     l_active := bool_to_char(p_fcl_active);
     l_pti_id := C_PTI_CLASS_PREFIX || p_fcl_id;
-    validate_class_type(
-      p_fcl_id => p_fcl_id,
-      p_fcl_type_name => upper(p_fcl_type_name));
+    
+    if p_fcl_id = C_STD_FCL then
+      pit.assert(upper(p_fcl_type_name) = 'FSM_TYPE');
+    end if;
     
     pit_admin.merge_message_group(
       p_pmg_name => p_fcl_id);
@@ -283,7 +534,7 @@ as
      when not matched then insert (fsc_id, fsc_fcl_id, fsc_pti_id, fsc_active)
           values (s.fsc_id, s.fsc_fcl_id, s.fsc_pti_id, s.fsc_active);
 
-    check_metadata_if_needed(p_fsc_fcl_id);
+    check_metadata_if_needed(p_fsc_fcl_id, p_fsc_id);
           
   end merge_sub_class;
     
@@ -331,7 +582,7 @@ as
       p_pti_id => l_pti_id,
       p_pti_pmg_name => p_fsc_id);
 
-    check_metadata_if_needed(p_fsc_fcl_id);
+    check_metadata_if_needed(p_fsc_fcl_id, p_fsc_id);
       
   end delete_sub_class;  
        
@@ -588,7 +839,7 @@ as
            s.fst_warn_interval, s.fst_alert_interval, s.fst_escalation_basis,
            s.fst_icon_css, s.fst_name_css);
 
-    check_metadata_if_needed(p_fst_fcl_id);
+    check_metadata_for_class(p_fst_fcl_id);
   end merge_status;
   
   procedure merge_status(
@@ -642,7 +893,7 @@ as
       p_pti_id => l_pti_id,
       p_pti_pmg_name => p_fst_fcl_id);
 
-    check_metadata_if_needed(p_fst_fcl_id);
+    check_metadata_for_class(p_fst_fcl_id);
   end delete_status;
   
   
@@ -706,7 +957,7 @@ as
           (s.fev_id, s.fev_fcl_id, s.fev_msg_id, s.fev_pti_id, s.fev_active,
            s.fev_raised_by_user, s.fev_button_icon, s.fev_button_highlight, s.fev_confirm_message);
 
-    check_metadata_if_needed(p_fev_fcl_id);
+    check_metadata_for_class(p_fev_fcl_id);
   end merge_event;
   
   procedure merge_event(
@@ -752,7 +1003,7 @@ as
       p_pti_id => l_pti_id,
       p_pti_pmg_name => p_fev_fcl_id);
 
-    check_metadata_if_needed(p_fev_fcl_id);
+    check_metadata_for_class(p_fev_fcl_id);
   end delete_event;
   
   
@@ -807,7 +1058,7 @@ as
            s.ftr_raise_automatically, s.ftr_raise_on_status, s.ftr_required_role);
 
     if p_run_checks then
-      check_metadata_if_needed(p_ftr_fcl_id);
+      check_metadata_if_needed(p_ftr_fcl_id, p_ftr_fsc_id);
     end if;
   end merge_transition;
   
@@ -846,43 +1097,9 @@ as
        and ftr_fcl_id = p_ftr_fcl_id
        and ftr_fsc_id = p_ftr_fsc_id;
 
-    check_metadata_if_needed(p_ftr_fcl_id);
+    check_metadata_if_needed(p_ftr_fcl_id, p_ftr_fsc_id);
   end delete_transition;
 
-
-  procedure create_constant_package_for(
-    p_pkg_name in varchar2
-  )
-  as
-    l_sql_text clob;
-  begin
-    with templates as (
-           select uttm_text template, uttm_mode
-             from utl_text_templates
-            where uttm_name = 'FSM_PACKAGE'
-              and uttm_type = 'FSM')
-    select utl_text.generate_text(cursor(
-             select frame.template, p_pkg_name pkg_name,
-                    utl_text.generate_text(cursor(
-                      select template,
-                             upper(fev_fcl_id) fcl_id,
-                             upper(fev_id) item_id
-                        from fsm_events
-                       cross join templates
-                       where uttm_mode = 'CONST'
-                         and fev_active = pit_util.C_TRUE
-                       order by fev_fcl_id, fev_id
-                    ), fsm.C_CR) constants
-               from templates frame
-              where frame.uttm_mode = 'FRAME')  
-           ) result
-      into l_sql_text
-      from dual;
-
-    execute immediate l_sql_text;
-  end create_constant_package_for;
-  
-  
   /**
     Procedure: create_event_package
       See <FSM_ADMIN.create_event_package>
@@ -910,160 +1127,18 @@ as
       See <FSM_ADMIN.check_metadata>
    */
   procedure check_metadata(
-    p_fcl_id in fsm_objects_v.fsm_fcl_id%type)
+    p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+    p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
   as
-    cursor fsc_cur (p_fcl_id in fsm_objects_v.fsm_fcl_id%type) is
-      select distinct ftr_fcl_id, ftr_fsc_id
-        from fsm_transitions
-       where ftr_fcl_id = p_fcl_id;
-    l_count binary_integer;
-    l_fst_id fsm_status.fst_id%type;
-    l_fsc_id fsm_transitions.ftr_fsc_id%type;
-    l_raise_on_status fsm_transitions.ftr_raise_on_status%type;
   begin
   
-    for fsc in fsc_cur(p_fcl_id) loop
-      select count(distinct fst_id)
-        into l_count
-        from fsm_transitions
-        join fsm_status
-          on ftr_fst_id = fst_id
-       where ftr_fcl_id = fsc.ftr_fcl_id
-         and ftr_fsc_id = fsc.ftr_fsc_id
-         and ftr_active = pit_util.C_TRUE
-         and fst_active = pit_util.C_TRUE
-         and fst_initial_status = (select pit_util.C_TRUE from dual);
-      
-      pit.assert(l_count > 0, msg.FSM_NO_INITIAL_STATUS);
-      pit.assert(l_count = 1, msg.FSM_TOO_MANY_INITIALS);
-    end loop;
+    check_initial_statuses(p_fcl_id, p_fsc_id);
 
-    begin
-      select ftr_fst_id, ftr_fsc_id, ftr_raise_on_status
-        into l_fst_id, l_fsc_id, l_raise_on_status
-        from (
-          select ftr_fst_id, ftr_fsc_id, ftr_raise_on_status
-            from fsm_transitions
-           where ftr_fcl_id = p_fcl_id
-             and ftr_active = pit_util.C_TRUE
-             and ftr_raise_automatically = pit_util.C_TRUE
-           group by ftr_fst_id, ftr_fsc_id, ftr_raise_on_status
-          having count(distinct ftr_fev_id) > 1)
-       where rownum = 1;
+    report_multiple_auto_events(p_fcl_id, p_fsc_id);
 
-      pit.raise_error(
-        msg.FSM_MULTIPLE_AUTO_EVENTS,
-        msg_args(l_fst_id, l_fsc_id, to_char(l_raise_on_status)));
-    exception
-      when no_data_found then
-        null;
-    end;
+    report_unreachable_statuses(p_fcl_id, p_fsc_id);
 
-    begin
-      with active_statuses as (
-             select fst_id
-               from fsm_status
-              where fst_fcl_id = p_fcl_id
-                and fst_active = pit_util.C_TRUE),
-           active_transitions as (
-             select ftr_fst_id, ftr_fst_list
-               from fsm_transitions
-              where ftr_fcl_id = p_fcl_id
-                and ftr_active = pit_util.C_TRUE),
-           edges as (
-             select distinct at.ftr_fst_id source_status,
-                    regexp_substr(at.ftr_fst_list, '[^:]+', 1, level) target_status
-               from active_transitions at
-             connect by regexp_substr(at.ftr_fst_list, '[^:]+', 1, level) is not null
-                    and prior sys_guid() is not null
-                    and prior at.ftr_fst_id = at.ftr_fst_id
-                    and prior at.ftr_fst_list = at.ftr_fst_list),
-           initials as (
-             select fst_id
-               from fsm_status
-              where fst_fcl_id = p_fcl_id
-                and fst_active = pit_util.C_TRUE
-                and fst_initial_status = pit_util.C_TRUE),
-           reachable_statuses as (
-             select fst_id status_id
-               from initials
-             union
-             select distinct target_status
-               from edges
-              start with source_status in (
-                    select fst_id
-                      from initials)
-            connect by nocycle prior target_status = source_status)
-      select fst_id
-        into l_fst_id
-        from (
-          select fst_id
-            from active_statuses
-          minus
-          select status_id
-            from reachable_statuses)
-       where rownum = 1;
-
-      pit.raise_error(
-        msg.FSM_UNREACHABLE_STATUS,
-        msg_args(l_fst_id, p_fcl_id));
-    exception
-      when no_data_found then
-        null;
-    end;
-
-    begin
-      with active_transitions as (
-             select ftr_fst_id
-               from fsm_transitions
-              where ftr_fcl_id = p_fcl_id
-                and ftr_active = pit_util.C_TRUE),
-           edges as (
-             select distinct ftr_fst_id source_status,
-                    regexp_substr(ftr_fst_list, '[^:]+', 1, level) target_status
-               from fsm_transitions
-              where ftr_fcl_id = p_fcl_id
-                and ftr_active = pit_util.C_TRUE
-             connect by regexp_substr(ftr_fst_list, '[^:]+', 1, level) is not null
-                    and prior sys_guid() is not null
-                    and prior ftr_fst_id = ftr_fst_id
-                    and prior ftr_fst_list = ftr_fst_list),
-           initials as (
-             select fst_id
-               from fsm_status
-              where fst_fcl_id = p_fcl_id
-                and fst_active = pit_util.C_TRUE
-                and fst_initial_status = pit_util.C_TRUE),
-           reachable_statuses as (
-             select fst_id status_id
-               from initials
-             union
-             select distinct target_status
-               from edges
-              start with source_status in (
-                    select fst_id
-                      from initials)
-            connect by nocycle prior target_status = source_status)
-      select rs.status_id
-        into l_fst_id
-        from reachable_statuses rs
-        join fsm_status st
-          on st.fst_id = rs.status_id
-         and st.fst_fcl_id = p_fcl_id
-       where not exists (
-             select 1
-               from active_transitions at
-              where at.ftr_fst_id = rs.status_id)
-         and st.fst_terminal_status = pit_util.C_FALSE
-         and rownum = 1;
-
-      pit.raise_error(
-        msg.FSM_DEAD_END_STATUS,
-        msg_args(l_fst_id, p_fcl_id));
-    exception
-      when no_data_found then
-        null;
-    end;
+    report_dead_ends(p_fcl_id, p_fsc_id);
     
   end check_metadata;
   
@@ -1085,86 +1160,198 @@ as
             where uttm_name = 'EXPORT_FSM'
               and uttm_type = 'FSM')
     select utl_text.generate_text(cursor(
-             select template, fcl_id, fcl_type_name, fcl_name, fcl_description,
-                    case fcl_active when pit_util.C_TRUE then 'true' else 'false' end fcl_active,
+             select template, cls.fcl_id, cls.fcl_type_name,
+                    pti.pti_name fcl_name, pti.pti_description fcl_description,
+                    case cls.fcl_active when pit_util.C_TRUE then 'true' else 'false' end fcl_active,
                     utl_text.generate_text(cursor(
-                      select template, fsc_id, fsc_fcl_id, fsc_name, fsc_description,
-                             case fsc_active when pit_util.C_TRUE then 'true' else 'false' end fsc_active
-                        from fsm_sub_classes_v
+                      select template, fsc.fsc_id, fsc.fsc_fcl_id, pti.pti_name fsc_name, pti.pti_description fsc_description,
+                             case fsc.fsc_active when pit_util.C_TRUE then 'true' else 'false' end fsc_active
+                        from fsm_sub_classes fsc
+                        join pit_translatable_item_v pti
+                          on fsc.fsc_pti_id = pti.pti_id
+                         and fsc.fsc_fcl_id = pti.pti_pmg_name
                        cross join templates
                        where uttm_mode = 'FSC'
-                         and fsc_fcl_id = fcl_id
+                         and fsc.fsc_fcl_id = cls.fcl_id
                     ), C_CR) fsc_script,
                     utl_text.generate_text(cursor(
-                      select template, fsg_id, fsg_fcl_id, fsg_name, fsg_description,
-                             fsg_icon_css, fsg_name_css,
-                             case fsg_active when pit_util.C_TRUE then 'true' else 'false' end fsg_active
-                        from fsm_status_groups_v
+                      select template, fsg.fsg_id, fsg.fsg_fcl_id, pti.pti_name fsg_name, pti.pti_description fsg_description,
+                             fsg.fsg_icon_css, fsg.fsg_name_css,
+                             case fsg.fsg_active when pit_util.C_TRUE then 'true' else 'false' end fsg_active
+                        from fsm_status_groups fsg
+                        join pit_translatable_item_v pti
+                          on fsg.fsg_pti_id = pti.pti_id
+                         and fsg.fsg_fcl_id = pti.pti_pmg_name
                        cross join templates
                        where uttm_mode = 'FSG'
-                         and fsg_fcl_id = fcl_id
+                         and fsg.fsg_fcl_id = cls.fcl_id
                     ), C_CR) fsg_script,
                     utl_text.generate_text(cursor(
-                      select template, fst_id, fst_fcl_id, fst_fsg_id, fst_msg_id, fst_pti_id, fst_name, fst_description,                             
-                             fst_retries_on_error, fst_severity, fst_retry_schedule, 
-                             coalesce(to_char(fst_retry_time), 'null') fst_retry_time,
-                             coalesce(
-                               to_char(extract(day from fst_warn_interval))
-                               || ' '
-                               || lpad(to_char(extract(hour from fst_warn_interval)), 2, '0')
-                               || ':'
-                               || lpad(to_char(extract(minute from fst_warn_interval)), 2, '0')
-                               || ':'
-                               || lpad(to_char(trunc(extract(second from fst_warn_interval))), 2, '0'),
-                               'null') fst_warn_interval,
-                             coalesce(
-                               to_char(extract(day from fst_alert_interval))
-                               || ' '
-                               || lpad(to_char(extract(hour from fst_alert_interval)), 2, '0')
-                               || ':'
-                               || lpad(to_char(extract(minute from fst_alert_interval)), 2, '0')
-                               || ':'
-                               || lpad(to_char(trunc(extract(second from fst_alert_interval))), 2, '0'),
-                               'null') fst_alert_interval,
-                             fst_escalation_basis,
-                             fst_icon_css, fst_name_css,
-                             case fst_initial_status when pit_util.C_TRUE then 'true' else 'false' end fst_initial_status,
-                             case fst_terminal_status when pit_util.C_TRUE then 'true' else 'false' end fst_terminal_status,
-                             case fst_active when pit_util.C_TRUE then 'true' else 'false' end fst_active
-                        from fsm_status_v
+                      select template, fst.fst_id, fst.fst_fcl_id, fst.fst_fsg_id, fst.fst_msg_id, fst.fst_pti_id,
+                             pti.pti_name fst_name, pti.pti_description fst_description,
+                             fst.fst_retries_on_error, msg.pms_pse_id fst_severity, fst.fst_retry_schedule,
+                             coalesce(to_char(fst.fst_retry_time), 'null') fst_retry_time,
+                             case
+                               when fst.fst_warn_interval is not null then 
+                                    to_char(extract(day from fst.fst_warn_interval))
+                                    || ' '
+                                    || lpad(to_char(extract(hour from fst.fst_warn_interval)), 2, '0')
+                                    || ':'
+                                    || lpad(to_char(extract(minute from fst.fst_warn_interval)), 2, '0')
+                                    || ':'
+                                    || lpad(to_char(trunc(extract(second from fst.fst_warn_interval))), 2, '0')
+                             end fst_warn_interval,
+                             case
+                               when fst.fst_alert_interval is not null then
+                                    to_char(extract(day from fst.fst_alert_interval))
+                                    || ' '
+                                    || lpad(to_char(extract(hour from fst.fst_alert_interval)), 2, '0')
+                                    || ':'
+                                    || lpad(to_char(extract(minute from fst.fst_alert_interval)), 2, '0')
+                                    || ':'
+                                    || lpad(to_char(trunc(extract(second from fst.fst_alert_interval))), 2, '0')
+                             end fst_alert_interval,
+                             fst.fst_escalation_basis,
+                             fst.fst_icon_css, fst.fst_name_css,
+                             case fst.fst_initial_status when pit_util.C_TRUE then 'true' else 'false' end fst_initial_status,
+                             case fst.fst_terminal_status when pit_util.C_TRUE then 'true' else 'false' end fst_terminal_status,
+                             case fst.fst_active when pit_util.C_TRUE then 'true' else 'false' end fst_active
+                        from fsm_status fst
+                        join pit_message_v msg
+                          on fst.fst_msg_id = msg.pms_name
+                         and fst.fst_fcl_id = msg.pms_pmg_name
+                        join pit_translatable_item_v pti
+                          on fst.fst_pti_id = pti.pti_id
+                         and fst.fst_fcl_id = pti.pti_pmg_name
                        cross join templates
                        where uttm_mode = 'FST'
-                         and fst_fcl_id = fcl_id
+                         and fst.fst_fcl_id = cls.fcl_id
                     ), C_CR) fst_script,
                     utl_text.generate_text(cursor(
-                      select template, fev_id, fev_fcl_id, fev_msg_id, fev_name, fev_description,
-                             case fev_raised_by_user when pit_util.C_TRUE then 'true' else 'false' end fev_raised_by_user,
-                             fev_command_label, fev_button_highlight, fev_confirm_message, fev_button_icon,
-                             case fev_active when pit_util.C_TRUE then 'true' else 'false' end fev_active
-                        from fsm_events_v
+                      select template, fev.fev_id, fev.fev_fcl_id, fev.fev_msg_id, pti.pti_name fev_name, pti.pti_description fev_description,
+                             case fev.fev_raised_by_user when pit_util.C_TRUE then 'true' else 'false' end fev_raised_by_user,
+                             pti.pti_display_name fev_command_label, fev.fev_button_highlight, fev.fev_confirm_message, fev.fev_button_icon,
+                             case fev.fev_active when pit_util.C_TRUE then 'true' else 'false' end fev_active
+                        from fsm_events fev
+                        join pit_translatable_item_v pti
+                          on fev.fev_pti_id = pti.pti_id
+                         and fev.fev_fcl_id = pti.pti_pmg_name
                        cross join templates
                        where uttm_mode = 'FEV'
-                         and fev_fcl_id = fcl_id
+                         and fev.fev_fcl_id = cls.fcl_id
                     ), C_CR) fev_script,
                     utl_text.generate_text(cursor(
-                      select template, ftr_fst_id, ftr_fev_id, ftr_fcl_id, ftr_fsc_id, ftr_fst_list, ftr_required_role, ftr_raise_on_status,
-                             case ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_raise_automatically,                             
-                             case ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_active
-                        from fsm_transitions_v
+                      select template, ftr.ftr_fst_id, ftr.ftr_fev_id, ftr.ftr_fcl_id, ftr.ftr_fsc_id, ftr.ftr_fst_list, ftr.ftr_required_role, ftr.ftr_raise_on_status,
+                             case ftr.ftr_raise_automatically when pit_util.C_TRUE then 'true' else 'false' end ftr_raise_automatically,
+                             case ftr.ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_active
+                        from fsm_transitions ftr
                        cross join templates
                        where uttm_mode = 'FTR'
-                         and ftr_fcl_id = fcl_id
+                         and ftr.ftr_fcl_id = cls.fcl_id
                     ), C_CR) ftr_script
-               from fsm_classes_v
+               from fsm_classes cls
+               join pit_translatable_item_v pti
+                 on cls.fcl_pti_id = pti.pti_id
+                and cls.fcl_id = pti.pti_pmg_name
               cross join templates
               where uttm_mode = 'FRAME'
-                and fcl_id = p_fcl_id
+                and cls.fcl_id = p_fcl_id
            )) resultat
       into l_script
       from dual;
       
     return l_script;
   end export_class;
+
+
+  function get_class_diagram(
+    p_fcl_id in fsm_classes_v.fcl_id%type,
+    p_fsc_id in fsm_sub_classes_v.fsc_id%type default 'MASTER')
+    return clob
+  as
+    l_diagram clob;
+    l_has_edges pls_integer;
+    C_CR constant pit_util.flag_type := chr(10);
+  begin
+    select count(*)
+      into l_has_edges
+      from bl_fsm_edges
+     where fcl_id = p_fcl_id
+       and fsc_id = p_fsc_id;
+
+    if l_has_edges > 0 then
+      with templates as (
+            select uttm_text template, uttm_mode
+              from utl_text_templates
+              where uttm_name = 'FSM_MERMAID'
+                and uttm_type = 'FSM')
+      select utl_text.generate_text(cursor(
+              select frame.template,
+                      utl_text.generate_text(cursor(
+                        select template,
+                                's_' || lower(status_id) node_id,
+                                status_id,
+                                replace(replace(replace(coalesce(status_name, ''), '"', '\"'), chr(10), ' '), chr(13), ' ') status_name,
+                                case
+                                  when is_initial = pit_util.C_TRUE then 'initial'
+                                end initial_class,
+                                case
+                                  when is_terminal = pit_util.C_TRUE then 'terminal'
+                                end terminal_class
+                          from (
+                            select fst.fst_id status_id,
+                                    pti.pti_name status_name,
+                                    fst.fst_initial_status is_initial,
+                                    fst.fst_terminal_status is_terminal
+                              from fsm_status fst
+                              join pit_translatable_item_v pti
+                                on fst.fst_pti_id = pti.pti_id
+                                and fst.fst_fcl_id = pti.pti_pmg_name
+                              where fst.fst_fcl_id = p_fcl_id
+                                and fst.fst_active = pit_util.C_TRUE
+                                and exists (
+                                      select 1
+                                        from fsm_transitions ftr
+                                      where ftr.ftr_fcl_id = p_fcl_id
+                                        and ftr.ftr_fsc_id = p_fsc_id
+                                        and ftr.ftr_active = pit_util.C_TRUE
+                                        and (    ftr.ftr_fst_id = fst.fst_id
+                                              or instr(':' || ftr.ftr_fst_list || ':', ':' || fst.fst_id || ':') > 0))
+                          )
+                          cross join templates
+                          where uttm_mode = case
+                                              when is_initial = pit_util.C_TRUE
+                                                or is_terminal = pit_util.C_TRUE
+                                              then 'CLASS'
+                                              else 'NODE'
+                                            end
+                          order by status_id
+                      ), C_CR, p_enable_second_level => pit_util.C_TRUE)
+                      || utl_text.generate_text(cursor(
+                        select template,
+                                's_' || lower(source_status_id) source_node_id,
+                                's_' || lower(target_status_id) target_node_id,
+                                replace(replace(replace(nvl(
+                                  event_id || ': ' || event_name
+                                  || case when raise_automatically = pit_util.C_TRUE then ' - auto' end
+                                  || case when raise_on_status = fsm.C_ERROR then ' - error' end
+                                , ''), '"', '\"'), chr(10), ' '), chr(13), ' ') edge_label
+                          from bl_fsm_edges
+                          cross join templates
+                          where fcl_id = p_fcl_id
+                            and fsc_id = p_fsc_id
+                            and uttm_mode = 'EDGE'
+                          order by source_status_id, event_id, target_status_id
+                      ), C_CR, p_enable_second_level => pit_util.C_TRUE) content
+                from templates frame
+                where frame.uttm_mode = 'FRAME'
+            ))
+        into l_diagram
+        from dual;
+    end if;
+
+    return l_diagram;
+  end get_class_diagram;
   
 
 end fsm_admin;

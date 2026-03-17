@@ -26,7 +26,7 @@ create table fsm_status(
     references pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_fst_active check (fst_active is not null),
   constraint nn_fst_msg_id check (fst_msg_id is not null),
-  constraint chk_fst_active check (fst_active in ('Y', 'N')),
+  constraint chk_fst_active check (fst_active in (&C_TRUE., &C_FALSE.)),
   constraint nn_fst_retries_on_error check (fst_retries_on_error is not null),
   constraint chk_retry check (
        (fst_retries_on_error = 0 and fst_retry_schedule is null and fst_retry_time is null)

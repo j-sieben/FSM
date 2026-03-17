@@ -37,9 +37,8 @@ prompt &h2.Create Views
 @&tools.install_view fsm_transitions_v
 @&tools.install_view fsm_objects_v
 @&tools.install_view fsm_log_v
-@&tools.install_view fsm_fsl_log_v
 @&tools.install_view bl_fsm_active_status_event
-@&tools.install_view bl_fsm_hierarchy
+@&tools.install_view bl_fsm_edges
 @&tools.install_view bl_fsm_next_commands
 
 prompt &h2.Create Types and Packages

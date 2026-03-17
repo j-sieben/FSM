@@ -1,6 +1,6 @@
 create table fsm_events (
   fev_id &ORA_NAME_TYPE. constraint fev_id_nn not null, 
-	fev_fcl_id varchar2(3 char) constraint fev_fcl_id_nn not null, 
+	fev_fcl_id &ORA_NAME_TYPE. constraint fev_fcl_id_nn not null, 
 	fev_msg_id &ORA_NAME_TYPE. constraint fev_msg_id_nn not null,
 	fev_pti_id &ORA_NAME_TYPE. constraint fev_pti_id_nn not null, 
   fev_raised_by_user &FLAG_TYPE. default on null &C_FALSE. constraint fev_raised_by_user_nn not null,

@@ -163,6 +163,46 @@ q'{    p_run_checks => false);}',
     p_uttm_log_text => q'{}',
     p_uttm_log_severity => 70
   );
+
+  utl_text_admin.merge_template(
+    p_uttm_name => 'FSM_MERMAID',
+    p_uttm_type => 'FSM',
+    p_uttm_mode => 'FRAME',
+    p_uttm_text => q'{flowchart LR\CR\}' ||
+q'{  classDef initial fill:#dff3e4,stroke:#2e7d32,stroke-width:2px;\CR\}' ||
+q'{  classDef terminal fill:#fde2e4,stroke:#b71c1c,stroke-width:2px;\CR\}' ||
+q'{#CONTENT#}',
+    p_uttm_log_text => q'{}',
+    p_uttm_log_severity => 70
+  );
+
+  utl_text_admin.merge_template(
+    p_uttm_name => 'FSM_MERMAID',
+    p_uttm_type => 'FSM',
+    p_uttm_mode => 'NODE',
+    p_uttm_text => q'{  #NODE_ID#["#STATUS_ID#<br/>#STATUS_NAME#"]\CR\}',
+    p_uttm_log_text => q'{}',
+    p_uttm_log_severity => 70
+  );
+
+  utl_text_admin.merge_template(
+    p_uttm_name => 'FSM_MERMAID',
+    p_uttm_type => 'FSM',
+    p_uttm_mode => 'CLASS',
+    p_uttm_text => q'{  #NODE_ID#["#STATUS_ID#<br/>#STATUS_NAME#"]\CR\}' ||
+q'{#INITIAL_CLASS|  class ^NODE_ID^ |;|##TERMINAL_CLASS|  class ^NODE_ID^ |;|#\CR\}',
+    p_uttm_log_text => q'{}',
+    p_uttm_log_severity => 70
+  );
+  
+  utl_text_admin.merge_template(
+    p_uttm_name => 'FSM_MERMAID',
+    p_uttm_type => 'FSM',
+    p_uttm_mode => 'EDGE',
+    p_uttm_text => q'{  #SOURCE_NODE_ID# -->|#EDGE_LABEL#| #TARGET_NODE_ID#\CR\}',
+    p_uttm_log_text => q'{}',
+    p_uttm_log_severity => 70
+  );
   commit;
 end;
 /
