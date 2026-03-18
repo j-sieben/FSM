@@ -23,7 +23,7 @@ select fsm_id, fsm_fcl_id, fsm_fsc_id,
                             else coalesce(fsm_status_change_date, fsm_last_change_date)
                           end + fst_warn_interval) then c_warn
          else c_ok
-       end status_state
+       end fsm_status_state
   from fsm_objects
  cross join constants
   join fsm_classes_v

@@ -227,6 +227,21 @@ as
 
 
   /**
+    Function: is_terminal_status
+      Evaluates wether the given FSM instance has reached a status that is marked as terminating.
+
+    Parameters:
+      p_fsm - FSM instance to check
+
+    Returns:
+      True if the FSM has reached a terminating status, FALSE otherwise.
+   */
+  function is_terminal_status(
+    p_fsm in out nocopy fsm_type)
+    return boolean;
+
+
+  /**
     Function: get_escalation_state
       Evaluates the configured duration thresholds for the current status of an FSM instance.
 

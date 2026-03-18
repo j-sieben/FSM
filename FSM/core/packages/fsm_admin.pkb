@@ -13,14 +13,6 @@ as
   
   
   /* Helper */
-  function bool_to_char(
-    p_bool in boolean)
-    return varchar2
-  as
-  begin
-    return case when p_bool then pit_util.C_TRUE else pit_util.C_FALSE end;
-  end bool_to_char;
-
   /**
     Procedure: create_sub_class
       Method to create a default entry for a new class entry. This default entry is
@@ -225,13 +217,12 @@ as
                 and ftr_fsc_id = p_fsc_id
                 and ftr_active = pit_util.C_TRUE),
            edges as (
-             select distinct at.ftr_fst_id source_status,
-                    regexp_substr(at.ftr_fst_list, '[^:]+', 1, level) target_status
+             select distinct ftr_fst_id source_status,
+                    regexp_substr(ftr_fst_list, '[^:]+', 1, level) target_status
                from active_transitions at
-             connect by regexp_substr(at.ftr_fst_list, '[^:]+', 1, level) is not null
-                    and prior sys_guid() is not null
-                    and prior at.ftr_fst_id = at.ftr_fst_id
-                    and prior at.ftr_fst_list = at.ftr_fst_list),
+            connect by regexp_substr(ftr_fst_list, '[^:]+', 1, level) is not null
+                    and prior ftr_fst_id = ftr_fst_id
+                    and prior ftr_fst_list = ftr_fst_list),
            initials as (
              select fst_id
                from fsm_status
@@ -255,11 +246,15 @@ as
               select status_id
                 from reachable_statuses);
   begin
-    for finding in unreachable_status_cur(p_fcl_id, p_fsc_id) loop
-      pit.raise_error(
-        msg.FSM_UNREACHABLE_STATUS,
-        msg_args(finding.fst_id, p_fcl_id));
-    end loop;
+    if p_fsc_id = 'MASTER' then
+      -- Only global class must be able to reach any status,
+      -- subclasses may address a subset of statuses only
+      for finding in unreachable_status_cur(p_fcl_id, p_fsc_id) loop
+        pit.raise_error(
+          msg.FSM_UNREACHABLE_STATUS,
+          msg_args(finding.fst_id, p_fcl_id));
+      end loop;
+    end if;
   end report_unreachable_statuses;
 
 
@@ -406,7 +401,7 @@ as
     l_active pit_util.flag_type;
     l_pti_id pit_util.ora_name_type;
   begin
-    l_active := bool_to_char(p_fcl_active);
+    l_active := pit_util.to_bool(p_fcl_active);
     l_pti_id := C_PTI_CLASS_PREFIX || p_fcl_id;
     
     if p_fcl_id = C_STD_FCL then
@@ -508,7 +503,7 @@ as
     l_active pit_util.flag_type;
     l_pti_id pit_util.ora_name_type;
   begin
-    l_active := bool_to_char(p_fsc_active);
+    l_active := pit_util.to_bool(p_fsc_active);
     l_pti_id := C_PTI_SUB_CLASS_PREFIX || p_fsc_id;
     
     pit_admin.merge_message_group(
@@ -603,7 +598,7 @@ as
     l_active pit_util.flag_type;
     l_pti_id pit_util.ora_name_type;
   begin
-    l_active := bool_to_char(p_fsg_active);
+    l_active := pit_util.to_bool(p_fsg_active);
     l_pti_id := replace(C_PTI_GROUP_PREFIX, C_FCL, p_fsg_fcl_id) || p_fsg_id;
     
     pit_admin.merge_translatable_item(
@@ -773,9 +768,9 @@ as
     l_active pit_util.flag_type;
     l_pti_id pit_util.ora_name_type;
   begin
-    l_initial_status := bool_to_char(p_fst_initial_status);
-    l_terminal_status := bool_to_char(p_fst_terminal_status);
-    l_active := bool_to_char(p_fst_active);
+    l_initial_status := pit_util.to_bool(p_fst_initial_status);
+    l_terminal_status := pit_util.to_bool(p_fst_terminal_status);
+    l_active := pit_util.to_bool(p_fst_active);
     l_pti_id := replace(C_PTI_STATUS_PREFIX, C_FCL, p_fst_fcl_id) || p_fst_id;
     
     pit_admin.merge_translatable_item(
@@ -920,9 +915,9 @@ as
     l_button_highlight pit_util.flag_type;
   begin
     l_pti_id := replace(C_PTI_EVENT_PREFIX, C_FCL, p_fev_fcl_id) || p_fev_id;
-    l_active := bool_to_char(p_fev_active);    
-    l_raised_by_user := bool_to_char(p_fev_raised_by_user);
-    l_button_highlight := bool_to_char(p_fev_button_highlight);
+    l_active := pit_util.to_bool(p_fev_active);    
+    l_raised_by_user := pit_util.to_bool(p_fev_raised_by_user);
+    l_button_highlight := pit_util.to_bool(p_fev_button_highlight);
     
     pit_admin.merge_translatable_item(
       p_pti_id => l_pti_id,
@@ -1020,14 +1015,13 @@ as
     p_ftr_raise_automatically in boolean,
     p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default fsm.C_OK,
     p_ftr_required_role in fsm_transitions_v.ftr_required_role%type default null,
-    p_ftr_active in boolean default true,
-    p_run_checks in boolean default true)
+    p_ftr_active in boolean default true)
   as
     l_active pit_util.flag_type;
     l_raise_automatically pit_util.flag_type;
   begin
-    l_active := bool_to_char(p_ftr_active);
-    l_raise_automatically := bool_to_char(p_ftr_raise_automatically);
+    l_active := pit_util.to_bool(p_ftr_active);
+    l_raise_automatically := pit_util.to_bool(p_ftr_raise_automatically);
     
     merge into fsm_transitions t
     using (select p_ftr_fst_id ftr_fst_id,
@@ -1057,9 +1051,6 @@ as
           (s.ftr_fst_id, s.ftr_fev_id, s.ftr_fcl_id, s.ftr_fsc_id, s.ftr_fst_list, s.ftr_active, 
            s.ftr_raise_automatically, s.ftr_raise_on_status, s.ftr_required_role);
 
-    if p_run_checks then
-      check_metadata_if_needed(p_ftr_fcl_id, p_ftr_fsc_id);
-    end if;
   end merge_transition;
   
   procedure merge_transition(

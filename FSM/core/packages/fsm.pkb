@@ -709,6 +709,29 @@ as
 
 
   /*
+    Function: to_string
+      See  <FSM.to_string>
+   */
+  function is_terminal_status(
+    p_fsm in out nocopy fsm_type)
+    return boolean
+  as
+    l_result binary_integer;
+  begin
+    pit.enter_mandatory;
+    
+    select count(*)
+      into l_result
+      from fsm_objects_v
+     where fsm_id = p_fsm.fsm_id
+       and fsm_terminal_status = pit_util.C_TRUE;
+    
+    pit.leave_mandatory;
+    return l_result = 1;
+  end is_terminal_status;
+  
+  
+  /*
     Function: get_escalation_reference_date
       See <FSM.get_escalation_reference_date>
    */
