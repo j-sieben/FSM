@@ -222,7 +222,8 @@ as
                from active_transitions at
             connect by regexp_substr(ftr_fst_list, '[^:]+', 1, level) is not null
                     and prior ftr_fst_id = ftr_fst_id
-                    and prior ftr_fst_list = ftr_fst_list),
+                    and prior ftr_fst_list = ftr_fst_list
+                    and prior sys_guid() is not null),
            initials as (
              select fst_id
                from fsm_status
@@ -311,7 +312,7 @@ as
           on st.fst_id = rs.fst_id
          and st.fst_fcl_id = p_fcl_id
        where not exists (
-             select 1
+             select 'Has transition'
                from active_transitions at
               where at.ftr_fst_id = rs.fst_id)
          and st.fst_terminal_status = pit_util.C_FALSE;
@@ -322,6 +323,42 @@ as
         msg_args(finding.fst_id, p_fcl_id));
     end loop;
   end report_dead_ends;
+
+
+  /**
+    Procedure: report_dead_ends
+      Reports declared but unused events.
+
+    Parameters:
+      p_fcl_id - ID of the class to inspect
+      p_fsc_id - ID of the subclass to inspect
+   */
+  procedure report_unused_events(
+    p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+    p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
+  as
+    cursor unused_event_cur(
+      p_fcl_id in fsm_objects_v.fsm_fcl_id%type,
+      p_fsc_id in fsm_objects_v.fsm_fsc_id%type)
+    is
+      select fev.fev_id
+        from fsm_events fev
+       where fev.fev_fcl_id = p_fcl_id
+         and fev.fev_active = pit_util.C_TRUE
+         and not exists (
+               select 'Event found'
+                 from fsm_transitions ftr
+                where ftr.ftr_fcl_id = fev.fev_fcl_id
+                  and ftr.ftr_fev_id = fev.fev_id
+                  and ftr.ftr_active = pit_util.C_TRUE);
+  begin
+    for finding in unused_event_cur(p_fcl_id, p_fsc_id) loop
+      pit.raise_error(
+        msg.FSM_UNUSED_EVENT,
+        msg_args(finding.fev_id, p_fcl_id, p_fsc_id));
+    end loop;
+  end report_unused_events;
+
 
 
   /**
@@ -1130,6 +1167,8 @@ as
     report_unreachable_statuses(p_fcl_id, p_fsc_id);
 
     report_dead_ends(p_fcl_id, p_fsc_id);
+
+    report_unused_events(p_fcl_id, p_fsc_id);
     
   end check_metadata;
   

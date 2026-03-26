@@ -152,5 +152,32 @@ That split matters because decision logic and state-machine control are not the 
 - Overview: [Doc/Overview.md](Doc/Overview.md)
 - Detailed walkthrough: [Doc/How_it_works.md](Doc/How_it_works.md)
 
+## Installation
+The supported entrypoints are `FSM/fsm.sh` and `FSM/fsm.bat`.
+
+Examples:
+
+- `./FSM/fsm.sh install`
+- `./FSM/fsm.sh install-client`
+- `./FSM/fsm.sh install-sample`
+- `./FSM/fsm.sh uninstall`
+- `FSM\\fsm.bat install`
+
+Non-interactive example:
+
+```bash
+FSM_OWNER=FSM \
+FSM_OWNER_PW=secret \
+FSM_SERVICE=MYDB \
+./FSM/fsm.sh install
+```
+
+CLI values override environment values. Missing values fall back to interactive prompts. In non-interactive mode, missing required values fail fast with a non-zero exit code.
+
+## Legacy CLI
+The previous shell entrypoints such as `install.sh`, `install_client.sh`, `install_sample.sh`, `install.bat` or `install_sample.bat` are no longer supported as top-level entrypoints.
+
+Legacy wrappers are kept under `FSM/install_scripts/legacy/` for reference and controlled migration only.
+
 ## Disclaimer
 This code is YOYO software. You may use, modify and redistribute it freely. No support commitment is implied.

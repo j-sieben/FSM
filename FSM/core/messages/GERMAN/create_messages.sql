@@ -363,6 +363,16 @@ begin
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
   );
+
+  pit_admin.merge_message(
+    p_pms_name => 'FSM_UNUSED_EVENT',
+    p_pms_pmg_name => 'FSM',
+    p_pms_text => q'^Das Ereignis "#1#" wurde deklariert, aber nicht verwendet.^',
+    p_pms_description => q'^Ereignisse, die nicht verwendet werden, sollten nicht deklariert werden.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
   
   commit;
   pit_admin.create_message_package;
