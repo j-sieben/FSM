@@ -10,6 +10,10 @@ comment on column fsm_status.fst_escalation_basis is 'Determines whether elapsed
 @&tools.check_has_column fsm_status fst_terminal_status "&FLAG_TYPE. default &C_FALSE."
 comment on column fsm_status.fst_terminal_status is 'Flag indicating whether this status is a terminal/final status of the workflow';
 
+@&tools.check_has_column fsm_status fst_initial_status "char(1 byte) default 'N' constraint fst_initial_status_chk check (fst_initial_status in ('Y', 'N'))"
+comment on column fsm_status.fst_initial_status is 'Flag indicating whether this status is the first status to enter when creating a new fsm object';
+
+
 update fsm_status
    set fst_escalation_basis = 'STATUS'
  where fst_escalation_basis is null;
@@ -17,6 +21,8 @@ update fsm_status
 update fsm_status
    set fst_terminal_status = 'N'
  where fst_terminal_status is null;
+ 
+commit;
 
 @&tools.check_has_constraint fsm_status fst_escalation_basis_chk "check (fst_escalation_basis in ('STATUS', 'EVENT'))"
 @&tools.check_has_constraint fsm_status fst_terminal_status_chk "check (fst_terminal_status in (&C_TRUE., &C_FALSE.))"
