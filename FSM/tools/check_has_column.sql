@@ -16,4 +16,4 @@ select case amt when 0 then '&tools.add_column.sql' else 'tools/null.sql' end sc
 
 set termout on
 prompt &msg.
-@&script. &1. &2. &3.
+@&script. &1. &2. "&3."

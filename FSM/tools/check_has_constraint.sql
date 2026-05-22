@@ -14,4 +14,4 @@ select case amt when 0 then '&tools.add_constraint.sql' else 'tools/null.sql' en
 
 set termout on
 prompt &msg.
-@&script. &1. &2. &3.
+@&script. &1. &2. "&3."
