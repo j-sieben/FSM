@@ -437,6 +437,7 @@ as
       select fsm.fsm_validity,
              fsm.fsm_fev_id,
              fst.fst_id,
+             fst.fst_terminal_status,
              fst.fst_retries_on_error,
              fst.fst_retry_schedule,
              fst.fst_retry_time
@@ -454,9 +455,19 @@ as
                     msg_param('p_fev_id', p_fev_id)));
 
     for fsm in fsm_cur(p_fsm.fsm_id) loop
-      if fsm.fsm_validity = C_ERROR then
+      p_fsm.fsm_fst_id := fsm.fst_id;
+      p_fsm.fsm_validity := fsm.fsm_validity;
+
+      case when p_fev_id = fsm_fev.FSM_ERROR then
+        pit.raise_verbose(msg.FSM_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_FALSE), p_fsm.fsm_id);
+        if fsm.fst_terminal_status = pit_util.C_FALSE then
+          force_error_status(p_fsm);
+        end if;
+      when fsm.fst_terminal_status = pit_util.C_TRUE then
+        pit.raise_verbose(msg.FSM_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_FALSE), p_fsm.fsm_id);
+      when fsm.fsm_validity = C_ERROR then
         proceed_with_error_event(p_fsm);
-      elsif fsm.fst_retries_on_error > C_ERROR then
+      when fsm.fst_retries_on_error > C_ERROR then
         pit.raise_verbose(msg.FSM_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_TRUE), p_fsm.fsm_id);
         -- take retry into account
         -- fsm_VALIDITY may have one of the following values:
@@ -487,7 +498,7 @@ as
       else
         pit.raise_verbose(msg.FSM_RETRY_REQUESTED, msg_args(p_fev_id, fsm.fst_id, pit_util.C_FALSE), p_fsm.fsm_id);
         proceed_with_error_event(p_fsm);
-      end if;
+      end case;
 
     end loop;
 
