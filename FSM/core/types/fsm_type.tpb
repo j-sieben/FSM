@@ -66,6 +66,20 @@ create or replace type body fsm_type as
       p_msg => p_msg,
       p_msg_args => p_msg_args);
   end notify;
+  
+  
+  member procedure log_reason(
+    self in out nocopy fsm_type,
+    p_reason_code in varchar2,
+    p_msg_args in msg_args default null)
+  as
+  begin
+    fsm.log_reason(
+      p_fsm => self,
+      p_reason_code => p_reason_code,
+      p_msg_args => p_msg_args);
+  end log_reason;
+  
 
   member function to_string
     return varchar2

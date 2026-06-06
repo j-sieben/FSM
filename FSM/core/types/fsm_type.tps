@@ -33,6 +33,10 @@ as object(
     self in out nocopy fsm_type,
     p_msg in varchar2,
     p_msg_args in msg_args default null),
+  member procedure log_reason(
+    self in out nocopy fsm_type,
+    p_reason_code in varchar2,
+    p_msg_args in msg_args default null),
   member function to_string
     return varchar2,
   member procedure finalize(
