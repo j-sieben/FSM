@@ -24,6 +24,7 @@ prompt &h2.Align Table Definitions
 @&table_dir.alter_fsm_status.sql
 @&table_dir.alter_fsm_objects.sql
 @&table_dir.alter_fsm_transitions.sql
+@&table_dir.alter_fsm_log.sql
 
 prompt &h2.Cleanup Generated Objects
 @&tools.run_script cleanup_generated_objects

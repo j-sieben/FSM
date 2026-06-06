@@ -1052,7 +1052,9 @@ as
     p_ftr_raise_automatically in boolean,
     p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default fsm.C_OK,
     p_ftr_required_role in fsm_transitions_v.ftr_required_role%type default null,
-    p_ftr_active in boolean default true)
+    p_ftr_active in boolean default true,
+    p_ftr_reason_msg_id in fsm_transitions_v.ftr_reason_msg_id%type default null,
+    p_run_checks in boolean default true)
   as
     l_active pit_util.flag_type;
     l_raise_automatically pit_util.flag_type;
@@ -1069,7 +1071,8 @@ as
                   l_active ftr_active,
                   l_raise_automatically ftr_raise_automatically,
                   p_ftr_raise_on_status ftr_raise_on_status,
-                  p_ftr_required_role ftr_required_role
+                  p_ftr_required_role ftr_required_role,
+                  p_ftr_reason_msg_id ftr_reason_msg_id
              from dual) s
        on (t.ftr_fst_id = s.ftr_fst_id
            and t.ftr_fev_id = s.ftr_fev_id
@@ -1080,13 +1083,18 @@ as
           ftr_active = s.ftr_active,
           ftr_raise_automatically = s.ftr_raise_automatically,
           ftr_raise_on_status = s.ftr_raise_on_status,
-          ftr_required_role = s.ftr_required_role
+          ftr_required_role = s.ftr_required_role,
+          ftr_reason_msg_id = s.ftr_reason_msg_id
      when not matched then insert
           (ftr_fst_id, ftr_fev_id, ftr_fcl_id, ftr_fsc_id, ftr_fst_list, ftr_active, 
-           ftr_raise_automatically, ftr_raise_on_status, ftr_required_role)
+           ftr_raise_automatically, ftr_raise_on_status, ftr_required_role, ftr_reason_msg_id)
           values
           (s.ftr_fst_id, s.ftr_fev_id, s.ftr_fcl_id, s.ftr_fsc_id, s.ftr_fst_list, s.ftr_active, 
-           s.ftr_raise_automatically, s.ftr_raise_on_status, s.ftr_required_role);
+           s.ftr_raise_automatically, s.ftr_raise_on_status, s.ftr_required_role, s.ftr_reason_msg_id);
+
+    if p_run_checks then
+      check_metadata_if_needed(p_ftr_fcl_id, p_ftr_fsc_id);
+    end if;
 
   end merge_transition;
   
@@ -1103,7 +1111,8 @@ as
       p_ftr_raise_automatically => pit_util.to_bool(p_row.ftr_raise_automatically),
       p_ftr_raise_on_status => p_row.ftr_raise_on_status,
       p_ftr_required_role => p_row.ftr_required_role,
-      p_ftr_active => pit_util.to_bool(p_row.ftr_active));
+      p_ftr_active => pit_util.to_bool(p_row.ftr_active),
+      p_ftr_reason_msg_id => p_row.ftr_reason_msg_id);
   end merge_transition;
   
   
@@ -1272,6 +1281,7 @@ as
                     ), C_CR) fev_script,
                     utl_text.generate_text(cursor(
                       select template, ftr.ftr_fst_id, ftr.ftr_fev_id, ftr.ftr_fcl_id, ftr.ftr_fsc_id, ftr.ftr_fst_list, ftr.ftr_required_role, ftr.ftr_raise_on_status,
+                             ftr.ftr_reason_msg_id,
                              case ftr.ftr_raise_automatically when pit_util.C_TRUE then 'true' else 'false' end ftr_raise_automatically,
                              case ftr.ftr_active when pit_util.C_TRUE then 'true' else 'false' end ftr_active
                         from fsm_transitions ftr

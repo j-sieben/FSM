@@ -1,7 +1,16 @@
 create or replace view fsm_log_v as
 select fsl_id, fsl_fsm_id, fsl_user_name, fsl_session_id, fsl_log_date,
        fsl_msg_id, pit.get_message_text(fsl_msg_id, fsl_msg_args) fsl_msg_text,
-       fsl_severity, fsl_fst_id, fst_name fsl_fst_name, fsg_id fsl_fsg_id, fsg_name fsl_fsg_name, fsl_fev_list, fsl_fcl_id, fsl_fsc_id
+       fsl_severity, fsl_fst_id, fst_name fsl_fst_name, fsg_id fsl_fsg_id, fsg_name fsl_fsg_name,
+       fsl_fev_id, fsl_prev_fst_id, fsl_fev_list, fsl_fcl_id, fsl_fsc_id,
+       fsl_transition_reason_msg_id,
+       case
+         when fsl_transition_reason_msg_id is not null then pit.get_message_text(fsl_transition_reason_msg_id)
+       end fsl_transition_reason_msg_text,
+       fsl_reason_msg_id, fsl_reason_msg_args,
+       case
+         when fsl_reason_msg_id is not null then pit.get_message_text(fsl_reason_msg_id, fsl_reason_msg_args)
+       end fsl_reason_msg_text
   from fsm_log
   join fsm_status_v 
     on fsl_fst_id = fst_id

@@ -115,6 +115,22 @@ as
 
 
   /**
+    Procedure: log_reason
+      Stores a transient runtime reason for the next successful status log entry.
+      If the reason code does not start with <FSM class>_REASON_, this prefix is added.
+
+    Parameters:
+      p_fsm - FSM instance
+      p_reason_code - Reason code with or without class prefix
+      p_msg_args - Optional parameters to pass to the reason message
+   */
+  procedure log_reason(
+    p_fsm in out nocopy fsm_type,
+    p_reason_code in pit_util.ora_name_type,
+    p_msg_args in msg_args default null);
+
+
+  /**
     Function: allows_event
       Method checks if an fsm allows an event to be searched for.
       Called by APEX application to check whether a control should be displayed or executed

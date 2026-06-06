@@ -158,6 +158,7 @@ q'{    p_ftr_fst_list => '#FTR_FST_LIST#',\CR\}' ||
 q'{    p_ftr_required_role => '#FTR_REQUIRED_ROLE#',\CR\}' || 
 q'{    p_ftr_raise_automatically => #FTR_RAISE_AUTOMATICALLY#,\CR\}' || 
 q'{    p_ftr_raise_on_status => #FTR_RAISE_ON_STATUS#,\CR\}' || 
+q'{    p_ftr_reason_msg_id => '#FTR_REASON_MSG_ID#',\CR\}' ||
 q'{    p_ftr_active => #FTR_ACTIVE#,\CR\}' || 
 q'{    p_run_checks => false);}',
     p_uttm_log_text => q'{}',

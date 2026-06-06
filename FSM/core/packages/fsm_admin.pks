@@ -278,7 +278,9 @@ as
       p_ftr_raise_on_status - Optional flag to indicate whether this transition is fired upon normal execution (C_OK) or
                               in case of an error (C_ERROR). Defaults to fsm.C_OK
       p_ftr_required_role - Optional reference to a role that is required to perform this transition
+      p_ftr_reason_msg_id - Optional PIT message ID describing the static reason for this transition
       p_ftr_active - Optional flag to indicate whether this transition is actually used. Defaults to TRUE
+      p_run_checks - Optional flag to validate metadata after the merge. Defaults to TRUE
    */
  procedure  merge_transition(
     p_ftr_fst_id in fsm_transitions_v.ftr_fst_id%type,
@@ -289,7 +291,9 @@ as
     p_ftr_raise_automatically in boolean,
     p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default fsm.C_OK,
     p_ftr_required_role in fsm_transitions_v.ftr_required_role%type default null,
-    p_ftr_active in boolean default true);
+    p_ftr_active in boolean default true,
+    p_ftr_reason_msg_id in fsm_transitions_v.ftr_reason_msg_id%type default null,
+    p_run_checks in boolean default true);
     
   procedure merge_transition(
     p_row fsm_transitions_v%rowtype);

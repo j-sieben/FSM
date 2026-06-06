@@ -13,6 +13,84 @@ as
   /**
     Group: Private methods
    */
+  type context_rec is record(
+    fev_id fsm_events_v.fev_id%type,
+    prev_fst_id fsm_status.fst_id%type,
+    reason_msg_id pit_util.ora_name_type,
+    reason_msg_args msg_args);
+  type context_tab is table of context_rec index by varchar2(128);
+
+  g_context context_tab;
+
+
+  function context_key(
+    p_fsm in fsm_type)
+    return varchar2
+  as
+  begin
+    return to_char(p_fsm.fsm_id);
+  end context_key;
+
+
+  procedure ensure_context(
+    p_fsm in fsm_type)
+  as
+    l_key varchar2(128);
+  begin
+    l_key := context_key(p_fsm);
+    if not g_context.exists(l_key) then
+      g_context(l_key).fev_id := null;
+      g_context(l_key).prev_fst_id := null;
+      g_context(l_key).reason_msg_id := null;
+      g_context(l_key).reason_msg_args := null;
+    end if;
+  end ensure_context;
+
+
+  procedure clear_context(
+    p_fsm in fsm_type)
+  as
+    l_key varchar2(128);
+  begin
+    l_key := context_key(p_fsm);
+    if g_context.exists(l_key) then
+      g_context.delete(l_key);
+    end if;
+  end clear_context;
+
+
+  function get_transition_reason_msg_id(
+    p_fsm in fsm_type,
+    p_context in context_rec,
+    p_fst_id in fsm_status.fst_id%type)
+    return fsm_transitions.ftr_reason_msg_id%type
+  as
+    l_transition_reason_msg_id fsm_transitions.ftr_reason_msg_id%type;
+  begin
+    if p_context.fev_id is null or p_context.prev_fst_id is null then
+      return null;
+    end if;
+
+    select ftr_reason_msg_id
+      into l_transition_reason_msg_id
+      from (
+        select ftr_reason_msg_id
+          from fsm_transitions
+         where ftr_fst_id = p_context.prev_fst_id
+           and ftr_fev_id = p_context.fev_id
+           and ftr_fsc_id = p_fsm.fsm_fsc_id
+           and ftr_fcl_id in (p_fsm.fsm_fcl_id, 'FSM')
+           and instr(':' || ftr_fst_list || ':', ':' || p_fst_id || ':') > 0
+         order by case when ftr_fcl_id = p_fsm.fsm_fcl_id then 0 else 1 end)
+     where rownum = 1;
+
+    return l_transition_reason_msg_id;
+  exception
+    when no_data_found then
+      return null;
+  end get_transition_reason_msg_id;
+
+
   /*
     Procedure: persist_retry
       Method persists retry of a FSM instance to achieve a new status.
@@ -191,6 +269,14 @@ as
     l_message_id fsm_events_v.fev_msg_id%type;
     l_user pit_util.ora_name_type;
     l_msg_args msg_args;
+    l_key varchar2(128);
+    l_context context_rec;
+    l_has_status_context boolean := false;
+    l_log_fev_id fsm_events_v.fev_id%type;
+    l_log_prev_fst_id fsm_status.fst_id%type;
+    l_log_reason_msg_id pit_util.ora_name_type;
+    l_log_reason_msg_args msg_args_char;
+    l_transition_reason_msg_id fsm_transitions.ftr_reason_msg_id%type;
   begin
     pit.enter_optional('log_change',
       p_params => msg_params(
@@ -234,17 +320,45 @@ as
                    p_msg_args => l_msg_args,
                    p_affected_id => to_char(p_fsm.fsm_id));
 
+    l_key := context_key(p_fsm);
+    if p_fst_id is not null and g_context.exists(l_key) then
+      l_context := g_context(l_key);
+      l_has_status_context := true;
+      l_log_fev_id := l_context.fev_id;
+      l_log_prev_fst_id := l_context.prev_fst_id;
+      l_log_reason_msg_id := l_context.reason_msg_id;
+      if l_context.reason_msg_args is not null then
+        l_log_reason_msg_args := pit_util.cast_to_msg_args_char(l_context.reason_msg_args);
+      end if;
+
+      l_transition_reason_msg_id := get_transition_reason_msg_id(
+                                      p_fsm => p_fsm,
+                                      p_context => l_context,
+                                      p_fst_id => p_fst_id);
+    end if;
+
     -- LOG
     insert into fsm_log(
       fsl_id, fsl_fsm_id, fsl_user_name, fsl_session_id,
       fsl_log_date, fsl_msg_text, fsl_severity,
       fsl_fst_id, fsl_fev_list, fsl_fcl_id, fsl_fsc_id,
-      fsl_msg_id, fsl_msg_args)
+      fsl_msg_id, fsl_msg_args,
+      fsl_fev_id, fsl_prev_fst_id, fsl_transition_reason_msg_id,
+      fsl_reason_msg_id, fsl_reason_msg_args)
     values(
       fsm_log_seq.nextval, to_number(l_message.affected_id), l_message.user_name, l_message.session_id,
       current_timestamp, l_message.message_text, l_message.severity,
       p_fsm.fsm_fst_id, p_fsm.fsm_fev_list, p_fsm.fsm_fcl_id, p_fsm.fsm_fsc_id,
-      l_message.message_name, pit_util.cast_to_msg_args_char(l_message.message_args));
+      l_message.message_name, pit_util.cast_to_msg_args_char(l_message.message_args),
+      l_log_fev_id,
+      l_log_prev_fst_id,
+      l_transition_reason_msg_id,
+      l_log_reason_msg_id,
+      l_log_reason_msg_args);
+
+    if l_has_status_context then
+      clear_context(p_fsm);
+    end if;
 
     pit.leave_optional(
       p_params => msg_params(
@@ -406,6 +520,10 @@ as
                     msg_param('p_fev_id', p_fev_id)));
 
     lock_fsm(p_fsm.fsm_id);
+    ensure_context(p_fsm);
+    g_context(context_key(p_fsm)).fev_id := p_fev_id;
+    g_context(context_key(p_fsm)).prev_fst_id := p_fsm.fsm_fst_id;
+
     -- LOG verwalten
     log_change(
       p_fsm => p_fsm,
@@ -423,6 +541,38 @@ as
       pit.handle_exception(msg.FSM_SQL_ERROR, msg_args(p_fsm.fsm_fcl_id, to_char(p_fsm.fsm_id), p_fev_id));
       return C_ERROR;
   end raise_event;
+
+
+  /*
+    Procedure: log_reason
+      See  <FSM.log_reason>
+   */
+  procedure log_reason(
+    p_fsm in out nocopy fsm_type,
+    p_reason_code in pit_util.ora_name_type,
+    p_msg_args in msg_args default null)
+  as
+    l_reason_prefix pit_util.ora_name_type;
+    l_reason_msg_id pit_util.ora_name_type;
+  begin
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_fsm', p_fsm.fsm_id),
+                    msg_param('p_reason_code', p_reason_code),
+                    msg_param('p_msg_args', p_msg_args)));
+
+    l_reason_prefix := p_fsm.fsm_fcl_id || '_REASON_';
+    l_reason_msg_id := case
+                         when instr(p_reason_code, l_reason_prefix) = 1 then p_reason_code
+                         else l_reason_prefix || p_reason_code
+                       end;
+
+    ensure_context(p_fsm);
+    g_context(context_key(p_fsm)).reason_msg_id := l_reason_msg_id;
+    g_context(context_key(p_fsm)).reason_msg_args := p_msg_args;
+
+    pit.leave_optional;
+  end log_reason;
 
 
   /*
