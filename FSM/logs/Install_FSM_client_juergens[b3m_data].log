@@ -1,0 +1,52 @@
+Action: install-client
+Log file: /Users/j.sieben/Documents/Github/FSM/FSM/logs/Install_FSM_client_juergens[b3m_data].log
+Running /Users/j.sieben/Documents/Github/FSM/FSM/install_scripts/grant_client_access.sql as juergens[b3m_utils]@b3m_pre
+
+********************************************************************************
+*** Grant access to FSM to client B3M_DATA
+********************************************************************************
+.    - Granting execute, under on fsm_type to B3M_DATA
+.    - Granting execute on fsm to B3M_DATA
+.    - Granting execute on fsm_fev to B3M_DATA
+.    - Granting execute on fsm_fst to B3M_DATA
+.    - Granting execute on fsm_admin to B3M_DATA
+.    - Granting references on fsm_objects to B3M_DATA
+.    - Granting read on fsm_classes_v to B3M_DATA
+.    - Granting read on fsm_sub_classes_v to B3M_DATA
+.    - Granting read on fsm_events_v to B3M_DATA
+.    - Granting read on fsm_log_v to B3M_DATA
+.    - Granting read on fsm_objects_v to B3M_DATA
+.    - Granting read on fsm_status_groups_v to B3M_DATA
+.    - Granting read on fsm_status_severities_v to B3M_DATA
+.    - Granting read on fsm_status_v to B3M_DATA
+.    - Granting read on fsm_transitions_v to B3M_DATA
+.    - Granting read on bl_fsm_next_commands to B3M_DATA
+********************************************************************************
+*** Finished FSM client grants
+********************************************************************************
+Running /Users/j.sieben/Documents/Github/FSM/FSM/install_scripts/create_client_synonyms.sql as juergens[b3m_data]@b3m_pre
+
+********************************************************************************
+*** Registering FSM, found at B3M_UTILS at client B3M_DATA
+********************************************************************************
+**  Checking whether FSM exists at user B3M_UTILS
+**  Creating synonyms for FSM at client B3M_DATA
+.    - Create synonym fsm_type
+.    - Create synonym fsm
+.    - Create synonym fsm_fev
+.    - Create synonym fsm_fst
+.    - Create synonym fsm_admin
+.    - Create synonym fsm_objects
+.    - Create synonym fsm_classes_v
+.    - Create synonym fsm_sub_classes_v
+.    - Create synonym fsm_events_v
+.    - Create synonym fsm_log_v
+.    - Create synonym fsm_objects_v
+.    - Create synonym fsm_status_groups_v
+.    - Create synonym fsm_status_severities_v
+.    - Create synonym fsm_status_v
+.    - Create synonym fsm_transitions_v
+.    - Create synonym bl_fsm_next_commands
+********************************************************************************
+*** Finished FSM client registration
+********************************************************************************

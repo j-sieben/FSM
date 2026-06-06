@@ -1053,8 +1053,7 @@ as
     p_ftr_raise_on_status in fsm_transitions_v.ftr_raise_on_status%type default fsm.C_OK,
     p_ftr_required_role in fsm_transitions_v.ftr_required_role%type default null,
     p_ftr_active in boolean default true,
-    p_ftr_reason_msg_id in fsm_transitions_v.ftr_reason_msg_id%type default null,
-    p_run_checks in boolean default true)
+    p_ftr_reason_msg_id in fsm_transitions_v.ftr_reason_msg_id%type default null)
   as
     l_active pit_util.flag_type;
     l_raise_automatically pit_util.flag_type;
@@ -1091,10 +1090,6 @@ as
           values
           (s.ftr_fst_id, s.ftr_fev_id, s.ftr_fcl_id, s.ftr_fsc_id, s.ftr_fst_list, s.ftr_active, 
            s.ftr_raise_automatically, s.ftr_raise_on_status, s.ftr_required_role, s.ftr_reason_msg_id);
-
-    if p_run_checks then
-      check_metadata_if_needed(p_ftr_fcl_id, p_ftr_fsc_id);
-    end if;
 
   end merge_transition;
   
