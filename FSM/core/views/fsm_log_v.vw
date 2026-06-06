@@ -5,7 +5,7 @@ select fsl_id, fsl_fsm_id, fsl_user_name, fsl_session_id, fsl_log_date,
        fsl_fev_id, fsl_prev_fst_id, fsl_fev_list, fsl_fcl_id, fsl_fsc_id,
        fsl_transition_reason_msg_id,
        case
-         when fsl_transition_reason_msg_id is not null then pit.get_message_text(fsl_transition_reason_msg_id)
+         when fsl_transition_reason_msg_id is not null then pit.get_message_text(fsl_transition_reason_msg_id, msg_args())
        end fsl_transition_reason_msg_text,
        fsl_reason_msg_id, fsl_reason_msg_args,
        case
