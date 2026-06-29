@@ -28,11 +28,26 @@ as
       C_OK - Flag to indicate that a state transition was successful
       C_ERROR - Flag to indicate that a state transition was unsuccessful
       C_CR - Carriage return character
+      
+      C_STORY_ERROR - Reserved for erroneous outcome to filter error states
+      C_STORY_TERMINAL - Final state of a flow
+      C_STORY_MILESTONE - Important intermediate target of a flow
+      C_STORY_RESULT - Outcome of a flow step
+      C_STORY_STEP - Flow step
+      C_STORY_TRANSITION - Status movement of a flow step
+      C_STORY_DETAIL - Other messages such as progress of a flow step etc.
    */
   C_OK constant binary_integer := 0;
   C_ERROR constant binary_integer := 1;
   C_CR constant varchar2(2 byte) := chr(10);
   
+  C_STORY_ERROR constant binary_integer := 10;
+  C_STORY_TERMINAL constant binary_integer := 20;
+  C_STORY_MILESTONE constant binary_integer := 30;
+  C_STORY_RESULT constant binary_integer := 40;
+  C_STORY_STEP constant binary_integer := 50;
+  C_STORY_TRANSITION constant binary_integer := 60;
+  C_STORY_DETAIL constant binary_integer := 70;
 
   /**
     Group: Object maintenance

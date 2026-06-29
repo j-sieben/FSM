@@ -291,7 +291,9 @@ as
     case
     when p_msg is not null then
       l_message_id := p_msg;
-      l_msg_args := case p_msg_args.count when 0 then null else p_msg_args end;
+      l_msg_args := case 
+                      when p_msg_args is null then msg_args()
+                      else p_msg_args end;
     when p_fev_id is not null then
       select fev_msg_id, msg_args(fev_name)
         into l_message_id, l_msg_args
