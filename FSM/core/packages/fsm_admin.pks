@@ -116,13 +116,13 @@ as
     
   /**
     Procedure: merge_status_severity
-      Creates a status severity representation. Main focus is to map PIT severities
-      to FSM severities such as Milestone or similar.
+      Creates a status severity representation for the FSM story severity scale.
       
     Parameters:
-      p_fss_id - Numeric severity as defined in PIT, ranges from 10 .. 70 in increments of 10
+      p_fss_id - Numeric severity as defined by the FSM.C_STORY_* constants
       p_fss_fcl_id - Reference to FSM_CLASSES.
-      p_fss_name - Display name of the severity
+      p_fss_name - Technical name of the severity
+      p_fss_display_name - Display name of the severity
       p_fss_html - HTML expresssion for display purposes
       p_fss_icon - HTML CSS classes to display a status icon
    */
@@ -130,6 +130,7 @@ as
     p_fss_id in fsm_status_severities_v.fss_id%type,
     p_fss_fcl_id in fsm_status_severities_v.fss_fcl_id%type,
     p_fss_name in fsm_status_severities_v.fss_name%type,
+    p_fss_display_name in fsm_status_severities_v.fss_display_name%type,
     p_fss_description in fsm_status_severities_v.fss_description%type,
     p_fss_html in fsm_status_severities_v.fss_html%type,
     p_fss_icon in fsm_status_severities_v.fss_icon%type);
@@ -143,7 +144,7 @@ as
       Deletes a status severity.
       
     Parameters:
-      p_fss_id - Numeric severity as defined in PIT, ranges from 10 .. 70 in increments of 10
+      p_fss_id - Numeric severity as defined by the FSM.C_STORY_* constants
       p_fss_fcl_id - Reference to FSM_CLASSES.
    */
   procedure delete_status_severity(

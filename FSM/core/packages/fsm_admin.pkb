@@ -720,6 +720,7 @@ as
     p_fss_id in fsm_status_severities_v.fss_id%type,
     p_fss_fcl_id in fsm_status_severities_v.fss_fcl_id%type,
     p_fss_name in fsm_status_severities_v.fss_name%type,
+    p_fss_display_name in fsm_status_severities_v.fss_display_name%type,
     p_fss_description in fsm_status_severities_v.fss_description%type,
     p_fss_html in fsm_status_severities_v.fss_html%type,
     p_fss_icon in fsm_status_severities_v.fss_icon%type)
@@ -733,6 +734,7 @@ as
       p_pti_pml_name => pit.get_default_language,
       p_pti_pmg_name => p_fss_fcl_id,
       p_pti_name => p_fss_name,
+      p_pti_display_name => coalesce(p_fss_display_name, p_fss_name),
       p_pti_description => p_fss_description);
       
     merge into fsm_status_severities t
@@ -742,7 +744,11 @@ as
                   p_fss_html fss_html,
                   p_fss_icon fss_icon
              from dual) s
-       on (t.fss_id = s.fss_id)
+       on (t.fss_id = s.fss_id 
+      and t.fss_fcl_id = s.fss_fcl_id)
+     when matched then update set
+          t.fss_html = s.fss_html,
+          t.fss_icon = s.fss_icon
      when not matched then insert(fss_id, fss_fcl_id, fss_pti_id, fss_html, fss_icon)
           values(s.fss_id, s.fss_fcl_id, s.fss_pti_id, s.fss_html, s.fss_icon);
   end merge_status_severity;
@@ -755,6 +761,7 @@ as
       p_fss_id => p_row.fss_id,
       p_fss_fcl_id => p_row.fss_fcl_id,
       p_fss_name => p_row.fss_name,
+      p_fss_display_name => p_row.fss_display_name,
       p_fss_description => p_row.fss_description,
       p_fss_html => p_row.fss_html,
       p_fss_icon => p_row.fss_icon);

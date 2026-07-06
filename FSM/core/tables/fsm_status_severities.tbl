@@ -3,7 +3,7 @@
     Table for storing GUI information for severity filtering.
 
   Columns:
-    fss_id (`number`) - Technical key, equivalent to MESSAGE_SEVERITY.
+    fss_id (`number`) - Technical key, equivalent to the FSM.C_STORY_* constants.
     fss_fcl_id (according to `pit_util.ora_name_type`) - Technical key for the class, defaults to FSM.
     fss_pti_id (according to `pit_util.ora_name_type`) - Severity name.
     fss_html (`varchar2(200 char)`) - HTML snippet, long form.
@@ -30,7 +30,7 @@ create table fsm_status_severities(
 create index idx_fss_pti_id on fsm_status_severities(fss_fcl_id, fss_pti_id);
 
 comment on table fsm_status_severities is 'Table for storing GUI information for severity filtering';
-comment on column fsm_status_severities.fss_id is 'Technical key, equivalent to MESSAGE_SEVERITY';
+comment on column fsm_status_severities.fss_id is 'Technical key, equivalent to the FSM.C_STORY_* constants';
 comment on column fsm_status_severities.fss_fcl_id is 'Technical Key. Message group. Defaults to FSM';
 comment on column fsm_status_severities.fss_pti_id is 'Severity name';
 comment on column fsm_status_severities.fss_html is 'HTML snippet, long form';
