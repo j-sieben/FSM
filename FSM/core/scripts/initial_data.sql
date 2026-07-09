@@ -47,54 +47,54 @@ begin
     p_fss_id => fsm.C_STORY_ERROR,
     p_fss_fcl_id => 'FSM',
     p_fss_name => 'ERROR',
-    p_fss_display_name => 'Error',
-    p_fss_description => 'Erroneous outcome of a flow.',
-    p_fss_html => 'u-color-danger',
+    p_fss_display_name => 'Fehler',
+    p_fss_description => 'Endstatus eines Flows mit Fehler.',
+    p_fss_html => 'u-danger',
     p_fss_icon => 'fa-exclamation-circle');
     
   fsm_admin.merge_status_severity(
     p_fss_id => fsm.C_STORY_TERMINAL,
     p_fss_fcl_id => 'FSM',
     p_fss_name => 'TERMINAL',
-    p_fss_display_name => 'Terminal',
-    p_fss_description => 'Final state of a flow.',
-    p_fss_html => 'u-color-success',
-    p_fss_icon => 'fa-stop-circle');
+    p_fss_display_name => 'Beendet',
+    p_fss_description => 'Endstatus eines Flows.',
+    p_fss_html => 'u-success',
+    p_fss_icon => 'fa-flag-checkered');
     
   fsm_admin.merge_status_severity(
     p_fss_id => fsm.C_STORY_MILESTONE,
     p_fss_fcl_id => 'FSM',
     p_fss_name => 'MILESTONE',
-    p_fss_display_name => 'Milestone',
-    p_fss_description => 'Important intermediate target of a flow.',
-    p_fss_html => 'u-color-success',
-    p_fss_icon => 'fa-flag-checkered');
+    p_fss_display_name => 'Meilenstein',
+    p_fss_description => 'Relevanter Zwischenschritt eines Flows.',
+    p_fss_html => 'u-success',
+    p_fss_icon => 'fa-stop-circle');
     
   fsm_admin.merge_status_severity(
     p_fss_id => fsm.C_STORY_RESULT,
     p_fss_fcl_id => 'FSM',
     p_fss_name => 'RESULT',
-    p_fss_display_name => 'Result',
-    p_fss_description => 'Outcome of a flow step.',
-    p_fss_html => 'u-color-success',
-    p_fss_icon => 'fa-trophy');
+    p_fss_display_name => 'Ergebnis',
+    p_fss_description => 'Ergebnis eines Bearbeitungsschritts.',
+    p_fss_html => 'u-success',
+    p_fss_icon => 'fa-check');
     
   fsm_admin.merge_status_severity(
     p_fss_id => fsm.C_STORY_STEP,
     p_fss_fcl_id => 'FSM',
     p_fss_name => 'STEP',
-    p_fss_display_name => 'Step',
-    p_fss_description => 'Flow step.',
-    p_fss_html => 'u-color-info',
+    p_fss_display_name => 'Teilschritt',
+    p_fss_description => 'Bearbeitungsschritt.',
+    p_fss_html => 'u-info',
     p_fss_icon => 'fa-dot-circle-o');
 
   fsm_admin.merge_status_severity(
     p_fss_id => fsm.C_STORY_TRANSITION,
     p_fss_fcl_id => 'FSM',
     p_fss_name => 'TRANSITION',
-    p_fss_display_name => 'Transition',
-    p_fss_description => 'Status movement of a flow step.',
-    p_fss_html => 'u-color-info',
+    p_fss_display_name => 'Statuswechsel',
+    p_fss_description => 'Statuswechsel eines Bearbeitungsschritts.',
+    p_fss_html => 'u-info',
     p_fss_icon => 'fa-arrow-right');
 
   fsm_admin.merge_status_severity(
@@ -102,8 +102,8 @@ begin
     p_fss_fcl_id => 'FSM',
     p_fss_name => 'DETAIL',
     p_fss_display_name => 'Detail',
-    p_fss_description => 'Other messages such as progress of a flow step.',
-    p_fss_html => 'u-color-muted',
+    p_fss_description => 'Sonstige Meldungen eines Bearbeitungsschritts.',
+    p_fss_html => 'u-normal',
     p_fss_icon => 'fa-list-alt');
       
   fsm_admin.merge_status(

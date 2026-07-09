@@ -87,7 +87,7 @@ q'{    p_fsc_active => #FSC_ACTIVE#);}',
 q'{  fsm_admin.merge_status_group(\CR\}' || 
 q'{    p_fsg_id => '#FSG_ID#',\CR\}' || 
 q'{    p_fsg_fcl_id => '#FSG_FCL_ID#',\CR\}' || 
-q'{    p_fsg_name => '#FSG_NAME#',\CR\}' || 
+q'{    p_fsg_name => q'[#FSG_NAME#]',\CR\}' || 
 q'{    p_fsg_description => q'[#FSG_DESCRIPTION#]',\CR\}' || 
 q'{    p_fsg_icon_css => '#FSG_ICON_CSS#',\CR\}' || 
 q'{    p_fsg_name_css => '#FSG_NAME_CSS#',\CR\}' || 
@@ -106,7 +106,7 @@ q'{    p_fst_id => '#FST_ID#',\CR\}' ||
 q'{    p_fst_fsg_id => '#FST_FSG_ID#',\CR\}' || 
 q'{    p_fst_fcl_id => '#FST_FCL_ID#',\CR\}' || 
 q'{    p_fst_msg_id => '#FST_MSG_ID#',\CR\}' || 
-q'{    p_fst_name => '#FST_NAME#',\CR\}' || 
+q'{    p_fst_name => q'[#FST_NAME#]',\CR\}' || 
 q'{    p_fst_description => q'[#FST_DESCRIPTION#]',\CR\}' || 
 q'{    p_fst_severity => #FST_SEVERITY#,\CR\}' || 
 q'{    p_fst_retries_on_error => #FST_RETRIES_ON_ERROR#,\CR\}' || 
