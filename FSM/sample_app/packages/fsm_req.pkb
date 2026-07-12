@@ -29,17 +29,12 @@ as
   begin
     pit.enter_optional('persist');
 
-    -- propagation to abstract super class
-    fsm.persist(p_req);
-
     -- merge concrete instance attributes in table fsm_requests by calling its XAPI
     bl_request.merge_request(
       p_req_id => p_req.fsm_id,
       p_req_rtp_id => p_req.req_rtp_id,
       p_req_rre_id => p_req.req_rre_id,
       p_req_text => p_req.req_text);
-
-    commit;
 
     pit.leave_optional;
   end persist;
@@ -175,19 +170,18 @@ as
   as 
   begin
     pit.enter_mandatory;
-    
+
     if p_req_id is null then
-      p_req.fsm_fst_id := p_req_fst_id;
+      fsm.initialize(p_req);
       p_req.fsm_fev_list := p_req_fev_list;
       p_req.fsm_fcl_id := C_FCL_ID;
+      p_req.fsm_fsc_id := 'MASTER';
       p_req.req_rtp_id := p_req_rtp_id;
       p_req.req_rre_id := p_req_rre_id;
       p_req.req_text := p_req_text;
 
-      persist(p_req);
-      
-      pit.verbose(msg.FSM_CREATED, msg_args(C_FCL_ID, to_char(p_req_id)));
-      g_result := p_req.set_status(fsm_fst.REQ_CREATED);
+      pit.verbose(msg.FSM_CREATED, msg_args(C_FCL_ID, to_char(p_req.fsm_id)));
+      g_result := p_req.set_status(p_req_fst_id);
     else
       -- Wrong constructor chosen
       create_fsm_req(p_req, p_req_id);
@@ -218,7 +212,10 @@ as
      
     p_req.fsm_id := l_req.req_id;
     p_req.fsm_fcl_id := l_req.req_fcl_id;
+    p_req.fsm_fsc_id := l_req.req_fsc_id;
     p_req.fsm_fst_id := l_req.req_fst_id;
+    p_req.fsm_old_fst_id := null;
+    p_req.fsm_fev_id := l_req.req_fev_id;
     p_req.fsm_fev_list := l_req.req_fev_list;
     p_req.fsm_validity := l_req.req_validity;
     p_req.req_rtp_id := l_req.req_rtp_id;
@@ -311,9 +308,8 @@ as
     Procedure: set_status 
       See <FSM_REQ.set_status>
    */
-  function set_status(
+  procedure set_status(
     p_req in out nocopy fsm_req_type)
-    return binary_integer
   as
   begin
     pit.enter_mandatory;
@@ -321,11 +317,10 @@ as
     persist(p_req);
     
     pit.leave_mandatory;
-    return fsm.C_OK;
   exception
     when others then
       pit.handle_exception;
-      return fsm.C_ERROR;
+      raise;
   end set_status;
 
 end fsm_req;

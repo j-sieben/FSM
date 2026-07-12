@@ -75,8 +75,6 @@ as
       p_req - instance of type FSM_REQ_TYPE
       p_fev_id - Event to raise. Reference to FSM_EVENT
       
-    Returns:
-      Status code on whether the event could be raised successfully. One of the constants FSM.C_OK or FSM.C_ERROR or a retry counter value.
    */
   function raise_event(
     p_req in out nocopy fsm_req_type,
@@ -107,9 +105,8 @@ as
     Returns:
       Status code on whether the event could be raised successfully. One of the constants FSM.C_OK or FSM.C_ERROR or a retry counter value.
    */
-  function set_status(
-    p_req in out nocopy fsm_req_type)
-    return binary_integer;
+  procedure set_status(
+    p_req in out nocopy fsm_req_type);
 
 end fsm_req;
 /

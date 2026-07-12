@@ -64,6 +64,17 @@ as
 
 
   /**
+    Procedure: initialize
+      Initializes the runtime identity and transition attributes of a new FSM instance.
+
+    Parameter:
+      p_fsm - New FSM instance to initialize
+   */
+  procedure initialize(
+    p_fsm in out nocopy fsm_type);
+
+
+  /**
     Group: FSM_TYPE method implementations
    */
   /**
@@ -172,8 +183,9 @@ as
       otherwise FSM waits for the event to be triggered externally.
       The procedure overload sets validity at the FSM instance attribute only.
       
-    Parameter:
+    Parameters:
       p_fsm - Instance of fsm (concrete class of the type inherited from FSM_TYPE)
+      p_fst_id - Target status of the transition
       p_msg - Reference to MSG, will be created as message
       p_msg_args - Optional parameters to pass to the log message
   
@@ -187,6 +199,7 @@ as
    */
   function set_status(
     p_fsm in out nocopy fsm_type,
+    p_fst_id in fsm_status_v.fst_id%type,
     p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null)
     return number;
@@ -196,13 +209,15 @@ as
       Overload as procedure. Is used to set the status directly and not as a 
       consequence of an event raised.
       
-    Parameter:
+    Parameters:
       p_fsm - Instance of fsm (concrete class of the type inherited from FSM_TYPE)
+      p_fst_id - Target status of the transition
       p_msg - Reference to MSG, will be created as message
       p_msg_args - Optional parameters to pass to the log message
    */
   procedure set_status(
     p_fsm in out nocopy fsm_type,
+    p_fst_id in fsm_status_v.fst_id%type,
     p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null);
 

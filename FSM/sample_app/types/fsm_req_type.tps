@@ -17,9 +17,7 @@ create or replace type fsm_req_type under fsm_type(
     self in out nocopy fsm_req_type,
     p_fev_id in varchar2)
     return number,
-  overriding member function set_status(
-    self in out nocopy fsm_req_type,
-    p_fst_id in varchar2)
-    return number
+  overriding member procedure persist_state(
+    self in out nocopy fsm_req_type)
 );
 /

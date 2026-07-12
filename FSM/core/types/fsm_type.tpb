@@ -47,12 +47,49 @@ create or replace type body fsm_type as
     p_msg_args in msg_args default null)
     return number
   as
-    l_result binary_integer;
   begin
-    self.fsm_fst_id := p_fst_id;
-    l_result := fsm.set_status(self, p_msg, p_msg_args);
-    return l_result;
+    return fsm.set_status(self, p_fst_id, p_msg, p_msg_args);
   end set_status;
+
+
+  member procedure leave_status(
+    self in out nocopy fsm_type)
+  as
+  begin
+    null;
+  end leave_status;
+
+
+  member procedure before_transition(
+    self in out nocopy fsm_type)
+  as
+  begin
+    null;
+  end before_transition;
+
+
+  member procedure persist_state(
+    self in out nocopy fsm_type)
+  as
+  begin
+    null;
+  end persist_state;
+
+
+  member procedure enter_status(
+    self in out nocopy fsm_type)
+  as
+  begin
+    null;
+  end enter_status;
+
+
+  member procedure after_transition(
+    self in out nocopy fsm_type)
+  as
+  begin
+    null;
+  end after_transition;
 
 
   member procedure notify(

@@ -14,8 +14,6 @@ as
     Group: Private methods
    */
   type context_rec is record(
-    fev_id fsm_events_v.fev_id%type,
-    prev_fst_id fsm_status.fst_id%type,
     reason_msg_id pit_util.ora_name_type,
     reason_msg_args msg_args);
   type context_tab is table of context_rec index by varchar2(128);
@@ -39,8 +37,6 @@ as
   begin
     l_key := context_key(p_fsm);
     if not g_context.exists(l_key) then
-      g_context(l_key).fev_id := null;
-      g_context(l_key).prev_fst_id := null;
       g_context(l_key).reason_msg_id := null;
       g_context(l_key).reason_msg_args := null;
     end if;
@@ -61,13 +57,12 @@ as
 
   function get_transition_reason_msg_id(
     p_fsm in fsm_type,
-    p_context in context_rec,
     p_fst_id in fsm_status.fst_id%type)
     return fsm_transitions.ftr_reason_msg_id%type
   as
     l_transition_reason_msg_id fsm_transitions.ftr_reason_msg_id%type;
   begin
-    if p_context.fev_id is null or p_context.prev_fst_id is null then
+    if p_fsm.fsm_fev_id is null or p_fsm.fsm_old_fst_id is null then
       return null;
     end if;
 
@@ -76,8 +71,8 @@ as
       from (
         select ftr_reason_msg_id
           from fsm_transitions
-         where ftr_fst_id = p_context.prev_fst_id
-           and ftr_fev_id = p_context.fev_id
+         where ftr_fst_id = p_fsm.fsm_old_fst_id
+           and ftr_fev_id = p_fsm.fsm_fev_id
            and ftr_fsc_id = p_fsm.fsm_fsc_id
            and ftr_fcl_id in (p_fsm.fsm_fcl_id, 'FSM')
            and instr(':' || ftr_fst_list || ':', ':' || p_fst_id || ':') > 0
@@ -323,19 +318,20 @@ as
                    p_affected_id => to_char(p_fsm.fsm_id));
 
     l_key := context_key(p_fsm);
-    if p_fst_id is not null and g_context.exists(l_key) then
-      l_context := g_context(l_key);
-      l_has_status_context := true;
-      l_log_fev_id := l_context.fev_id;
-      l_log_prev_fst_id := l_context.prev_fst_id;
-      l_log_reason_msg_id := l_context.reason_msg_id;
-      if l_context.reason_msg_args is not null then
-        l_log_reason_msg_args := pit_util.cast_to_msg_args_char(l_context.reason_msg_args);
+    if p_fst_id is not null then
+      l_log_fev_id := p_fsm.fsm_fev_id;
+      l_log_prev_fst_id := p_fsm.fsm_old_fst_id;
+      if g_context.exists(l_key) then
+        l_context := g_context(l_key);
+        l_has_status_context := true;
+        l_log_reason_msg_id := l_context.reason_msg_id;
+        if l_context.reason_msg_args is not null then
+          l_log_reason_msg_args := pit_util.cast_to_msg_args_char(l_context.reason_msg_args);
+        end if;
       end if;
 
       l_transition_reason_msg_id := get_transition_reason_msg_id(
                                       p_fsm => p_fsm,
-                                      p_context => l_context,
                                       p_fst_id => p_fst_id);
     end if;
 
@@ -387,11 +383,10 @@ as
   as
   begin
     if p_fsm.fsm_fst_id != fsm_fst.FSM_ERROR then
-      p_fsm.fsm_fst_id := fsm_fst.FSM_ERROR;
       if p_leave then
         pit.leave_mandatory;
       end if;
-      return set_status(p_fsm);
+      return set_status(p_fsm, fsm_fst.FSM_ERROR);
     else
       force_error_status(p_fsm);
       if p_leave then
@@ -422,6 +417,25 @@ as
 
     pit.leave_mandatory;
   end drop_object;
+
+
+  /*
+    Procedure: initialize
+      See <FSM.initialize>
+   */
+  procedure initialize(
+    p_fsm in out nocopy fsm_type)
+  as
+  begin
+    pit.enter_mandatory('initialize');
+
+    p_fsm.fsm_id := coalesce(p_fsm.fsm_id, fsm_seq.nextval);
+    p_fsm.fsm_fst_id := null;
+    p_fsm.fsm_old_fst_id := null;
+    p_fsm.fsm_fev_id := fsm_fev.FSM_INITIALIZE;
+
+    pit.leave_mandatory;
+  end initialize;
 
 
   /*
@@ -522,9 +536,9 @@ as
                     msg_param('p_fev_id', p_fev_id)));
 
     lock_fsm(p_fsm.fsm_id);
+    p_fsm.fsm_old_fst_id := p_fsm.fsm_fst_id;
+    p_fsm.fsm_fev_id := p_fev_id;
     ensure_context(p_fsm);
-    g_context(context_key(p_fsm)).fev_id := p_fev_id;
-    g_context(context_key(p_fsm)).prev_fst_id := p_fsm.fsm_fst_id;
 
     -- LOG verwalten
     log_change(
@@ -708,17 +722,36 @@ as
    */
   function set_status(
     p_fsm in out nocopy fsm_type,
+    p_fst_id in fsm_status_v.fst_id%type,
     p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null)
     return number
   as
+    l_status_changed boolean;
+    l_auto_raise pit_util.flag_type;
+    l_auto_event fsm_events_v.fev_id%type;
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('fsm_fst_id', p_fsm.fsm_fst_id)));
+                    msg_param('old_fst_id', p_fsm.fsm_fst_id),
+                    msg_param('p_fst_id', p_fst_id),
+                    msg_param('fsm_fev_id', p_fsm.fsm_fev_id)));
 
-    pit.assert_not_null(p_fsm.fsm_fst_id, p_msg_args => msg_args('FSM_FST_ID'));
+    pit.assert_not_null(p_fst_id, p_msg_args => msg_args('P_FST_ID'));
     p_fsm.fsm_validity := coalesce(p_fsm.fsm_validity, C_OK);
+    if p_fsm.fsm_old_fst_id is null
+       and (p_fsm.fsm_fev_id is null or p_fsm.fsm_fev_id != fsm_fev.FSM_INITIALIZE)
+    then
+      p_fsm.fsm_old_fst_id := p_fsm.fsm_fst_id;
+    end if;
+    l_status_changed := p_fsm.fsm_old_fst_id is null
+                        or p_fsm.fsm_old_fst_id != p_fst_id;
+    p_fsm.fsm_fst_id := p_fst_id;
+
+    if l_status_changed and p_fsm.fsm_old_fst_id is not null then
+      p_fsm.leave_status;
+    end if;
+    p_fsm.before_transition;
 
     -- Find out the next possible events
     select listagg(fev_id, ':') within group(order by fev_id) fev_list,
@@ -732,6 +765,7 @@ as
        and ftr_raise_on_status = p_fsm.fsm_validity;
 
     persist(p_fsm);
+    p_fsm.persist_state;
 
     log_change(
       p_fsm => p_fsm,
@@ -739,7 +773,23 @@ as
       p_msg => p_msg,
       p_msg_args => p_msg_args);
 
+    if l_status_changed then
+      p_fsm.enter_status;
+    end if;
+    p_fsm.after_transition;
+
     notify(p_fsm, msg.FSM_NEXT_EVENTS, msg_args(p_fsm.fsm_fev_list, p_fsm.fsm_auto_raise));
+
+    l_auto_raise := p_fsm.fsm_auto_raise;
+    l_auto_event := p_fsm.fsm_fev_list;
+    p_fsm.fsm_old_fst_id := null;
+    p_fsm.fsm_fev_id := null;
+
+    if l_auto_raise = pit_util.C_TRUE then
+      p_fsm.fsm_validity := p_fsm.raise_event(l_auto_event);
+    elsif p_fsm.fsm_fev_list = 'NIL' then
+      p_fsm.finalize;
+    end if;
 
     pit.leave_mandatory(
       p_params => msg_params(
@@ -762,12 +812,13 @@ as
    */
   procedure set_status(
     p_fsm in out nocopy fsm_type,
+    p_fst_id in fsm_status_v.fst_id%type,
     p_msg in pit_util.ora_name_type default null,
     p_msg_args in msg_args default null)
   as
     l_result binary_integer;
   begin
-    l_result := set_status(p_fsm, p_msg, p_msg_args);
+    l_result := set_status(p_fsm, p_fst_id, p_msg, p_msg_args);
   end set_status;
 
 
@@ -850,7 +901,9 @@ as
     q'[Instance of type FSM_TYPE
     fsm_ID: #FSM_ID#
     fsm_fcl_id: #FSM_FCL_ID#
+    fsm_old_fst_id: #FSM_OLD_FST_ID#
     fsm_fst_id: #FSM_FST_ID#
+    fsm_fev_id: #FSM_FEV_ID#
     fsm_VALIDITY: #FSM_VALIDITY#
     event_list: #FEV_LIST#
 ]';
@@ -862,7 +915,9 @@ as
     utl_text.bulk_replace(l_result, char_table(
       'FSM_ID', p_fsm.fsm_id,
       'FSM_FCL_ID', p_fsm.fsm_fcl_id,
+      'FSM_OLD_FST_ID', p_fsm.fsm_old_fst_id,
       'FSM_FST_ID', p_fsm.fsm_fst_id,
+      'FSM_FEV_ID', p_fsm.fsm_fev_id,
       'FSM_VALIDITY', p_fsm.fsm_validity,
       'FEV_LIST', p_fsm.fsm_fev_list));
 

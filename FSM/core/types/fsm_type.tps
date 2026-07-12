@@ -5,6 +5,8 @@ as object(
   fsm_fcl_id &ORA_NAME_TYPE.,
   fsm_fsc_id &ORA_NAME_TYPE.,
   fsm_fst_id &ORA_NAME_TYPE.,
+  fsm_old_fst_id &ORA_NAME_TYPE.,
+  fsm_fev_id &ORA_NAME_TYPE.,
   fsm_validity number,
   fsm_fev_list varchar2(4000),
   fsm_auto_raise &FLAG_TYPE.,
@@ -29,6 +31,16 @@ as object(
     p_msg in varchar2 default null,
     p_msg_args in msg_args default null)
     return number,
+  member procedure leave_status(
+    self in out nocopy fsm_type),
+  member procedure before_transition(
+    self in out nocopy fsm_type),
+  member procedure persist_state(
+    self in out nocopy fsm_type),
+  member procedure enter_status(
+    self in out nocopy fsm_type),
+  member procedure after_transition(
+    self in out nocopy fsm_type),
   member procedure notify(
     self in out nocopy fsm_type,
     p_msg in varchar2,

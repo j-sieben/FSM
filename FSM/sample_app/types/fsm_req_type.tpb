@@ -51,28 +51,12 @@ as
   end raise_event;
   
   
-  overriding member function set_status(
-    self in out nocopy fsm_req_type,
-    p_fst_id in varchar2)
-    return number
+  overriding member procedure persist_state(
+    self in out nocopy fsm_req_type)
   as
-    l_result integer;
   begin
-    self.fsm_fst_id := p_fst_id;
-    -- propagate to super class
-    l_result := fsm.set_status(self);
-    -- persist status
-    l_result := fsm_req.set_status(self);
-    -- raise automatic events
-    if self.fsm_auto_raise = pit_util.C_TRUE and l_result = fsm.C_OK then
-      l_result := self.raise_event(self.fsm_fev_list);
-    end if;
-    -- call destructor, if next_event_list = 'NIL'
-    if l_result = fsm.C_OK and self.fsm_fev_list = 'NIL' then
-      self.finalize;
-    end if;
-    return l_result;
-  end set_status;
+    fsm_req.set_status(self);
+  end persist_state;
 
 end;
 /
