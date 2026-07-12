@@ -1,20 +1,14 @@
 create or replace view fsm_log_v as
 select fsl_id, fsl_fsm_id, fsl_user_name, fsl_session_id, fsl_log_date,
-       fsl_msg_id, pit.get_message_text(fsl_msg_id, fsl_msg_args) fsl_msg_text,
+       fsl_msg_id, fsl_msg_args,
        fsl_severity, fss_name fsl_severity_name, fss_display_name fsl_severity_display_name, fss_icon fsl_severity_icon, fss_html fsl_severity_html, 
        fsl_fst_id, fst_name fsl_fst_name,
        fst_initial_status fsl_fst_initial_status,
        fst_terminal_status fsl_fst_terminal_status,
        fsg_id fsl_fsg_id, fsg_name fsl_fsg_name,
        fsl_fev_id, fsl_prev_fst_id, fsl_fev_list, fsl_fcl_id, fsl_fsc_id,
-       fsl_transition_reason_msg_id,
-       case
-         when fsl_transition_reason_msg_id is not null then pit.get_message_text(fsl_transition_reason_msg_id, msg_args())
-       end fsl_transition_reason_msg_text,
-       fsl_reason_msg_id, fsl_reason_msg_args,
-       case
-         when fsl_reason_msg_id is not null then pit.get_message_text(fsl_reason_msg_id, fsl_reason_msg_args)
-       end fsl_reason_msg_text
+       fsl_transition_reason_msg_id, msg_args() fsl_transition_reason_msg_args,
+       fsl_reason_msg_id, fsl_reason_msg_args
   from fsm_log
   join fsm_status_v 
     on fsl_fst_id = fst_id
