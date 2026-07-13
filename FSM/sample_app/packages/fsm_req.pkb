@@ -31,7 +31,8 @@ as
 
     -- merge concrete instance attributes in table fsm_requests by calling its XAPI
     bl_request.merge_request(
-      p_req_id => p_req.fsm_id,
+      p_req_id => p_req.req_id,
+      p_req_fsm_id => p_req.fsm_id,
       p_req_rtp_id => p_req.req_rtp_id,
       p_req_rre_id => p_req.req_rre_id,
       p_req_text => p_req.req_text);
@@ -167,15 +168,17 @@ as
     p_req_rtp_id in fsm_request_types.rtp_id%type,
     p_req_rre_id in fsm_requestors.rre_id%type,
     p_req_text in fsm_requests.req_text%type)
-  as 
+  as
+    l_fsm_id fsm_objects.fsm_id%type;
   begin
     pit.enter_mandatory;
 
     if p_req_id is null then
-      fsm.initialize(p_req);
-      p_req.fsm_fev_list := p_req_fev_list;
+      p_req.req_id := fsm_request_seq.nextval;
       p_req.fsm_fcl_id := C_FCL_ID;
       p_req.fsm_fsc_id := 'MASTER';
+      fsm.initialize(p_req);
+      p_req.fsm_fev_list := p_req_fev_list;
       p_req.req_rtp_id := p_req_rtp_id;
       p_req.req_rre_id := p_req_rre_id;
       p_req.req_text := p_req_text;
@@ -183,8 +186,16 @@ as
       pit.verbose(msg.FSM_CREATED, msg_args(C_FCL_ID, to_char(p_req.fsm_id)));
       g_result := p_req.set_status(p_req_fst_id);
     else
-      -- Wrong constructor chosen
-      create_fsm_req(p_req, p_req_id);
+      select req_fsm_id
+        into l_fsm_id
+        from fsm_requests
+       where req_id = p_req_id;
+
+      load_fsm_req(p_req, l_fsm_id);
+      p_req.req_rtp_id := p_req_rtp_id;
+      p_req.req_rre_id := p_req_rre_id;
+      p_req.req_text := p_req_text;
+      persist(p_req);
     end if;
     
     pit.leave_mandatory;
@@ -192,12 +203,12 @@ as
     
 
   /**
-    Procedure: create_fsm_req 
-      See <FSM_REQ.create_fsm_req>
+    Procedure: load_fsm_req
+      See <FSM_REQ.load_fsm_req>
    */
-  procedure create_fsm_req(
+  procedure load_fsm_req(
     p_req in out nocopy fsm_req_type,
-    p_req_id in fsm_requests.req_id%type)
+    p_fsm_id in fsm_objects.fsm_id%type)
   as
     l_req fsm_requests_vw%rowtype;
   begin
@@ -205,12 +216,12 @@ as
     
     -- Don't call persist in this constructor as it simply loads an existing instance
     -- from table into memory. Persisting would lead to unnecessary log entries only.
-    select *
+     select *
       into l_req
       from fsm_requests_vw
-     where req_id = p_req_id;
-     
-    p_req.fsm_id := l_req.req_id;
+     where req_fsm_id = p_fsm_id;
+
+    p_req.fsm_id := l_req.req_fsm_id;
     p_req.fsm_fcl_id := l_req.req_fcl_id;
     p_req.fsm_fsc_id := l_req.req_fsc_id;
     p_req.fsm_fst_id := l_req.req_fst_id;
@@ -218,6 +229,7 @@ as
     p_req.fsm_fev_id := l_req.req_fev_id;
     p_req.fsm_fev_list := l_req.req_fev_list;
     p_req.fsm_validity := l_req.req_validity;
+    p_req.req_id := l_req.req_id;
     p_req.req_rtp_id := l_req.req_rtp_id;
     p_req.req_rre_id := l_req.req_rre_id;
     p_req.req_text := l_req.req_text;
@@ -226,7 +238,7 @@ as
   exception
     when NO_DATA_FOUND then
       pit.handle_exception;
-  end create_fsm_req;
+  end load_fsm_req;
     
 
   /**
@@ -255,14 +267,16 @@ as
    */
   function raise_event(
     p_req in out nocopy fsm_req_type,
-    p_fev_id in fsm_events_v.fev_id%type)
+    p_fev_id in fsm_events_v.fev_id%type,
+    p_msg in varchar2 default null,
+    p_msg_args in msg_args default null)
     return binary_integer
   as
   begin
     pit.enter_mandatory;
     
     -- propagate event to super class
-    g_result := fsm.raise_event(p_req, p_fev_id);
+    g_result := fsm.raise_event(p_req, p_fev_id, p_msg, p_msg_args);
 
     -- process event
     if instr(':' || p_req.fsm_fev_list || ':', ':' || p_fev_id || ':') > 0 then
@@ -292,13 +306,19 @@ as
       See <FSM_REQ.raise_event>
    */
   procedure raise_event(
-    p_req_id in fsm_objects_v.fsm_id%type,
+    p_req_id in fsm_requests.req_id%type,
     p_fev_id in fsm_events_v.fev_id%type)
   as
     l_req fsm_req_type;
+    l_fsm_id fsm_objects.fsm_id%type;
     l_result binary_integer;
   begin
-    l_req := fsm_req_type(p_req_id);
+    select req_fsm_id
+      into l_fsm_id
+      from fsm_requests
+     where req_id = p_req_id;
+
+    l_req := fsm_req_type(l_fsm_id);
     l_result := l_req.raise_event(p_fev_id);
     pit.assert(l_result = 0);
   end raise_event;

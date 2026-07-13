@@ -16,29 +16,18 @@ as
   type context_rec is record(
     reason_msg_id pit_util.ora_name_type,
     reason_msg_args msg_args);
-  type context_tab is table of context_rec index by varchar2(128);
+  type context_tab is table of context_rec index by binary_integer;
 
   g_context context_tab;
-
-
-  function context_key(
-    p_fsm in fsm_type)
-    return varchar2
-  as
-  begin
-    return to_char(p_fsm.fsm_id);
-  end context_key;
 
 
   procedure ensure_context(
     p_fsm in fsm_type)
   as
-    l_key varchar2(128);
   begin
-    l_key := context_key(p_fsm);
-    if not g_context.exists(l_key) then
-      g_context(l_key).reason_msg_id := null;
-      g_context(l_key).reason_msg_args := null;
+    if not g_context.exists(p_fsm.fsm_id) then
+      g_context(p_fsm.fsm_id).reason_msg_id := null;
+      g_context(p_fsm.fsm_id).reason_msg_args := null;
     end if;
   end ensure_context;
 
@@ -46,11 +35,9 @@ as
   procedure clear_context(
     p_fsm in fsm_type)
   as
-    l_key varchar2(128);
   begin
-    l_key := context_key(p_fsm);
-    if g_context.exists(l_key) then
-      g_context.delete(l_key);
+    if g_context.exists(p_fsm.fsm_id) then
+      g_context.delete(p_fsm.fsm_id);
     end if;
   end clear_context;
 
@@ -243,6 +230,57 @@ as
 
 
   /*
+    Procedure: get_log_message
+      Determines the PIT message and its arguments for a FSM log entry.
+
+    Parameters:
+      p_fsm - FSM instance
+      p_fev_id - Optional event that was triggered
+      p_fst_id - Optional new status that was taken
+      p_msg - Optional explicit PIT message ID
+      p_msg_args - Optional arguments for the explicit or status message
+      p_message_id - Determined PIT message ID
+      p_message_args - Determined PIT message arguments
+   */
+  procedure get_log_message(
+    p_fsm in fsm_type,
+    p_fev_id in fsm_events_v.fev_id%type,
+    p_fst_id in fsm_status.fst_id%type,
+    p_msg in varchar2,
+    p_msg_args in msg_args,
+    p_message_id out nocopy fsm_events_v.fev_msg_id%type,
+    p_message_args out nocopy msg_args)
+  as
+  begin
+    case
+    when p_msg is not null then
+      p_message_id := p_msg;
+      p_message_args := p_msg_args;
+    when p_fev_id is not null then
+      select fev_msg_id, msg_args(fev_name)
+        into p_message_id, p_message_args
+        from fsm_events_v
+       where fev_id = p_fev_id
+         and fev_fcl_id = p_fsm.fsm_fcl_id;
+    when p_fst_id = fsm_fst.FSM_ERROR then
+      select msg.FSM_DELIVERY_FAILED, msg_args(fst_name)
+        into p_message_id, p_message_args
+        from fsm_status_v
+       where fst_id = p_fst_id
+         and fst_fcl_id = p_fsm.fsm_fcl_id;
+    when p_fst_id is not null then
+      select fst_msg_id, coalesce(p_msg_args, msg_args(fst_name))
+        into p_message_id, p_message_args
+        from fsm_status_v
+       where fst_id = p_fst_id
+         and fst_fcl_id = p_fsm.fsm_fcl_id;
+    else
+      null;
+    end case;
+  end get_log_message;
+
+
+  /*
     Procedure: log_change
       Method to maintain FSM_LOG. Called to log status changes, events and notifications from FSM
 
@@ -264,11 +302,7 @@ as
     l_message_id fsm_events_v.fev_msg_id%type;
     l_user pit_util.ora_name_type;
     l_msg_args msg_args;
-    l_key varchar2(128);
     l_context context_rec;
-    l_has_status_context boolean := false;
-    l_log_fev_id fsm_events_v.fev_id%type;
-    l_log_prev_fst_id fsm_status.fst_id%type;
     l_log_reason_msg_id pit_util.ora_name_type;
     l_log_reason_msg_args msg_args_char;
     l_transition_reason_msg_id fsm_transitions.ftr_reason_msg_id%type;
@@ -278,38 +312,16 @@ as
                     msg_param('p_fsm', p_fsm.fsm_id),
                     msg_param('p_fev_id', p_fev_id),
                     msg_param('p_fst_id', p_fst_id),
-                    msg_param('p_msg', p_msg),
-                    msg_param('p_msg_args', p_msg_args)));
+                    msg_param('p_msg', p_msg)));
 
-    -- choose appropriate message based on parameters entered
-
-    case
-    when p_msg is not null then
-      l_message_id := p_msg;
-      l_msg_args := case 
-                      when p_msg_args is null then msg_args()
-                      else p_msg_args end;
-    when p_fev_id is not null then
-      select fev_msg_id, msg_args(fev_name)
-        into l_message_id, l_msg_args
-        from fsm_events_v
-       where fev_id = p_fev_id
-         and fev_fcl_id = p_fsm.fsm_fcl_id;
-    when p_fst_id = fsm_fst.FSM_ERROR then
-      select msg.FSM_DELIVERY_FAILED, msg_args(fst_name)
-        into l_message_id, l_msg_args
-        from fsm_status_v
-       where fst_id = p_fst_id
-         and fst_fcl_id = p_fsm.fsm_fcl_id;
-    when p_fst_id is not null then
-      select fst_msg_id, coalesce(p_msg_args, msg_args(fst_name))
-        into l_message_id, l_msg_args
-        from fsm_status_v
-       where fst_id = p_fst_id
-         and fst_fcl_id = p_fsm.fsm_fcl_id;
-    else
-      null;
-    end case;
+    get_log_message(
+      p_fsm => p_fsm,
+      p_fev_id => p_fev_id,
+      p_fst_id => p_fst_id,
+      p_msg => p_msg,
+      p_msg_args => p_msg_args,
+      p_message_id => l_message_id,
+      p_message_args => l_msg_args);
 
     -- create message
     l_message := pit.get_message(
@@ -317,23 +329,17 @@ as
                    p_msg_args => l_msg_args,
                    p_affected_id => to_char(p_fsm.fsm_id));
 
-    l_key := context_key(p_fsm);
-    if p_fst_id is not null then
-      l_log_fev_id := p_fsm.fsm_fev_id;
-      l_log_prev_fst_id := p_fsm.fsm_old_fst_id;
-      if g_context.exists(l_key) then
-        l_context := g_context(l_key);
-        l_has_status_context := true;
-        l_log_reason_msg_id := l_context.reason_msg_id;
-        if l_context.reason_msg_args is not null then
-          l_log_reason_msg_args := pit_util.cast_to_msg_args_char(l_context.reason_msg_args);
-        end if;
+    if g_context.exists(p_fsm.fsm_id) then
+      l_context := g_context(p_fsm.fsm_id);
+      l_log_reason_msg_id := l_context.reason_msg_id;
+      if l_context.reason_msg_args is not null then
+        l_log_reason_msg_args := pit_util.cast_to_msg_args_char(l_context.reason_msg_args);
       end if;
-
-      l_transition_reason_msg_id := get_transition_reason_msg_id(
-                                      p_fsm => p_fsm,
-                                      p_fst_id => p_fst_id);
     end if;
+
+    l_transition_reason_msg_id := get_transition_reason_msg_id(
+                                    p_fsm => p_fsm,
+                                    p_fst_id => p_fst_id);
 
     -- LOG
     insert into fsm_log(
@@ -344,23 +350,21 @@ as
       fsl_fev_id, fsl_prev_fst_id, fsl_transition_reason_msg_id,
       fsl_reason_msg_id, fsl_reason_msg_args)
     values(
-      fsm_log_seq.nextval, to_number(l_message.affected_id), l_message.user_name, l_message.session_id,
+      fsm_log_seq.nextval, p_fsm.fsm_id, l_message.user_name, l_message.session_id,
       current_timestamp, l_message.message_text, l_message.severity,
       p_fsm.fsm_fst_id, p_fsm.fsm_fev_list, p_fsm.fsm_fcl_id, p_fsm.fsm_fsc_id,
       l_message.message_name, pit_util.cast_to_msg_args_char(l_message.message_args),
-      l_log_fev_id,
-      l_log_prev_fst_id,
-      l_transition_reason_msg_id,
-      l_log_reason_msg_id,
-      l_log_reason_msg_args);
+      p_fsm.fsm_fev_id, p_fsm.fsm_old_fst_id, l_transition_reason_msg_id,
+      l_log_reason_msg_id, l_log_reason_msg_args);
 
-    if l_has_status_context then
-      clear_context(p_fsm);
-    end if;
+    clear_context(p_fsm);
 
     pit.leave_optional(
       p_params => msg_params(
                     msg_param('Message', l_message.message_text)));
+  exception
+    when others then
+      pit.handle_exception(msg.PIT_SQL_ERROR);
   end log_change;
 
 
@@ -574,8 +578,7 @@ as
     pit.enter_optional(
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id),
-                    msg_param('p_reason_code', p_reason_code),
-                    msg_param('p_msg_args', p_msg_args)));
+                    msg_param('p_reason_code', p_reason_code)));
 
     l_reason_prefix := p_fsm.fsm_fcl_id || '_REASON_';
     l_reason_msg_id := case
@@ -584,8 +587,8 @@ as
                        end;
 
     ensure_context(p_fsm);
-    g_context(context_key(p_fsm)).reason_msg_id := l_reason_msg_id;
-    g_context(context_key(p_fsm)).reason_msg_args := p_msg_args;
+    g_context(p_fsm.fsm_id).reason_msg_id := l_reason_msg_id;
+    g_context(p_fsm.fsm_id).reason_msg_args := p_msg_args;
 
     pit.leave_optional;
   end log_reason;
@@ -728,10 +731,8 @@ as
     return number
   as
     l_status_changed boolean;
-    l_auto_raise pit_util.flag_type;
-    l_auto_event fsm_events_v.fev_id%type;
   begin
-    pit.enter_mandatory(
+    pit.enter_mandatory('set_status',
       p_params => msg_params(
                     msg_param('old_fst_id', p_fsm.fsm_fst_id),
                     msg_param('p_fst_id', p_fst_id),
@@ -739,11 +740,7 @@ as
 
     pit.assert_not_null(p_fst_id, p_msg_args => msg_args('P_FST_ID'));
     p_fsm.fsm_validity := coalesce(p_fsm.fsm_validity, C_OK);
-    if p_fsm.fsm_old_fst_id is null
-       and (p_fsm.fsm_fev_id is null or p_fsm.fsm_fev_id != fsm_fev.FSM_INITIALIZE)
-    then
-      p_fsm.fsm_old_fst_id := p_fsm.fsm_fst_id;
-    end if;
+    p_fsm.fsm_old_fst_id := p_fsm.fsm_fst_id;
     l_status_changed := p_fsm.fsm_old_fst_id is null
                         or p_fsm.fsm_old_fst_id != p_fst_id;
     p_fsm.fsm_fst_id := p_fst_id;
@@ -780,16 +777,17 @@ as
 
     notify(p_fsm, msg.FSM_NEXT_EVENTS, msg_args(p_fsm.fsm_fev_list, p_fsm.fsm_auto_raise));
 
-    l_auto_raise := p_fsm.fsm_auto_raise;
-    l_auto_event := p_fsm.fsm_fev_list;
-    p_fsm.fsm_old_fst_id := null;
-    p_fsm.fsm_fev_id := null;
 
-    if l_auto_raise = pit_util.C_TRUE then
-      p_fsm.fsm_validity := p_fsm.raise_event(l_auto_event);
+    if p_fsm.fsm_auto_raise = pit_util.C_TRUE then
+      p_fsm.fsm_validity := p_fsm.raise_event(p_fsm.fsm_fev_list);
     elsif p_fsm.fsm_fev_list = 'NIL' then
       p_fsm.finalize;
     end if;
+
+    p_fsm.fsm_old_fst_id := null;
+    p_fsm.fsm_fev_id := null;
+
+    commit;
 
     pit.leave_mandatory(
       p_params => msg_params(
@@ -877,8 +875,7 @@ as
     pit.enter_mandatory(
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id),
-                    msg_param('p_msg', p_msg),
-                    msg_param('p_msg_args', p_msg_args)));
+                    msg_param('p_msg', p_msg)));
 
     log_change(
       p_fsm => p_fsm,

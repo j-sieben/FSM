@@ -16,7 +16,7 @@ declare
                  'DEMO_USERS_VW', 'FSM_REQUESTS_VW', 'FSM_REQUESTORS_VW', 'FSM_REQUEST_TYPES_VW', -- Views
                  'FSM_REQUESTS', 'FSM_REQUEST_TYPES', 'FSM_REQUESTORS', 'DEMO_USERS',  -- Tabellen
                  '',  -- Synonyme
-                 '' -- Sequenzen
+                 'FSM_REQUEST_SEQ' -- Sequenzen
                  )
              and object_type not like '%BODY'
            order by object_type, object_name;

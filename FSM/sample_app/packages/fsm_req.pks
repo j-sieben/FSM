@@ -34,16 +34,16 @@ as
     
 
   /**
-    Procedure: create_fsm_req
-      Overlaod to re-create an already persisted instance from FSM_REQUESTS 
+    Procedure: load_fsm_req
+      Re-creates an already persisted instance from FSM_REQUESTS by FSM ID.
    
     Parameters:
       p_req - instance of FSM_REQ_TYPE to be re-created
-      p_req_id - ID of the existing request
+      p_fsm_id - Technical FSM ID of the existing request
    */
-  procedure create_fsm_req(
+  procedure load_fsm_req(
     p_req in out nocopy fsm_req_type,
-    p_req_id in fsm_requests.req_id%type);
+    p_fsm_id in fsm_objects.fsm_id%type);
     
     
   /**
@@ -78,7 +78,9 @@ as
    */
   function raise_event(
     p_req in out nocopy fsm_req_type,
-    p_fev_id in fsm_events_v.fev_id%type)
+    p_fev_id in fsm_events_v.fev_id%type,
+    p_msg in varchar2 default null,
+    p_msg_args in msg_args default null)
     return binary_integer;
       
   
@@ -87,11 +89,11 @@ as
       Method to wrap the creation of an fsm_req_type in order to throw an event on it.
     
     Parameters:
-      p_req_id - ID of an existing FSM_REQ_TYPE instance
+      p_req_id - Business ID of an existing request
       p_fev_id - Event to raise. Reference to FSM_EVENT
    */
   procedure raise_event(
-    p_req_id in fsm_objects_v.fsm_id%type,
+    p_req_id in fsm_requests.req_id%type,
     p_fev_id in fsm_events_v.fev_id%type);
     
 

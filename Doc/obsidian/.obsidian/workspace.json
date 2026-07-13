@@ -1,0 +1,216 @@
+{
+  "main": {
+    "id": "b4ecaa243db4c505",
+    "type": "split",
+    "children": [
+      {
+        "id": "e18806d615d39a3c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "dbcd204396d0db8b",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "README.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "README"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "8085f828c56fcf6f",
+    "type": "split",
+    "children": [
+      {
+        "id": "2b36c70a60b951b5",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a63384dd9be80a11",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Dateiexplorer"
+            }
+          },
+          {
+            "id": "44f65bf57eb5be51",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Suchen"
+            }
+          },
+          {
+            "id": "bccb2228a1b41d62",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Lesezeichen"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "0a50c8c0bd849d05",
+    "type": "split",
+    "children": [
+      {
+        "id": "8f9602dbde4e3fb7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e3e971610167db57",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "README.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Rückverweise auf README"
+            }
+          },
+          {
+            "id": "016b78e835868119",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "README.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Ausgehende Links von README öffnen"
+            }
+          },
+          {
+            "id": "6520180729b0fd25",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "136ab1b3f2a0c1d7",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Alle Eigenschaften"
+            }
+          },
+          {
+            "id": "1e151cdf5cf95c90",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "README.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Gliederung von README"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Schnellauswahl öffnen": false,
+      "graph:Graph-Ansicht öffnen": false,
+      "canvas:Neuen Canvas erstellen": false,
+      "daily-notes:Heutige Notiz öffnen": false,
+      "templates:Vorlage einfügen": false,
+      "command-palette:Befehlspalette öffnen": false,
+      "bases:Neue Base erstellen": false
+    }
+  },
+  "active": "dbcd204396d0db8b",
+  "lastOpenFiles": [
+    "Glossar/Polymorphie.md",
+    "Glossar/Objekttyp.md",
+    "Glossar/Metadatenmodell.md",
+    "Glossar/Lifecycle-Hook.md",
+    "Glossar/Initialstatus.md",
+    "Glossar/Glossar.md",
+    "Glossar/FSM-Instanz.md",
+    "Glossar/FSM.md",
+    "Glossar/Ereignis.md",
+    "Glossar/Automatisches Ereignis.md",
+    "04_Betrieb/Installation-und-generierte-Objekte.md",
+    "04_Betrieb/Diagnoseleitfaden.md",
+    "03_FSM-verwenden/Metadaten-definieren.md",
+    "03_FSM-verwenden/FSM-im-eigenen-Projekt-verwenden.md",
+    "03_FSM-verwenden/Eigene-FSM-implementieren.md",
+    "05_Referenz/Quellobjekte.md",
+    "02_Funktionen/Logging-Fehler-und-Retry.md",
+    "02_Funktionen/Instanzen-erstellen-und-laden.md",
+    "03_Erweiterung/Eigene-FSM-implementieren.md",
+    "03_FSM-verwenden",
+    "02_Funktionen/Eskalation-und-Aktivität.md",
+    "02_Funktionen/Ereignisse-und-Statuswechsel.md",
+    "01_Architektur/Laufzeit-und-Lifecycle.md",
+    "01_Architektur/Komponenten-und-Verantwortlichkeiten.md",
+    "01_Architektur/Datenmodell.md",
+    "01_Architektur/Architekturüberblick.md",
+    "00_Start/Einführung-in-Finite-State-Machines.md"
+  ]
+}

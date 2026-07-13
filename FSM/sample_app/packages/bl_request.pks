@@ -115,13 +115,15 @@ as
       
     Parameters:
       p_req_id - ID of the request
+      p_req_fsm_id - ID of the accompanying FSM instance
       p_req_rtp_id - Reference to the request type
       p_req_rre_id - Reference to the requestor
       p_req_text - Request in textual form
    */
   procedure merge_request(
-    p_req_id in out nocopy number, 
-	  p_req_rtp_id in varchar2, 
+    p_req_id in out nocopy number,
+	  p_req_fsm_id in number,
+	  p_req_rtp_id in varchar2,
 	  p_req_rre_id in varchar2, 
 	  p_req_text in varchar2);    
 

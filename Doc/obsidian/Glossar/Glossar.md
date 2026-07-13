@@ -1,0 +1,15 @@
+# Glossar
+
+- [[Glossar/Automatisches Ereignis|Automatisches Ereignis]]
+- [[Glossar/Ereignis|Ereignis]]
+- [[Glossar/FSM|FSM]]
+- [[Glossar/FSM-Instanz|FSM-Instanz]]
+- [[Glossar/Initialstatus|Initialstatus]]
+- [[Glossar/Lifecycle-Hook|Lifecycle-Hook]]
+- [[Glossar/Metadatenmodell|Metadatenmodell]]
+- [[Glossar/Objekttyp|Objekttyp]]
+- [[Glossar/Polymorphie|Polymorphie]]
+- [[Glossar/Status|Status]]
+- [[Glossar/Subklasse|Subklasse]]
+- [[Glossar/Terminalstatus|Terminalstatus]]
+- [[Glossar/Transition|Transition]]

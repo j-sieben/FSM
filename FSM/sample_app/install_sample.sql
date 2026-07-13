@@ -5,6 +5,7 @@ prompt &h1.Installing FSM sample instance
 
 define tool_dir=tools/
 define table_dir=&sample_dir.tables/
+define seq_dir=&sample_dir.sequences/
 define view_dir=&sample_dir.views/
 define type_dir=&sample_dir.types/
 define pkg_dir=&sample_dir.packages/
@@ -17,6 +18,7 @@ prompt &h2.Create FSM sample messages
 @&msg_dir.create_messages.sql
 
 prompt &h2.Create tables and initial data
+@&tool_dir.check_has_sequence fsm_request_seq
 @&tool_dir.check_has_table fsm_request_types
 @&tool_dir.check_has_table fsm_requestors
 @&tool_dir.check_has_table fsm_requests

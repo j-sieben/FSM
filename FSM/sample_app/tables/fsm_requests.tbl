@@ -3,24 +3,27 @@
     Table storing concrete attributes for type FSM_REQ.
 
   Columns:
-    req_id (`number`) - Primary key, reference to FSM_OBJECTS.
+    req_id (`number`) - Primary key and business ID of the request.
+    req_fsm_id (`number`) - Unique reference to FSM_OBJECTS.
     req_rtp_id (`varchar2(50 char)`) - Request type, reference to FSM_REQUEST_TYPES.
     req_rre_id (`varchar2(50 char)`) - Requesting person, reference to FSM_REQUESTORS.
     req_text (`varchar2(1000 char)`) - Text the requestor entered for the request.
 
   Dependencies:
-    req_id - references <FSM_OBJECTS> (fsm_id)
+    req_fsm_id - references <FSM_OBJECTS> (fsm_id)
     req_rre_id - references <FSM_REQUESTORS> (rre_id)
     req_rtp_id - references <FSM_REQUEST_TYPES> (rtp_id)
  */
 
 create table fsm_requests(
-  req_id number, 
+  req_id number default on null fsm_request_seq.nextval,
+  req_fsm_id number not null,
 	req_rtp_id varchar2(50 char), 
 	req_rre_id varchar2(50 char), 
 	req_text varchar2(1000 char),
   constraint pk_fsm_requests primary key (req_id),
-  constraint fk_req_id foreign key (req_id)
+  constraint uk_req_fsm_id unique (req_fsm_id),
+  constraint fk_req_fsm_id foreign key (req_fsm_id)
 	  references fsm_objects (fsm_id) on delete cascade,
   constraint fk_req_rre_id foreign key (req_rre_id)
 	  references fsm_requestors (rre_id),
@@ -29,7 +32,8 @@ create table fsm_requests(
 );
 
 comment on table fsm_requests  is 'table to store concrete attributes for type FSM_REQ';
-comment on column fsm_requests.req_id is 'primary key, reference to FSM_OBJECT';
+comment on column fsm_requests.req_id is 'Business ID and primary key of the request';
+comment on column fsm_requests.req_fsm_id is 'Unique reference to the accompanying FSM_OBJECT';
 comment on column fsm_requests.req_rtp_id is 'Request type, reference to FSM_REQUEST_TYPES';
 comment on column fsm_requests.req_rre_id is 'Requesting person, reference to FSM_REQUESTORS';
 comment on column fsm_requests.req_text is 'Text the requestor has entered for her request';

@@ -152,15 +152,19 @@ as
   
     merge into fsm_requests d
     using (select p_row.req_id req_id,
+                  p_row.req_fsm_id req_fsm_id,
                   p_row.req_rtp_id req_rtp_id,
                   p_row.req_rre_id req_rre_id,
                   p_row.req_text req_text
              from dual) v
        on (d.req_id = v.req_id)
      when matched then update set
+          req_fsm_id = v.req_fsm_id,
+          req_rtp_id = v.req_rtp_id,
+          req_rre_id = v.req_rre_id,
           req_text = v.req_text
-     when not matched then insert (req_id, req_rtp_id, req_rre_id, req_text)
-          values(v.req_id, v.req_rtp_id, v.req_rre_id, v.req_text);
+     when not matched then insert (req_id, req_fsm_id, req_rtp_id, req_rre_id, req_text)
+          values(v.req_id, v.req_fsm_id, v.req_rtp_id, v.req_rre_id, v.req_text);
 
   end merge_request;
   
@@ -170,14 +174,16 @@ as
       See: <BL_REQUEST.merge_request>
    */
   procedure merge_request(
-    p_req_id in out nocopy number, 
-	  p_req_rtp_id in varchar2, 
+    p_req_id in out nocopy number,
+	  p_req_fsm_id in number,
+	  p_req_rtp_id in varchar2,
 	  p_req_rre_id in varchar2, 
 	  p_req_text in varchar2)
   as
     l_row fsm_requests_vw%rowtype;
   begin
     l_row.req_id := p_req_id;
+    l_row.req_fsm_id := p_req_fsm_id;
     l_row.req_rtp_id := p_req_rtp_id;
     l_row.req_rre_id := p_req_rre_id;
     l_row.req_text := p_req_text;
@@ -195,9 +201,8 @@ as
     p_row in fsm_requests_vw%rowtype)
   as
   begin
-    delete from fsm_requests
-     where req_id = p_row.req_id;
-     
+    fsm.drop_object(p_row.req_fsm_id);
+
   end delete_request;
   
   

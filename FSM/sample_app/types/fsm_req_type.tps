@@ -1,4 +1,5 @@
 create or replace type fsm_req_type under fsm_type(
+  req_id number,
   req_rtp_id varchar2(50 char),
   req_rre_id varchar2(50 char),
   req_text varchar2(1000 char),
@@ -15,7 +16,9 @@ create or replace type fsm_req_type under fsm_type(
     return self as result,
   overriding member function raise_event(
     self in out nocopy fsm_req_type,
-    p_fev_id in varchar2)
+    p_fev_id in varchar2,
+    p_msg in varchar2 default null,
+    p_msg_args in msg_args default null)
     return number,
   overriding member procedure persist_state(
     self in out nocopy fsm_req_type)

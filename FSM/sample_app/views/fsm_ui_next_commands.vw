@@ -1,5 +1,6 @@
 create or replace view fsm_ui_next_commands as
-select distinct fsm_id,
+select distinct req_id,
+       fsm_id,
        null lvl, 
        fev_command_label label, 
        case when fev_confirm_message is not null then
@@ -13,6 +14,8 @@ select distinct fsm_id,
        fev_button_icon image, 
        null image_attrib, 
        to_char(fev_description) image_alt
-  from bl_fsm_next_commands;
+  from bl_fsm_next_commands
+  join fsm_requests_vw
+    on req_fsm_id = fsm_id;
     
-comment on table fsm_ui_next_commands is 'LIST-query for all applicable next commands. To be filtered by actual FSM_ID.';
+comment on table fsm_ui_next_commands is 'LIST-query for all applicable next commands. Can be filtered by business REQ_ID or technical FSM_ID.';

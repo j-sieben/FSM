@@ -45,19 +45,16 @@ as
    */
   procedure raise_event
   as
-    l_req fsm_req_type;
     l_req_id fsm_requests_vw.req_id%type;
     l_req_fev_id fsm_requests_vw.req_fev_id%type;
-    l_result binary_integer;
   begin
     pit.enter_mandatory;
     
     l_req_id := utl_apex.get_number('req_id');
     l_req_fev_id := utl_apex.get_request;
-    l_req := fsm_req_type(l_req_id);
     
-    l_result := fsm_req.raise_event(
-      p_req => l_req,
+    fsm_req.raise_event(
+      p_req_id => l_req_id,
       p_fev_id => l_req_fev_id);
     
     pit.leave_mandatory;

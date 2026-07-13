@@ -13,6 +13,7 @@ begin
     p_fst_msg_id => 'REQ_GRANTED',
     p_fst_name => 'Genehmigt',
     p_fst_description => 'Die Anfrage wurde genehmigt',
+    p_fst_severity => fsm.C_STORY_TERMINAL,
     p_fst_terminal_status => true);
     
   fsm_admin.merge_status(
@@ -22,6 +23,7 @@ begin
     p_fst_msg_id => 'FSM_STATUS_CHANGED',
     p_fst_name => 'Antrag erstellt',
     p_fst_description => 'Der Antrag wurde erstellt',
+    p_fst_severity => fsm.C_STORY_STEP,
     p_fst_initial_status => true);
     
   fsm_admin.merge_status(
@@ -30,7 +32,8 @@ begin
     p_fst_fcl_id => 'REQ',
     p_fst_msg_id => 'FSM_STATUS_CHANGED',
     p_fst_name => 'Automatisch genehmigt',
-    p_fst_description => 'Der Antrag wurde automatisiert genehmigt');
+    p_fst_description => 'Der Antrag wurde automatisiert genehmigt',
+    p_fst_severity => fsm.C_STORY_STEP);
     
   fsm_admin.merge_status(
     p_fst_id => 'GRANT_MANUALLY',
@@ -38,7 +41,8 @@ begin
     p_fst_fcl_id => 'REQ',
     p_fst_msg_id => 'REQ_PENDING',
     p_fst_name => 'Antrag muss genehmigt werden',
-    p_fst_description => 'Diese Beantragung muss genehmigt werden');
+    p_fst_description => 'Diese Beantragung muss genehmigt werden',
+    p_fst_severity => fsm.C_STORY_STEP);
     
   fsm_admin.merge_status(
     p_fst_id => 'GRANT_SUPERVISOR',
@@ -46,7 +50,8 @@ begin
     p_fst_fcl_id => 'REQ',
     p_fst_msg_id => 'REQ_PENDING',
     p_fst_name => 'Erteilung durch Supervisor',
-    p_fst_description => 'Deise Beantragung muss durch einen Supervisor genehmigt werden');
+    p_fst_description => 'Diese Beantragung muss durch einen Supervisor genehmigt werden',
+    p_fst_severity => fsm.C_STORY_STEP);
     
   fsm_admin.merge_status(
     p_fst_id => 'IN_PROCESS',
@@ -54,7 +59,8 @@ begin
     p_fst_fcl_id => 'REQ',
     p_fst_msg_id => 'FSM_STATUS_CHANGED',
     p_fst_name => 'In Bearbeitung',
-    p_fst_description => 'Der Antrag wird bearbeitet');
+    p_fst_description => 'Der Antrag wird bearbeitet',
+    p_fst_severity => fsm.C_STORY_STEP);
     
   fsm_admin.merge_status(
     p_fst_id => 'REJECTED',
@@ -63,6 +69,7 @@ begin
     p_fst_msg_id => 'REQ_REJECTED',
     p_fst_name => 'Abgelehnt',
     p_fst_description => 'Der Antrag wurde abgelehnt',
+    p_fst_severity => fsm.C_STORY_TERMINAL,
     p_fst_terminal_status => true);
     
   fsm_admin.merge_event(

@@ -179,9 +179,30 @@ as
       Method sets the status of an FSM instance. Overloaded as procedure.
       A new status is determined by the logic of the event handler or by calling GET_NEXT_STATUS.
       Based on the new status, allowed events are determined.
-      If the following event is automatic, it will be triggered immediately,
-      otherwise FSM waits for the event to be triggered externally.
-      The procedure overload sets validity at the FSM instance attribute only.
+      The transition is processed synchronously in the following order:
+
+      1. Store the previous status and assign the target status.
+      2. Call FSM_TYPE.leave_status if an existing status is left.
+      3. Call FSM_TYPE.before_transition.
+      4. Determine the allowed next events and whether an event is automatic.
+      5. Persist the common FSM attributes, then call FSM_TYPE.persist_state for
+         subtype-specific persistence.
+      6. Write the status log entry.
+      7. Call FSM_TYPE.enter_status if the status changed, followed by
+         FSM_TYPE.after_transition.
+      8. Notify observers about the allowed next events.
+      9. Raise an automatic event synchronously. The resulting status change
+         repeats this sequence recursively. If no automatic event remains, a
+         terminal instance is finalized.
+      10. Clear the transition context and commit before returning.
+
+      Consequently, an initial status assigned by a concrete constructor is
+      fully processed, including all automatic follow-up events, before the
+      constructed instance is returned to its caller. If no event is automatic,
+      FSM waits for an event to be triggered externally.
+      The procedure overload executes the same lifecycle but discards the
+      numeric return value; the resulting validity remains available on the FSM
+      instance.
       
     Parameters:
       p_fsm - Instance of fsm (concrete class of the type inherited from FSM_TYPE)
