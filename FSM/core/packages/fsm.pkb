@@ -428,7 +428,9 @@ as
       See <FSM.initialize>
    */
   procedure initialize(
-    p_fsm in out nocopy fsm_type)
+    p_fsm in out nocopy fsm_type,
+    p_msg in pit_util.ora_name_type default null,
+    p_msg_args in msg_args default null)
   as
     l_initial_fst_id fsm_status.fst_id%type;
     l_initial_count binary_integer;
@@ -456,7 +458,10 @@ as
     pit.assert(l_initial_count > 0, msg.FSM_NO_INITIAL_STATUS);
     pit.assert(l_initial_count = 1, msg.FSM_TOO_MANY_INITIALS);
 
-    p_fsm.fsm_validity := p_fsm.set_status(l_initial_fst_id);
+    p_fsm.fsm_validity := p_fsm.set_status(
+                            p_fst_id => l_initial_fst_id,
+                            p_msg => p_msg,
+                            p_msg_args => p_msg_args);
 
     pit.leave_mandatory;
   end initialize;

@@ -75,9 +75,13 @@ as
 
     Parameter:
       p_fsm - New FSM instance to initialize
+      p_msg_id - Optional ID of an initialization message
+      p_msg_args - Optional message args for the initial message
    */
   procedure initialize(
-    p_fsm in out nocopy fsm_type);
+    p_fsm in out nocopy fsm_type,
+    p_msg in pit_util.ora_name_type default null,
+    p_msg_args in msg_args default null);
 
 
   /**
