@@ -56,7 +56,7 @@ Die Initialisierung läuft anschließend in dieser Reihenfolge:
 
 1. Der konkrete Konstruktor setzt Klasse, Subklasse, fachliche ID und weitere konkrete Attribute im Objekt.
 2. `FSM.INITIALIZE` vergibt die `FSM_ID` und setzt das auslösende Ereignis auf `INITIALIZE`.
-3. Der Konstruktor ruft die geerbte Methode `SET_STATUS` mit dem Initialstatus auf.
+3. `FSM.INITIALIZE` ermittelt den aktiven Initialstatus aus den Metadaten für Klasse und Subklasse und ruft `SET_STATUS` auf.
 4. `FSM.SET_STATUS` führt die vorbereitenden Lifecycle-Hooks aus und ermittelt die Folgeereignisse des Initialstatus.
 5. `FSM.PERSIST` legt den gemeinsamen Datensatz mit der neuen `FSM_ID` in `FSM_OBJECTS` an.
 6. Der Laufzeitkern ruft `PERSIST_STATE` des konkreten Objekttyps auf.
@@ -99,8 +99,9 @@ flowchart TD
   D --> E[Persistierte Instanz laden]
   C -- Erstellung --> F[Klasse, Subklasse und fachliche ID setzen]
   F --> G[FSM.INITIALIZE vergibt FSM-ID]
-  G --> H[SET_STATUS mit Initialstatus]
-  H --> I[FSM.PERSIST schreibt FSM_OBJECTS]
+  G --> H[Initialstatus aus Metadaten ermitteln]
+  H --> M[SET_STATUS mit Initialstatus]
+  M --> I[FSM.PERSIST schreibt FSM_OBJECTS]
   I --> J[PERSIST_STATE schreibt REQ_ID und REQ_FSM_ID]
   J --> K[Logging und Autoevents ausführen]
   K --> L[Stabilisierte Instanz zurückgeben]

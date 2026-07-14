@@ -20,9 +20,10 @@
 ## Für Fehlersuche und Betrieb
 
 1. [[02_Funktionen/Logging-Fehler-und-Retry|Logging, Fehler und Retry]]
-2. [[02_Funktionen/Eskalation-und-Aktivität|Eskalation und Aktivität]]
-3. [[04_Betrieb/Installation-und-generierte-Objekte|Installation und generierte Objekte]]
-4. [[04_Betrieb/Diagnoseleitfaden|Diagnoseleitfaden]]
+2. [[02_Funktionen/Transition-Reasons-und-Ausführungsstory|Transition-Reasons und Ausführungsstory]]
+3. [[02_Funktionen/Eskalation-und-Aktivität|Eskalation und Aktivität]]
+4. [[04_Betrieb/Installation-und-generierte-Objekte|Installation und generierte Objekte]]
+5. [[04_Betrieb/Diagnoseleitfaden|Diagnoseleitfaden]]
 
 ## Für Details zu einzelnen Objekten
 

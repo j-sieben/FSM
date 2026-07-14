@@ -24,9 +24,9 @@ as object(
       next events. If one of these events is configured as automatic, it is
       raised synchronously. Its resulting status change runs through the same
       sequence recursively. Control returns to the original caller, including a
-      constructor that selected an initial status, only after no further
-      automatic event remains. Terminal instances are finalized; the completed
-      transition chain is committed before <FSM.set_status> returns.
+      constructor that called <FSM.initialize>, after the automatic event chain
+      reaches a stable status. Terminal instances are finalized; the completed
+      transition chain is committed before <FSM.initialize> returns.
    */
   fsm_id number,
   fsm_fcl_id &ORA_NAME_TYPE.,

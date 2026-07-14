@@ -65,7 +65,13 @@ as
 
   /**
     Procedure: initialize
-      Initializes the runtime identity and transition attributes of a new FSM instance.
+      Initializes a new FSM instance and enters the initial status defined by
+      the metadata for its class and subclass. The regular status lifecycle
+      persists the instance, writes its log entry and processes automatic
+      follow-up events before this procedure returns.
+
+      The caller assigns the class, subclass and all subtype-specific attributes
+      required by PERSIST_STATE before calling this procedure.
 
     Parameter:
       p_fsm - New FSM instance to initialize

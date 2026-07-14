@@ -163,8 +163,6 @@ as
   procedure create_fsm_req(
     p_req in out nocopy fsm_req_type,
     p_req_id in fsm_requests.req_id%type default null,
-    p_req_fst_id in fsm_status_v.fst_id%type default fsm_fst.REQ_CREATED,
-    p_req_fev_list in fsm_events_v.fev_id%type default null,
     p_req_rtp_id in fsm_request_types.rtp_id%type,
     p_req_rre_id in fsm_requestors.rre_id%type,
     p_req_text in fsm_requests.req_text%type)
@@ -177,14 +175,13 @@ as
       p_req.req_id := fsm_request_seq.nextval;
       p_req.fsm_fcl_id := C_FCL_ID;
       p_req.fsm_fsc_id := 'MASTER';
-      fsm.initialize(p_req);
-      p_req.fsm_fev_list := p_req_fev_list;
       p_req.req_rtp_id := p_req_rtp_id;
       p_req.req_rre_id := p_req_rre_id;
       p_req.req_text := p_req_text;
 
+      fsm.initialize(p_req);
+
       pit.verbose(msg.FSM_CREATED, msg_args(C_FCL_ID, to_char(p_req.fsm_id)));
-      g_result := p_req.set_status(p_req_fst_id);
     else
       select req_fsm_id
         into l_fsm_id

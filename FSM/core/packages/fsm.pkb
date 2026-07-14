@@ -430,6 +430,8 @@ as
   procedure initialize(
     p_fsm in out nocopy fsm_type)
   as
+    l_initial_fst_id fsm_status.fst_id%type;
+    l_initial_count binary_integer;
   begin
     pit.enter_mandatory('initialize');
 
@@ -437,6 +439,24 @@ as
     p_fsm.fsm_fst_id := null;
     p_fsm.fsm_old_fst_id := null;
     p_fsm.fsm_fev_id := fsm_fev.FSM_INITIALIZE;
+
+    select count(distinct fst_id),
+           max(fst_id)
+      into l_initial_count,
+           l_initial_fst_id
+      from fsm_transitions
+      join fsm_status
+        on fst_id = ftr_fst_id
+     where ftr_active = pit_util.C_TRUE
+       and fst_active = pit_util.C_TRUE
+       and fst_initial_status = pit_util.C_TRUE
+       and ftr_fcl_id = p_fsm.fsm_fcl_id
+       and ftr_fsc_id = p_fsm.fsm_fsc_id;
+
+    pit.assert(l_initial_count > 0, msg.FSM_NO_INITIAL_STATUS);
+    pit.assert(l_initial_count = 1, msg.FSM_TOO_MANY_INITIALS);
+
+    p_fsm.fsm_validity := p_fsm.set_status(l_initial_fst_id);
 
     pit.leave_mandatory;
   end initialize;

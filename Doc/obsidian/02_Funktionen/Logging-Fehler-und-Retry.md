@@ -13,6 +13,8 @@
 
 `LOG_REASON` legt den Grund zunächst im instanzbezogenen Package-Kontext ab. Der nächste erfolgreiche Statuslog übernimmt ihn und leert den Kontext.
 
+Die ausführliche Beschreibung der statischen Transition-Reason, der dynamischen Runtime-Reason und ihrer gemeinsamen Nutzung für eine Ausführungsstory steht unter [[02_Funktionen/Transition-Reasons-und-Ausführungsstory|Transition-Reasons und Ausführungsstory]].
+
 ## Fehlerbehandlung
 
 Fehler in `SET_STATUS` werden an einen kontrollierten Fehlerpfad übergeben. Der erste technische Fehler ist für die Diagnose maßgeblich und bleibt als Hauptursache erhalten. Weitere Fehler aus dem anschließenden Fallback werden als Folgefehler behandelt.

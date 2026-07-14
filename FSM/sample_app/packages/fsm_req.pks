@@ -17,8 +17,6 @@ as
     Parameters:
       p_req - instance of FSM_REQ_TYPE to be created
       p_req_id - ID of the request
-      p_req_fst_id - Status of the request, reference to FSM_STATUS
-      p_req_fev_list - List of allowed events
       p_req_rtp_id - type of the request, reference to FSM_REQ_TYPE
       p_req_rre_id - requesting person, rerefence to FSM_requestors
       p_req_text - request text
@@ -26,8 +24,6 @@ as
   procedure create_fsm_req(
     p_req in out nocopy fsm_req_type,
     p_req_id in fsm_requests.req_id%type default null,
-    p_req_fst_id in fsm_status_v.fst_id%type default fsm_fst.REQ_CREATED,
-    p_req_fev_list in fsm_events_v.fev_id%type default null,
     p_req_rtp_id in fsm_request_types.rtp_id%type,
     p_req_rre_id in fsm_requestors.rre_id%type,
     p_req_text in fsm_requests.req_text%type);
