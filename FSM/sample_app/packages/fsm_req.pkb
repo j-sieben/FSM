@@ -109,10 +109,19 @@ as
                 
     case l_mode
     when bl_request.C_GRANT_AUTOMATICALLY then
+      p_req.log_reason(
+        p_reason_code => 'GRANT_AUTOMATICALLY',
+        p_msg_args => msg_args(p_req.req_rtp_id, p_req.req_rre_id));
       l_new_status := fsm_fst.REQ_GRANT_AUTOMATICALLY;
     when bl_request.C_GRANT_MANUALLY then
+      p_req.log_reason(
+        p_reason_code => 'GRANT_MANUALLY',
+        p_msg_args => msg_args(p_req.req_rtp_id, p_req.req_rre_id));
       l_new_status := fsm_fst.REQ_GRANT_MANUALLY;
     else
+      p_req.log_reason(
+        p_reason_code => 'GRANT_SUPERVISOR',
+        p_msg_args => msg_args(p_req.req_rtp_id, p_req.req_rre_id));
       l_new_status := fsm_fst.REQ_GRANT_SUPERVISOR;
     end case;
     

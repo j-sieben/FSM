@@ -44,6 +44,46 @@ begin
     p_pms_pml_name => 'AMERICAN',
     p_error_number => null
   );
+
+  pit_admin.merge_message(
+    p_pms_name => 'REQ_REASON_CHECK_REQUEST',
+    p_pms_pmg_name => 'REQ',
+    p_pms_text => q'^The request is checked to determine the required approval path.^',
+    p_pms_description => q'^Static business reason for the CHECK transition.^',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'AMERICAN',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'REQ_REASON_GRANT_AUTOMATICALLY',
+    p_pms_pmg_name => 'REQ',
+    p_pms_text => q'^Request type #1# can be approved automatically for requestor #2#.^',
+    p_pms_description => q'^Runtime reason for selecting automatic approval.^',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'AMERICAN',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'REQ_REASON_GRANT_MANUALLY',
+    p_pms_pmg_name => 'REQ',
+    p_pms_text => q'^Request type #1# requires manual approval for requestor #2#.^',
+    p_pms_description => q'^Runtime reason for selecting manual approval.^',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'AMERICAN',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'REQ_REASON_GRANT_SUPERVISOR',
+    p_pms_pmg_name => 'REQ',
+    p_pms_text => q'^Request type #1# requires supervisor approval for requestor #2#.^',
+    p_pms_description => q'^Runtime reason for selecting supervisor approval.^',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'AMERICAN',
+    p_error_number => null
+  );
   
   pit_admin.merge_translatable_item(
     p_pti_id => 'OBJECT_PRIV',

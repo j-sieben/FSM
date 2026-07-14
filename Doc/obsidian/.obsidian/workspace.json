@@ -185,8 +185,17 @@
   },
   "active": "dbcd204396d0db8b",
   "lastOpenFiles": [
-    "README.md",
+    "03_FSM-verwenden/Ereignisbehandlung-implementieren.md",
+    "03_FSM-verwenden/Transitionen-und-Autoevents-definieren.md",
+    "03_FSM-verwenden/Klasse-Status-und-Ereignisse-definieren.md",
+    "03_FSM-verwenden/Lifecycle-Hooks-einsetzen.md",
+    "03_FSM-verwenden/FSM-im-eigenen-Projekt-verwenden.md",
+    "03_FSM-verwenden/Fachobjekt-und-FSM-verbinden.md",
+    "03_FSM-verwenden/Eigene-FSM-implementieren.md",
+    "01_Architektur/Laufzeit-und-Lifecycle.md",
+    "03_FSM-verwenden/Metadaten-definieren.md",
     "02_Funktionen/Transition-Reasons-und-Ausführungsstory.md",
+    "README.md",
     "Glossar/Polymorphie.md",
     "Glossar/Objekttyp.md",
     "Glossar/Metadatenmodell.md",
@@ -199,18 +208,9 @@
     "Glossar/Automatisches Ereignis.md",
     "04_Betrieb/Installation-und-generierte-Objekte.md",
     "04_Betrieb/Diagnoseleitfaden.md",
-    "03_FSM-verwenden/Metadaten-definieren.md",
-    "03_FSM-verwenden/FSM-im-eigenen-Projekt-verwenden.md",
-    "03_FSM-verwenden/Eigene-FSM-implementieren.md",
     "05_Referenz/Quellobjekte.md",
     "02_Funktionen/Logging-Fehler-und-Retry.md",
     "02_Funktionen/Instanzen-erstellen-und-laden.md",
-    "03_Erweiterung/Eigene-FSM-implementieren.md",
-    "03_FSM-verwenden",
-    "02_Funktionen/Eskalation-und-Aktivität.md",
-    "02_Funktionen/Ereignisse-und-Statuswechsel.md",
-    "01_Architektur/Laufzeit-und-Lifecycle.md",
-    "01_Architektur/Komponenten-und-Verantwortlichkeiten.md",
-    "01_Architektur/Datenmodell.md"
+    "03_FSM-verwenden"
   ]
 }

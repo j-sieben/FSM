@@ -133,6 +133,7 @@ begin
     p_ftr_fcl_id => 'REQ',
     p_ftr_fst_list => 'GRANT_AUTOMATICALLY:GRANT_MANUALLY:GRANT_SUPERVISOR',
     p_ftr_raise_automatically => true,
+    p_ftr_reason_msg_id => 'REQ_REASON_CHECK_REQUEST',
     p_run_checks => false);
     
   fsm_admin.merge_transition(

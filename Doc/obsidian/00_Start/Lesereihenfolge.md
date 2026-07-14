@@ -14,8 +14,11 @@
 3. [[02_Funktionen/Instanzen-erstellen-und-laden|Instanzen erstellen und laden]]
 4. [[02_Funktionen/Ereignisse-und-Statuswechsel|Ereignisse und Statuswechsel]]
 5. [[03_FSM-verwenden/FSM-im-eigenen-Projekt-verwenden|FSM im eigenen Projekt verwenden]]
-6. [[03_FSM-verwenden/Eigene-FSM-implementieren|Eigene FSM implementieren]]
-7. [[03_FSM-verwenden/Metadaten-definieren|Metadaten definieren]]
+6. [[03_FSM-verwenden/Fachobjekt-und-FSM-verbinden|Fachobjekt und FSM verbinden]]
+7. [[03_FSM-verwenden/Ereignisbehandlung-implementieren|Ereignisbehandlung implementieren]]
+8. [[03_FSM-verwenden/Lifecycle-Hooks-einsetzen|Lifecycle-Hooks einsetzen]]
+9. [[03_FSM-verwenden/Klasse-Status-und-Ereignisse-definieren|Klasse, Status und Ereignisse definieren]]
+10. [[03_FSM-verwenden/Transitionen-und-Autoevents-definieren|Transitionen und Autoevents definieren]]
 
 ## Für Fehlersuche und Betrieb
 

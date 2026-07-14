@@ -73,35 +73,37 @@ Damit beantwortet ein Logeintrag mehrere Fragen gleichzeitig:
 - Welche fachliche Regel beschreibt diesen Übergang?
 - Welche konkrete Entscheidung wurde in dieser Ausführung getroffen?
 
-## Einsatz in fachlicher Logik
+## Durchgängiges Beispiel der Sample-App
 
-Fachliche Implementierungen setzen `LOG_REASON` an der Stelle, an der die relevante Entscheidung getroffen wird. Geeignete Stellen sind insbesondere:
+Die Sample-App verwendet beide Gründe für den Übergang `IN_PROCESS + CHECK`:
 
-- ein überschriebener Event-Handler wie `RAISE_CHECK`
-- ein Lifecycle-Hook vor oder nach einer Transition
-- eine fachliche Entscheidungsmethode, die den Zielstatus auswählt
+- Die Transition hinterlegt `REQ_REASON_CHECK_REQUEST`. Sie erklärt dauerhaft, dass `CHECK` den erforderlichen Genehmigungsweg bestimmt.
+- `FSM_REQ.RAISE_CHECK` ermittelt anhand von Antragstyp und Antragsteller den konkreten Weg.
+- Direkt vor `SET_STATUS` setzt der gewählte Zweig eine Runtime-Reason wie `GRANT_AUTOMATICALLY`, `GRANT_MANUALLY` oder `GRANT_SUPERVISOR`.
+- FSM ergänzt den Klassenpräfix und schreibt beispielsweise `REQ_REASON_GRANT_MANUALLY` mit Antragstyp und Antragsteller in den nächsten Statuslog.
 
-Beispiel:
+Der manuelle Zweig ist im Handler so implementiert:
 
 ```plsql
-case bl_request.get_grant_mode(p_req_id => p_fsm_req.req_id)
-  when bl_request.C_GRANT_AUTOMATICALLY then
-    p_fsm_req.log_reason(
-      p_reason_code => 'AUTO_GRANT_RULE_MATCHED',
-      p_msg_args => msg_args('P_REQ_ID', p_fsm_req.req_id));
-
-    l_fst_id := fsm_fst.REQ_GRANT_AUTOMATICALLY;
-
-  when bl_request.C_GRANT_MANUALLY then
-    p_fsm_req.log_reason(
-      p_reason_code => 'MANUAL_GRANT_REQUIRED',
-      p_msg_args => msg_args('P_REQ_ID', p_fsm_req.req_id));
-
-    l_fst_id := fsm_fst.REQ_GRANT_MANUALLY;
+when bl_request.C_GRANT_MANUALLY then
+  p_req.log_reason(
+    p_reason_code => 'GRANT_MANUALLY',
+    p_msg_args => msg_args(p_req.req_rtp_id, p_req.req_rre_id));
+  l_new_status := fsm_fst.REQ_GRANT_MANUALLY;
 end case;
+
+return p_req.set_status(l_new_status);
 ```
 
-Der anschließende Aufruf von `SET_STATUS` schreibt den Statuswechsel und übernimmt die gesetzte Reason in `FSM_LOG`.
+Der resultierende Story-Eintrag beantwortet damit getrennt:
+
+| Frage | Wert im Beispiel |
+| --- | --- |
+| Was geschah? | `IN_PROCESS` wechselte durch `CHECK` nach `GRANT_MANUALLY` |
+| Warum existiert dieser Übergang? | Der Antrag wird geprüft, um den erforderlichen Genehmigungsweg zu bestimmen |
+| Warum wurde dieser Zielstatus gewählt? | Der konkrete Antragstyp erfordert für den Antragsteller eine manuelle Genehmigung |
+
+Eine Runtime-Reason wird an der fachlichen Entscheidungsstelle gesetzt. Das kann ein Event-Handler, ein Lifecycle-Hook oder eine aufgerufene Entscheidungsmethode sein. Entscheidend ist, dass `LOG_REASON` vor dem zugehörigen `SET_STATUS` ausgeführt wird.
 
 ## Praktische Regel
 
