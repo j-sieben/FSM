@@ -51,6 +51,17 @@ p_fsm_req.log_reason(
 
 Wenn der übergebene Reason-Code den Klassenpräfix enthält, verwendet FSM ihn direkt. Andernfalls ergänzt FSM den Präfix aus der Klasse. Aus `AUTO_GRANT_LIMIT_MATCHED` wird bei der Klasse `REQ` die Meldungs-ID `REQ_REASON_AUTO_GRANT_LIMIT_MATCHED`.
 
+Für eine bereits vollständig aufgelöste PIT-Message steht eine zweite Überladung zur Verfügung:
+
+```plsql
+p_fsm.log_reason(
+  p_reason => pit.get_message(
+    p_message_name => 'INREST_UNKNOWN_ENDPOINT',
+    p_msg_args => msg_args(l_endpoint)));
+```
+
+Diese Variante übernimmt `MESSAGE_NAME` und `MESSAGE_ARGS` unverändert. Insbesondere ergänzt sie keinen Klassenpräfix; eine vollständig qualifizierte Meldung einer anderen Message-Gruppe wie `INREST_UNKNOWN_ENDPOINT` bleibt deshalb erhalten. Die String-Überladung bleibt für klassenspezifische Reason-Codes zuständig und verwendet weiterhin `<FSM-Klasse>_REASON_`.
+
 Die Runtime-Reason gilt für den nächsten erfolgreichen Logeintrag. Danach leert FSM den Kontext. Dadurch bleibt die Reason eindeutig einem konkreten Statuswechsel zugeordnet.
 
 ## Ausführungsstory in FSM_LOG

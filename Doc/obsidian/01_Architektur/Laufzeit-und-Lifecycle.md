@@ -36,6 +36,8 @@ Zuerst speichert `FSM.PERSIST` die gemeinsamen Attribute der FSM in `FSM_OBJECTS
 
 `FSM.LOG_CHANGE` schreibt den Übergang in `FSM_LOG`. Der Eintrag verbindet bisherigen Status, neuen Status, auslösendes Ereignis, Meldung und Begründung zu einer nachvollziehbaren Bewegung des Fachobjekts.
 
+Eine zuvor mit `LOG_REASON` gesetzte Runtime-Reason liegt bis zu diesem erfolgreichen Aufruf transient im instanzbezogenen Package-Kontext. Die String-Überladung qualifiziert klassenspezifische Reason-Codes mit dem Klassenpräfix; die `MESSAGE_TYPE`-Überladung bewahrt eine bereits vollständig aufgelöste PIT-Message einschließlich ihrer Argumente unverändert. Nach dem Schreiben von `FSL_REASON_MSG_ID` und `FSL_REASON_MSG_ARGS` leert `LOG_CHANGE` den Reason-Kontext, sodass er nicht in einen späteren Logeintrag weitergetragen wird.
+
 ### 6. Neuen Status betreten und Übergang abschließen
 
 Bei einer tatsächlichen Statusänderung folgt `ENTER_STATUS`. Dieser Hook ist für Aktionen vorgesehen, die fachlich zum neuen Status gehören. Danach läuft `AFTER_TRANSITION` für jeden Übergang und bietet einen gemeinsamen Platz für fachliche Nacharbeiten.

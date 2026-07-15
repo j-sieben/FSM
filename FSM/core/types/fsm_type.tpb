@@ -116,6 +116,17 @@ create or replace type body fsm_type as
       p_reason_code => p_reason_code,
       p_msg_args => p_msg_args);
   end log_reason;
+
+
+  member procedure log_reason(
+    self in out nocopy fsm_type,
+    p_reason in message_type)
+  as
+  begin
+    fsm.log_reason(
+      p_fsm => self,
+      p_reason => p_reason);
+  end log_reason;
   
 
   member function to_string

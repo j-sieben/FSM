@@ -620,6 +620,28 @@ as
 
 
   /*
+    Procedure: log_reason
+      See  <FSM.log_reason>
+   */
+  procedure log_reason(
+    p_fsm in out nocopy fsm_type,
+    p_reason in message_type)
+  as
+  begin
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_fsm', p_fsm.fsm_id),
+                    msg_param('p_reason.message_name', p_reason.message_name)));
+
+    ensure_context(p_fsm);
+    g_context(p_fsm.fsm_id).reason_msg_id := p_reason.message_name;
+    g_context(p_fsm.fsm_id).reason_msg_args := p_reason.message_args;
+
+    pit.leave_optional;
+  end log_reason;
+
+
+  /*
     Procedure: retry
       See  <FSM.retry>
    */

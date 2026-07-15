@@ -167,6 +167,25 @@ as
 
 
   /**
+    Procedure: log_reason
+      Stores a fully resolved PIT message as transient runtime reason for the
+      next successful log entry. Unlike the string overload, this overload
+      preserves the fully qualified PIT message ID and its arguments without
+      adding the FSM class prefix. The reason remains transient until the next
+      successful <log_change>, which writes it to FSM_LOG and clears it from
+      the runtime context.
+
+    Parameters:
+      p_fsm - FSM instance
+      p_reason - Fully resolved PIT message whose message_name and message_args
+        are preserved unchanged
+   */
+  procedure log_reason(
+    p_fsm in out nocopy fsm_type,
+    p_reason in message_type);
+
+
+  /**
     Function: allows_event
       Method checks if an fsm allows an event to be searched for.
       Called by APEX application to check whether a control should be displayed or executed
