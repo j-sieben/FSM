@@ -102,6 +102,18 @@ as object(
     self in out nocopy fsm_type,
     p_msg in varchar2,
     p_msg_args in msg_args default null),
+  /**
+    Procedure: log_reason
+      Stores a fully resolved PIT message as transient runtime reason for the
+      next successful FSM log entry. Unlike the string overload, the fully
+      qualified message ID is not prefixed with the FSM class. Both
+      message_name and message_args are preserved unchanged until the next
+      successful <FSM.log_change> writes and clears the reason context.
+
+    Parameters:
+      p_reason_code - Name of a PIT message that starts with LOG_REASON_
+      p_msg_args - Optional arguments for the message
+   */
   member procedure log_reason(
     self in out nocopy fsm_type,
     p_reason_code in varchar2,
