@@ -23,7 +23,7 @@
   Dependencies:
     fst_fcl_id - references <FSM_CLASSES> (fcl_id)
     fst_fsg_id, fst_fcl_id - references <FSM_STATUS_GROUPS> (fsg_id, fsg_fcl_id)
-    fst_msg_id - references <PIT_MESSAGE> (pms_id)
+    fst_msg_id - references <PIT_MESSAGE> (pms_name)
     fst_pti_id, fst_fcl_id - references <PIT_TRANSLATABLE_ITEM> (pti_uid, pti_upmg)
  */
 
@@ -50,7 +50,7 @@ create table fsm_status(
   constraint fk_fst_fsg_id foreign key (fst_fsg_id, fst_fcl_id)
 	  references fsm_status_groups (fsg_id, fsg_fcl_id) on delete cascade,
   constraint fk_fst_msg_id foreign key (fst_msg_id)
-	  references pit_message (pms_id),
+	  references pit_message (pms_name),
   constraint fk_fst_pti_id foreign key(fst_pti_id, fst_fcl_id)
     references pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_fst_active check (fst_active is not null),
