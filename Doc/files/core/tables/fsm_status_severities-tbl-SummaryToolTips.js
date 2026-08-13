@@ -1,1 +1,1 @@
-﻿NDSummary.OnToolTipsLoaded("File:core/tables/fsm_status_severities.tbl",{66:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table for storing GUI information for severity filtering.</div></div>"});
+﻿NDSummary.OnToolTipsLoaded("File:core/tables/fsm_status_severities.tbl",{68:"<div class=\"NDToolTip TDatabaseTable LSQL\"><div class=\"TTSummary\">Table for storing GUI information for severity filtering.</div></div>"});

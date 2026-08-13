@@ -1,1 +1,1 @@
-﻿NDFramePage.OnPageTitleLoaded("Database:FSM_EVENTS","FSM_EVENTS");NDSummary.OnSummaryLoaded("Database:FSM_EVENTS",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[68,0,0,"FSM_EVENTS"]]);
+﻿NDFramePage.OnPageTitleLoaded("Database:FSM_EVENTS","FSM_EVENTS");NDSummary.OnSummaryLoaded("Database:FSM_EVENTS",[["SQL","SQL"]],[["Tables","DatabaseTable"]],[[66,0,0,"FSM_EVENTS"]]);

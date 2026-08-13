@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("ini",["Function"],[["initialize",,[["FSM Body",,,,0,"File:core/packages/fsm.pkb:FSM_Body.initialize","SQLClass:FSM_Body:initialize"],["FSM",,,,0,"File:core/packages/fsm.pks:FSM.initialize","SQLClass:FSM:initialize"]]]]);

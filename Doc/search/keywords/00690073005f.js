@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("is_",["Function"],[["is_terminal_status",,[["FSM",,,,0,"File:core/packages/fsm.pks:FSM.is_terminal_status","SQLClass:FSM:is_terminal_status"]]]]);

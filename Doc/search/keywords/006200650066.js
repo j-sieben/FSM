@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("bef",["Function"],[["before_transition",,[[,,,,0,"File:core/types/fsm_type.tps:before_transition"]]]]);

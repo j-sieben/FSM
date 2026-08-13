@@ -1,0 +1,1 @@
+﻿NDSearch.OnPrefixDataLoaded("ent",["Function"],[["enter_status",,[[,,,,0,"File:core/types/fsm_type.tps:enter_status"]]]]);
