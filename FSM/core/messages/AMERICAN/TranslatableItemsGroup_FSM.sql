@@ -137,8 +137,32 @@ begin
     p_pti_name => 'Error',
     p_pti_display_name => 'Error',
     p_pti_description => 'Processing stopped due to an error');
+
+  -- FSM_MONITOR_STATUS
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'FMS_OK',
+    p_pti_pml_name => 'AMERICAN',
+    p_pti_pmg_name => 'FSM',
+    p_pti_name => 'OK',
+    p_pti_display_name => 'On schedule',
+    p_pti_description => 'The FSM instance is within its expected processing time');
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'FMS_WARN',
+    p_pti_pml_name => 'AMERICAN',
+    p_pti_pmg_name => 'FSM',
+    p_pti_name => 'Warning',
+    p_pti_display_name => 'Delayed',
+    p_pti_description => 'The FSM instance exceeded its warning threshold');
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'FMS_ALERT',
+    p_pti_pml_name => 'AMERICAN',
+    p_pti_pmg_name => 'FSM',
+    p_pti_name => 'Alert',
+    p_pti_display_name => 'Overdue',
+    p_pti_description => 'The FSM instance exceeded its alert threshold');
     
   commit;
 end;
 /
-

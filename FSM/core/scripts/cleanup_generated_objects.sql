@@ -34,12 +34,14 @@ begin
   drop_view_if_exists('BL_FSM_HIEARCHY');
   drop_view_if_exists('BL_FSM_ACTIVE_STATUS_EVENT');
   drop_view_if_exists('FSM_FSL_LOG_V');
+  drop_view_if_exists('FSM_UNUSED_STATES_AND_EVENTS_V');
   drop_view_if_exists('FSM_LOG_V');
   drop_view_if_exists('FSM_OBJECTS_V');
   drop_view_if_exists('FSM_TRANSITIONS_V');
   drop_view_if_exists('FSM_STATUS_V');
   drop_view_if_exists('FSM_EVENTS_V');
   drop_view_if_exists('FSM_STATUS_SEVERITIES_V');
+  drop_view_if_exists('FSM_MONITOR_STATUS_V');
   drop_view_if_exists('FSM_STATUS_GROUPS_V');
   drop_view_if_exists('FSM_SUB_CLASSES_V');
   drop_view_if_exists('FSM_CLASSES_V');
@@ -48,6 +50,7 @@ begin
   drop_package_if_exists('FSM_FEV');
   drop_package_if_exists('FSM_FST');
   drop_package_if_exists('FSM_ADMIN');
+  drop_package_if_exists('FSM_MONITOR');
   drop_package_if_exists('FSM');
 end;
 /

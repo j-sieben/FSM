@@ -219,7 +219,19 @@ Without this distinction, the framework cannot tell the difference between:
 - "the process is still active in the same state"
 - "the process is stuck in the same state"
 
-`FSM_OBJECTS_V` derives `STATUS_STATE`:
+The generic `FSM_MONITOR.SCAN` procedure evaluates these timestamps for all
+persisted instances of a requested class. It requires no in-memory `FSM_TYPE`
+instances. A consuming schema can call it from a local `DBMS_SCHEDULER` job and
+react to the returned findings in its own packages, so the FSM schema has no
+dependency on application schemas.
+
+The scan persists the current global monitor status (`OK`, `WARN`, or `ALERT`)
+and its date in `FSM_OBJECTS`. It writes every detected change to `FSM_LOG`. An
+unchanged state produces no finding. If WARN and ALERT are both crossed before a
+scan, both signals are returned in severity order while ALERT becomes the current
+persisted state. Recovery to OK is likewise signaled and logged.
+
+`FSM_OBJECTS_V` exposes the persisted `STATUS_STATE`:
 
 - `OK`
 - `WARN`

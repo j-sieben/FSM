@@ -134,6 +134,22 @@ begin
     p_fev_fcl_id => 'FSM',
     p_fev_name => 'Keine Aktion',
     p_fev_description => 'Keine weiteren Aktionen');
+
+  merge into fsm_monitor_status t
+  using (
+    select 'OK' fms_id, 'FMS_OK' fms_pti_id, 0 fms_sort_seq from dual union all
+    select 'WARN', 'FMS_WARN', 10 from dual union all
+    select 'ALERT', 'FMS_ALERT', 20 from dual) s
+     on (t.fms_id = s.fms_id)
+   when matched then update set
+        t.fms_pti_id = s.fms_pti_id,
+        t.fms_pmg_name = 'FSM',
+        t.fms_sort_seq = s.fms_sort_seq,
+        t.fms_active = pit_util.C_TRUE
+   when not matched then insert(
+        fms_id, fms_pti_id, fms_pmg_name, fms_sort_seq, fms_active)
+        values(
+        s.fms_id, s.fms_pti_id, 'FSM', s.fms_sort_seq, pit_util.C_TRUE);
     
   commit;
 end;

@@ -12,6 +12,7 @@ prompt &h2.Create Tables
 @&tools.check_has_table fsm_classes
 @&tools.check_has_table fsm_sub_classes
 @&tools.check_has_table fsm_status_groups
+@&tools.check_has_table fsm_monitor_status
 @&tools.check_has_table fsm_events
 @&tools.check_has_table fsm_status
 @&tools.check_has_table fsm_transitions
@@ -34,6 +35,7 @@ prompt &h2.Create Views
 @&tools.install_view fsm_sub_classes_v
 @&tools.install_view fsm_status_groups_v
 @&tools.install_view fsm_status_severities_v
+@&tools.install_view fsm_monitor_status_v
 @&tools.install_view fsm_events_v
 @&tools.install_view fsm_status_v
 @&tools.install_view fsm_transitions_v
@@ -48,6 +50,7 @@ prompt &h3.Specifications
 @&tools.install_type_spec fsm_type
 @&tools.install_package_spec fsm
 @&tools.install_package_spec fsm_admin
+@&tools.install_package_spec fsm_monitor
 
 prompt &h3.Bodies
 @&tools.install_type_body fsm_type
@@ -55,6 +58,7 @@ prompt &h3.Bodies
 
 prompt &h2.Load Initial Data
 @&tools.run_script initial_data
+@&table_dir.finalize_fsm_objects.sql
 @&tools.run_script utl_text_templates_FSM
 
 prompt &h2.Create Event and Status Packages
@@ -65,3 +69,4 @@ end;
 /
 
 @&tools.install_package_body fsm
+@&tools.install_package_body fsm_monitor

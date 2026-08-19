@@ -65,13 +65,20 @@ The runtime uses two timestamps in `FSM_OBJECTS`:
 
 This separation is required to distinguish a stalled process from a process that remains in the same state but continues to report activity.
 
-Views such as `FSM_OBJECTS_V` derive a `STATUS_STATE` value:
+`FSM_MONITOR.SCAN` evaluates the persisted timestamps and stores the current
+monitor status for each instance. `FSM_OBJECTS_V` exposes that persisted status:
 
 - `OK`
 - `WARN`
 - `ALERT`
 
 This makes it possible to detect stale objects even if repeated events do not change the status.
+
+The monitor is invoked locally by a consuming schema for one FSM class. Its
+generic scan does not instantiate concrete FSM object types and the FSM schema
+does not call application packages. Each detected status change is logged and
+returned to the caller; local code decides how to react. Signal delivery is
+independent of whether that reaction is performed or ignored.
 
 Typical examples are:
 

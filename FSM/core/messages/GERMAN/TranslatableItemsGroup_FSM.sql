@@ -137,8 +137,32 @@ begin
     p_pti_name => 'Fehler',
     p_pti_display_name => 'Fehler',
     p_pti_description => 'Verarbeitung wegen eines Fehlers gestoppt');
+
+  -- FSM_MONITOR_STATUS
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'FMS_OK',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'FSM',
+    p_pti_name => 'OK',
+    p_pti_display_name => 'Im Zeitplan',
+    p_pti_description => 'Die FSM-Instanz befindet sich innerhalb der erwarteten Bearbeitungszeit');
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'FMS_WARN',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'FSM',
+    p_pti_name => 'Warnung',
+    p_pti_display_name => 'Verzögert',
+    p_pti_description => 'Die FSM-Instanz hat ihre Warnschwelle überschritten');
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'FMS_ALERT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'FSM',
+    p_pti_name => 'Alarm',
+    p_pti_display_name => 'Überfällig',
+    p_pti_description => 'Die FSM-Instanz hat ihre Alarmschwelle überschritten');
     
   commit;
 end;
 /
-

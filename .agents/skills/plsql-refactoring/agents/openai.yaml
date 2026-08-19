@@ -1,0 +1,4 @@
+interface:
+  display_name: "PL/SQL Refactoring"
+  short_description: "Refactor FSM PL/SQL with documented contracts"
+  default_prompt: "Use $plsql-refactoring to refactor the requested FSM PL/SQL code while preserving architecture, documentation, installation, and validation contracts."

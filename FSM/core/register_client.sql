@@ -5,6 +5,7 @@ define tool_dir=tools/
 @&tool_dir.create_synonym.sql fsm_fev
 @&tool_dir.create_synonym.sql fsm_fst
 @&tool_dir.create_synonym.sql fsm_admin
+@&tool_dir.create_synonym.sql fsm_monitor
 
 -- Tables
 @&tool_dir.create_synonym.sql fsm_objects
@@ -17,6 +18,7 @@ define tool_dir=tools/
 @&tool_dir.create_synonym.sql fsm_objects_v
 @&tool_dir.create_synonym.sql fsm_status_groups_v
 @&tool_dir.create_synonym.sql fsm_status_severities_v
+@&tool_dir.create_synonym.sql fsm_monitor_status_v
 @&tool_dir.create_synonym.sql fsm_status_v
 @&tool_dir.create_synonym.sql fsm_transitions_v
 @&tool_dir.create_synonym.sql bl_fsm_next_commands

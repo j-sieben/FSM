@@ -339,13 +339,15 @@ as
 
   /**
     Function: get_escalation_state
-      Evaluates the configured duration thresholds for the current status of an FSM instance.
+      Returns the last monitor status persisted for an FSM instance by
+      <FSM_MONITOR.scan>. The function does not dynamically compare thresholds
+      with the current time.
 
     Parameters:
       p_fsm_id - ID of the FSM instance
 
     Returns:
-      One of OK, WARN or ALERT depending on the configured thresholds.
+      Persisted global monitor status, normally OK, WARN or ALERT.
    */
   function get_escalation_state(
     p_fsm_id in fsm_objects.fsm_id%type)

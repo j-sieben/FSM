@@ -1029,38 +1029,14 @@ as
     p_fsm_id in fsm_objects.fsm_id%type)
     return varchar2
   as
-    l_reference_date date;
-    l_warn_interval interval day to second;
-    l_alert_interval interval day to second;
-    l_elapsed interval day to second;
+    l_monitor_status fsm_objects.fsm_fms_id%type;
   begin
-    select case fst_escalation_basis
-             when 'EVENT' then fsm_last_change_date
-             else coalesce(fsm_status_change_date, fsm_last_change_date)
-           end,
-           fst_warn_interval,
-           fst_alert_interval
-      into l_reference_date,
-           l_warn_interval,
-           l_alert_interval
+    select fsm_fms_id
+      into l_monitor_status
       from fsm_objects
-      join fsm_status
-        on fsm_fst_id = fst_id
-       and fsm_fcl_id = fst_fcl_id
      where fsm_id = p_fsm_id;
 
-    if l_warn_interval is null or l_alert_interval is null or l_reference_date is null then
-      return 'OK';
-    end if;
-
-    l_elapsed := systimestamp - cast(l_reference_date as timestamp);
-    if l_elapsed >= l_alert_interval then
-      return 'ALERT';
-    elsif l_elapsed >= l_warn_interval then
-      return 'WARN';
-    else
-      return 'OK';
-    end if;
+    return l_monitor_status;
   exception
     when no_data_found then
       return null;

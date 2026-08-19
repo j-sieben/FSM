@@ -5,6 +5,7 @@ define tool_dir=tools/
 @&tool_dir.grant_access.sql execute fsm_fev
 @&tool_dir.grant_access.sql execute fsm_fst
 @&tool_dir.grant_access.sql execute fsm_admin
+@&tool_dir.grant_access.sql execute fsm_monitor
 
 -- Tables
 @&tool_dir.grant_access_with_grant_option.sql references fsm_objects
@@ -17,6 +18,7 @@ define tool_dir=tools/
 @&tool_dir.grant_access_with_grant_option.sql read fsm_objects_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_status_groups_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_status_severities_v
+@&tool_dir.grant_access_with_grant_option.sql read fsm_monitor_status_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_status_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_transitions_v
 @&tool_dir.grant_access_with_grant_option.sql read bl_fsm_next_commands

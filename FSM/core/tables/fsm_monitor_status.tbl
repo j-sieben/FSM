@@ -1,0 +1,37 @@
+/**
+  Table: FSM_MONITOR_STATUS
+    Global, translatable lookup for persisted FSM monitor states.
+
+  Columns:
+    fms_id (according to `pit_util.ora_name_type`) - Technical monitor status identifier.
+    fms_pti_id (according to `pit_util.ora_name_type`) - Translatable item in the FSM message group.
+    fms_pmg_name (according to `pit_util.ora_name_type`) - PIT message group, fixed to FSM.
+    fms_sort_seq (`number`) - Severity order; higher values take precedence.
+    fms_active (according to `pit_util.flag_type`) - Flag indicating whether the monitor status is active.
+
+  Dependencies:
+    fms_pti_id, fms_pmg_name - references <PIT_TRANSLATABLE_ITEM> (pti_uid, pti_upmg)
+ */
+
+create table fsm_monitor_status(
+  fms_id &ORA_NAME_TYPE.,
+  fms_pti_id &ORA_NAME_TYPE. constraint fms_pti_id_nn not null,
+  fms_pmg_name &ORA_NAME_TYPE. default on null 'FSM' constraint fms_pmg_name_nn not null,
+  fms_sort_seq number constraint fms_sort_seq_nn not null,
+  fms_active &FLAG_TYPE. default on null &C_TRUE. constraint fms_active_nn not null,
+  constraint pk_fsm_monitor_status primary key (fms_id),
+  constraint uq_fms_sort_seq unique (fms_sort_seq),
+  constraint fk_fms_pti_id foreign key (fms_pti_id, fms_pmg_name)
+    references pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
+  constraint chk_fms_pmg_name check (fms_pmg_name = 'FSM'),
+  constraint chk_fms_active check (fms_active in (&C_TRUE., &C_FALSE.))
+) organization index;
+
+create index idx_fms_pti_id on fsm_monitor_status(fms_pti_id, fms_pmg_name);
+
+comment on table fsm_monitor_status is 'Global, translatable lookup for persisted FSM monitor states';
+comment on column fsm_monitor_status.fms_id is 'Technical monitor status identifier';
+comment on column fsm_monitor_status.fms_pti_id is 'Translatable item in the FSM message group';
+comment on column fsm_monitor_status.fms_pmg_name is 'PIT message group, fixed to FSM';
+comment on column fsm_monitor_status.fms_sort_seq is 'Severity order; higher values take precedence';
+comment on column fsm_monitor_status.fms_active is 'Flag indicating whether the monitor status is active';

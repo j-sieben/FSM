@@ -13,11 +13,14 @@
     fsm_fev_list (`varchar2(500 char)`) - List of currently allowed next events.
     fsm_last_change_date (`date`) - Date of the last successful activity or event affecting the object.
     fsm_status_change_date (`date`) - Date of the last actual status change of the object.
+    fsm_fms_id (according to `pit_util.ora_name_type`) - Last monitor status detected by FSM_MONITOR.
+    fsm_monitor_status_date (`date`) - Date on which the current monitor status was detected or became effective.
 
   Dependencies:
     fsm_fcl_id - references <FSM_CLASSES> (fcl_id)
     fsm_fev_id, fsm_fcl_id - references <FSM_EVENTS> (fev_id, fev_fcl_id)
     fsm_fst_id, fsm_fcl_id - references <FSM_STATUS> (fst_id, fst_fcl_id)
+    fsm_fms_id - references <FSM_MONITOR_STATUS> (fms_id)
  */
 
 create table fsm_objects(
@@ -30,14 +33,18 @@ create table fsm_objects(
 	fsm_validity number, 
 	fsm_fev_list varchar2(500 char), 
 	fsm_last_change_date date, 
-	fsm_status_change_date date,
+  fsm_status_change_date date,
+  fsm_fms_id &ORA_NAME_TYPE. default on null 'OK' constraint fsm_fms_id_nn not null,
+  fsm_monitor_status_date date default on null sysdate constraint fsm_monitor_status_date_nn not null,
 	constraint pk_fsm_objects primary key (fsm_id),
   constraint fk_fsm_fcl_id foreign key (fsm_fcl_id)
 	  references fsm_classes (fcl_id),
   constraint fk_fsm_fev_id foreign key (fsm_fev_id, fsm_fcl_id)
 	  references fsm_events (fev_id, fev_fcl_id),
   constraint fk_fsm_fst_id foreign key (fsm_fst_id, fsm_fcl_id)
-	  references fsm_status (fst_id, fst_fcl_id)
+	  references fsm_status (fst_id, fst_fcl_id),
+  constraint fk_fsm_fms_id foreign key (fsm_fms_id)
+	  references fsm_monitor_status (fms_id)
 ) organization index;
 
 comment on table fsm_objects is 'Table for storing abstract FSM instances (table per class, central reference to all FSM classes)';
@@ -51,11 +58,14 @@ comment on column fsm_objects.fsm_validity is 'Current validity of fsm 0 = OK, 1
 comment on column fsm_objects.fsm_fev_list is 'List of currently allowed next events';
 comment on column fsm_objects.fsm_last_change_date is 'Date of the last successful activity or event affecting the object.';
 comment on column fsm_objects.fsm_status_change_date is 'Date of the last actual status change of the object.';
+comment on column fsm_objects.fsm_fms_id is 'Last monitor status detected by FSM_MONITOR.';
+comment on column fsm_objects.fsm_monitor_status_date is 'Date on which the current monitor status was detected or became effective.';
 
 
 create index idx_fk_fsm_fcl_id on fsm_objects (fsm_fcl_id);
 create index idx_fk_fsm_fsc_id on fsm_objects (fsm_fsc_id);
 create index idx_fk_fsm_fst_id on fsm_objects (fsm_fst_id);
 create index idx_fk_fsm_fev_id on fsm_objects (fsm_fev_id);
+create index idx_fk_fsm_fms_id on fsm_objects (fsm_fms_id);
 
 

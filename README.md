@@ -96,7 +96,37 @@ This supports both common cases:
 - an object should leave a status within an expected time
 - an object remains in a status but must emit heartbeat or progress events
 
-`FSM_OBJECTS_V` exposes the derived state as `STATUS_STATE` with values `OK`, `WARN` or `ALERT`.
+`FSM_OBJECTS_V` exposes the last persisted monitor state as `STATUS_STATE` with values `OK`, `WARN` or `ALERT`.
+
+The monitor state is persisted rather than calculated on every view access. A
+local scheduler job in a consuming schema calls `FSM_MONITOR.SCAN` for one FSM
+class. The scan evaluates all persisted instances of that class, records monitor
+state changes in `FSM_LOG`, updates `FSM_OBJECTS`, and returns the detected
+signals without instantiating concrete `FSM_TYPE` objects.
+
+Monitor states are global, translated metadata ordered by severity. If the first
+scan of an overdue instance detects both thresholds, it returns WARN followed by
+ALERT and persists ALERT as the current state. Recovery to OK is also returned
+and logged as a monitor state change. Processing or ignoring a returned signal
+does not change the persisted monitor result.
+
+A local job can consume the signals without exposing a callback to the FSM
+schema:
+
+```sql
+declare
+  l_findings fsm_monitor.finding_tab;
+begin
+  fsm_monitor.scan('ORDER', p_findings => l_findings);
+  for i in 1 .. l_findings.count loop
+    local_monitor.handle_finding(l_findings(i));
+  end loop;
+end;
+/
+```
+
+`FSM_MONITOR.SCAN` persists and logs its results in an autonomous transaction.
+The local handler therefore cannot accidentally roll back a detected signal.
 
 This turns the FSM into more than a pure transition engine. It also becomes a monitoring aid for stalled or silent processes.
 

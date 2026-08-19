@@ -373,6 +373,16 @@ begin
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
   );
+
+  pit_admin.merge_message(
+    p_pms_name => 'FSM_MONITOR_STATUS_CHANGED',
+    p_pms_pmg_name => 'FSM',
+    p_pms_text => q'^Monitorstatus der FSM #1# wurde von #2# auf #3# geändert.^',
+    p_pms_description => q'^Die zentrale FSM-Überwachung hat einen neuen persistierten Monitorstatus erkannt.^',
+    p_pms_pse_id => 60,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => null
+  );
   
   commit;
   pit_admin.create_message_package;
