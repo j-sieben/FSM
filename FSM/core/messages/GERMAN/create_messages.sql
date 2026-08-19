@@ -358,7 +358,7 @@ begin
     p_pms_name => 'FSM_DEAD_END_STATUS',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^Status "#1#" der Klasse "#2#" ist eine Sackgasse.^',
-    p_pms_description => q'^Der Status ist erreichbar, besitzt aber keine aktive ausgehende Transition. Terminale Zustände sollten daher explizit modelliert werden, zum Beispiel über ein NIL-Ereignis.^',
+    p_pms_description => q'^Der Status ist erreichbar, besitzt aber keine aktive ausgehende Transition. Beabsichtigte Endzustände müssen explizit als terminal markiert werden.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000

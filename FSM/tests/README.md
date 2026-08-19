@@ -24,3 +24,15 @@ separate saved connection for the consuming schema and can be checked there with
 ```sh
 sql -S -L -name "<client connection>" @FSM/tests/client_contract.sql B3M_UTILS
 ```
+
+## utPLSQL runtime suite
+
+The `utplsql` directory contains end-to-end tests for the generic FSM runtime.
+It installs a temporary concrete subtype and verifies initialization, persisted
+state, lifecycle hook order, automatic event chains and terminal finalization.
+
+```sh
+sql -S -L -name "B3M_UTILS Rack" @FSM/tests/utplsql/install.sql
+sql -S -L -name "B3M_UTILS Rack" @FSM/tests/utplsql/run.sql
+sql -S -L -name "B3M_UTILS Rack" @FSM/tests/utplsql/uninstall.sql
+```

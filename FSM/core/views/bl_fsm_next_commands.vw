@@ -13,7 +13,6 @@ select fsm_id, fev_id, fev_command_label, fev_description, ftr_required_role, fe
    and fsm_fst_id = ftr_fst_id
    and fev_id = ftr_fev_id
   join params
-    on fev_raised_by_user = C_TRUE
- where fev_id not in ('NIL');
+    on fev_raised_by_user = C_TRUE;
  
 comment on table bl_fsm_next_commands is 'BL view to prepare a list query with all possible next commands for a given FSM instance';

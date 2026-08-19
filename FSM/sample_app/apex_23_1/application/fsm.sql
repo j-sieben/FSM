@@ -11885,7 +11885,7 @@ wwv_flow_api.create_install_script(
 '    on req.req_fsm_id = ev.fsm_id',
 '  join user_roles ur',
 '    on (ev.ftr_required_role = ur.usr_role or ev.ftr_required_role is null)',
-' where ev.fev_id not in (''NIL'');',
+';',
 ' ',
 ' ',
 'create or replace view lov_fsm_severity as',

@@ -358,7 +358,7 @@ begin
     p_pms_name => 'FSM_DEAD_END_STATUS',
     p_pms_pmg_name => 'FSM',
     p_pms_text => q'^Status "#1#" of class "#2#" is a dead end.^',
-    p_pms_description => q'^The status is reachable but has no active outgoing transition. Terminal statuses should therefore be modeled explicitly, for example by a NIL event.^',
+    p_pms_description => q'^The status is reachable but has no active outgoing transition. Mark intentional final states explicitly as terminal statuses.^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'AMERICAN',
     p_error_number => -20000

@@ -101,15 +101,6 @@ begin
     p_fev_raised_by_user => false);
     
   fsm_admin.merge_event(
-    p_fev_id => 'NIL',
-    p_fev_fcl_id => 'REQ',
-    p_fev_msg_id => 'FSM_EVENT_RAISED',
-    p_fev_name => 'Keine Aktion',
-    p_fev_description => 'Keine Aktion',
-    p_fev_command_label => 'NIL',
-    p_fev_raised_by_user => false);
-    
-  fsm_admin.merge_event(
     p_fev_id => 'REJECT',
     p_fev_fcl_id => 'REQ',
     p_fev_msg_id => 'FSM_EVENT_RAISED',
@@ -178,21 +169,13 @@ begin
     p_ftr_raise_automatically => false,
     p_run_checks => false);
     
-  fsm_admin.merge_transition(
-    p_ftr_fst_id => 'GRANTED',
-    p_ftr_fev_id => 'NIL',
-    p_ftr_fcl_id => 'REQ',
-    p_ftr_fst_list => '',
-    p_ftr_raise_automatically => false,
-    p_run_checks => false);
-    
-  fsm_admin.merge_transition(
-    p_ftr_fst_id => 'REJECTED',
-    p_ftr_fev_id => 'NIL',
-    p_ftr_fcl_id => 'REQ',
-    p_ftr_fst_list => '',
-    p_ftr_raise_automatically => false,
-    p_run_checks => false);
+  delete from fsm_transitions
+   where ftr_fev_id = 'NIL'
+     and ftr_fcl_id = 'REQ';
+
+  delete from fsm_events
+   where fev_id = 'NIL'
+     and fev_fcl_id = 'REQ';
   
   commit;
   

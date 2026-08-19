@@ -827,7 +827,7 @@ as
 
     if p_fsm.fsm_auto_raise = pit_util.C_TRUE then
       p_fsm.fsm_validity := p_fsm.raise_event(p_fsm.fsm_fev_list);
-    elsif p_fsm.fsm_fev_list = 'NIL' then
+    elsif is_terminal_status(p_fsm) then
       p_fsm.finalize;
     end if;
 

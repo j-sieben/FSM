@@ -129,11 +129,9 @@ begin
     p_fev_name => 'Initialisiere FSM',
     p_fev_description => 'Instanz wurde initialisiert');
 
-  fsm_admin.merge_event(
-    p_fev_id => 'NIL',
-    p_fev_fcl_id => 'FSM',
-    p_fev_name => 'Keine Aktion',
-    p_fev_description => 'Keine weiteren Aktionen');
+  delete from fsm_events
+   where fev_id = 'NIL'
+     and fev_fcl_id = 'FSM';
 
   merge into fsm_monitor_status t
   using (
