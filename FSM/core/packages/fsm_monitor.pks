@@ -11,6 +11,8 @@ as
     Transaction behavior:
       SCAN uses an autonomous transaction. A detected signal remains persisted
       even if a consuming schema later rolls back or ignores the returned finding.
+      SCAN_ALL delegates each eligible class to SCAN and preserves that transaction
+      boundary for every class.
    */
 
   C_OK constant fsm_monitor_status.fms_id%type := 'OK';
@@ -49,5 +51,22 @@ as
     p_fcl_id in fsm_classes.fcl_id%type,
     p_scan_date in date default sysdate,
     p_findings out nocopy finding_tab);
+
+  /**
+    Procedure: scan_all
+      Evaluates all persisted FSM instances whose class has at least one status
+      with a configured warning or alert interval. The method reads persisted
+      metadata and state only and does not instantiate concrete FSM object types.
+
+    Parameters:
+      p_scan_date - Shared evaluation and detection time; defaults to SYSDATE
+
+    Side effects:
+      Delegates each eligible class to SCAN, which updates FSM_OBJECTS, writes
+      FSM_LOG entries for detected monitor status changes, and commits them in an
+      autonomous transaction. Findings are intentionally not returned.
+   */
+  procedure scan_all(
+    p_scan_date in date default sysdate);
 end fsm_monitor;
 /

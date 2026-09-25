@@ -99,10 +99,12 @@ This supports both common cases:
 `FSM_OBJECTS_V` exposes the last persisted monitor state as `STATUS_STATE` with values `OK`, `WARN` or `ALERT`.
 
 The monitor state is persisted rather than calculated on every view access. A
-local scheduler job in a consuming schema calls `FSM_MONITOR.SCAN` for one FSM
-class. The scan evaluates all persisted instances of that class, records monitor
-state changes in `FSM_LOG`, updates `FSM_OBJECTS`, and returns the detected
-signals without instantiating concrete `FSM_TYPE` objects.
+local scheduler job can call `FSM_MONITOR.SCAN_ALL`. It derives all classes with
+configured warning or alert intervals from persisted metadata, evaluates their
+persisted instances, records monitor state changes in `FSM_LOG`, and updates
+`FSM_OBJECTS` without instantiating concrete `FSM_TYPE` objects.
+`FSM_MONITOR.SCAN` remains available when one class must be evaluated explicitly
+and its detected signals returned to a local handler.
 
 Monitor states are global, translated metadata ordered by severity. If the first
 scan of an overdue instance detects both thresholds, it returns WARN followed by
@@ -127,6 +129,38 @@ end;
 
 `FSM_MONITOR.SCAN` persists and logs its results in an autonomous transaction.
 The local handler therefore cannot accidentally roll back a detected signal.
+
+### Optional scheduler job
+
+Continuous deadline monitoring needs a periodic trigger because elapsed time
+does not itself cause a database event. A scheduler job is therefore useful for
+classes which use warning or alert intervals, but it is deliberately not part of
+the FSM or client installation. It belongs to the consuming schema, where the
+decision to monitor a class and the required `CREATE JOB` privilege can be made
+locally.
+
+The optional script creates an initially disabled job:
+
+```sh
+sql -S -L -name "<client connection>" \
+  @FSM/install_scripts/optional/create_monitor_job.sql \
+  FSM_MONITOR_ALL "FREQ=MINUTELY;INTERVAL=1"
+```
+
+Review the job and then enable it explicitly:
+
+```sql
+begin
+  dbms_scheduler.enable('FSM_MONITOR_ALL');
+end;
+/
+```
+
+The generated job calls `FSM_MONITOR.SCAN_ALL` and relies on its persisted state
+and log entries. If findings must trigger application-specific actions
+immediately, schedule a local wrapper procedure based on the class-specific
+example above instead. Remove a generated job with
+`FSM/install_scripts/optional/drop_monitor_job.sql`.
 
 This turns the FSM into more than a pure transition engine. It also becomes a monitoring aid for stalled or silent processes.
 

@@ -33,10 +33,10 @@ flowchart LR
 | Metadata model | Classes, subclasses, statuses, groups, severities, events, transitions | `FSM/core/tables/*.tbl` |
 | Runtime state | Current object state and retry information | `FSM/core/tables/fsm_objects.tbl` |
 | Audit trail | Status/event history and notifications | `FSM/core/tables/fsm_log.tbl` |
-| Monitoring | Generic persisted scan, monitor signals, and current monitor projection | `FSM/core/packages/fsm_monitor.pks`, `fsm_monitor.pkb` |
+| Monitoring | Generic persisted class scan, metadata-driven scan of all configured classes, monitor signals, and current monitor projection | `FSM/core/packages/fsm_monitor.pks`, `fsm_monitor.pkb` |
 | Monitor metadata | Global translated states and severity order | `FSM/core/tables/fsm_monitor_status.tbl` |
 | Read models | Enriched metadata, state, valid commands, and graph edges | `FSM/core/views/*.vw` |
-| Installation | Schema setup, initial data, generated objects, grants | `FSM/core/install.sql`, `FSM/install_scripts/`, `FSM/core/scripts/` |
+| Installation | Schema setup, initial data, generated objects, grants; optional local scheduler scripts are excluded from standard installation | `FSM/core/install.sql`, `FSM/install_scripts/`, `FSM/core/scripts/` |
 
 ## Metadata relationships
 
@@ -68,3 +68,4 @@ erDiagram
 - Installation order matters: subtype, class registration, metadata, generated constants, then concrete handlers/business logic.
 - PIT is an external dependency for logging/assertions and translations; UTL_TEXT is required by `FSM_ADMIN` for generation.
 - Monitoring is centrally defined but locally invoked. `FSM_MONITOR` never calls consuming schemas and never instantiates concrete FSM types.
+- Scheduler jobs are optional objects of consuming schemas. The scripts in `FSM/install_scripts/optional/` are not called by standard installation and create monitor jobs disabled so that activation remains an explicit local decision.

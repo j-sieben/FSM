@@ -296,5 +296,48 @@ as
       rollback;
       pit.handle_exception(msg.PIT_SQL_ERROR);
   end scan;
+
+
+  /**
+    Procedure: scan_all
+      See: FSM_MONITOR.scan_all
+
+      Uses one shared scan date for all eligible classes. Each class scan owns
+      its autonomous transaction, so later processing cannot roll back monitor
+      changes already persisted for an earlier class.
+   */
+  procedure scan_all(
+    p_scan_date in date default sysdate)
+  as
+    l_findings finding_tab;
+    l_scan_date date := coalesce(p_scan_date, sysdate);
+    l_class_count binary_integer := 0;
+  begin
+    pit.enter_mandatory(
+      'scan_all',
+      p_params => msg_params(
+                    msg_param('p_scan_date', to_char(l_scan_date, 'YYYY-MM-DD HH24:MI:SS'))));
+
+    for class_rec in (
+      select distinct fst_fcl_id
+        from fsm_status
+       where fst_warn_interval is not null
+          or fst_alert_interval is not null
+       order by fst_fcl_id)
+    loop
+      scan(
+        p_fcl_id => class_rec.fst_fcl_id,
+        p_scan_date => l_scan_date,
+        p_findings => l_findings);
+      l_class_count := l_class_count + 1;
+    end loop;
+
+    pit.leave_mandatory(
+      p_params => msg_params(
+                    msg_param('class_count', l_class_count)));
+  exception
+    when others then
+      pit.handle_exception(msg.PIT_SQL_ERROR);
+  end scan_all;
 end fsm_monitor;
 /

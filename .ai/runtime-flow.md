@@ -50,7 +50,7 @@ flowchart TD
 - `FSM_LAST_CHANGE_DATE` represents relevant activity/event time.
 - `FSM_STATUS_CHANGE_DATE` changes only when the status changes.
 - A status with escalation basis `EVENT` measures silence; basis `STATUS` measures time spent in the status.
-- A local job calls `FSM_MONITOR.SCAN` for one class.
+- An optional local job calls `FSM_MONITOR.SCAN_ALL`. The method selects classes with configured warning or alert intervals from `FSM_STATUS` and scans their persisted instances without constructing concrete FSM types. The supplied creation script is outside the standard installation and leaves the job disabled until the consuming schema explicitly enables it.
 - The scan compares the calculated state with the persisted monitor state in `FSM_OBJECTS`.
 - Each newly crossed upward state is returned and logged; a downward movement returns and logs the new current state, including `OK`.
 - `FSM_OBJECTS_V.STATUS_STATE` exposes the last monitor state persisted by a scan.
