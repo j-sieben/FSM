@@ -11,6 +11,7 @@ declare
           select object_name name, object_type type
             from all_objects
            where object_name in (
+                 'FSM_CLASSES_TV', 'FSM_SUB_CLASSES_TV', 'FSM_STATUS_GROUPS_TV', 'FSM_STATUS_SEVERITIES_TV', 'FSM_MONITOR_STATUS_TV', 'FSM_EVENTS_TV', 'FSM_STATUS_TV', 'FSM_TRANSITIONS_TV', 'FSM_OBJECTS_TV', 'FSM_LOG_TV', -- Technical views
                  'FSM_TYPE', -- Typen
                  'FSM_ADMIN', 'FSM_MONITOR', 'FSM', 'FSM_FST', 'FSM_FEV', -- Packages
                  'BL_FSM_ACTIVE_STATUS_EVENT', 'BL_FSM_EDGES', 'BL_FSM_MERMAID_EDGES', 'BL_FSM_HIERARCHY', 'BL_FSM_HIEARCHY', 'BL_FSM_NEXT_COMMANDS',

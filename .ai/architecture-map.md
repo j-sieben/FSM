@@ -69,3 +69,12 @@ erDiagram
 - PIT is an external dependency for logging/assertions and translations; UTL_TEXT is required by `FSM_ADMIN` for generation.
 - Monitoring is centrally defined but locally invoked. `FSM_MONITOR` never calls consuming schemas and never instantiates concrete FSM types.
 - Scheduler jobs are optional objects of consuming schemas. The scripts in `FSM/install_scripts/optional/` are not called by standard installation and create monitor jobs disabled so that activation remains an explicit local decision.
+
+## Technical client read layer
+
+All ten core tables additionally expose unfiltered, language-neutral 1:1 `_tv`
+views. Client READ grants with grant option and same-name private synonyms are
+managed by the existing core lifecycle scripts. Runtime and enriched `_v`
+contracts remain unchanged. Inventory, keys, installation paths, validation and
+the external PIT message-severity prerequisite are recorded in
+[technical-view-layer.md](technical-view-layer.md).

@@ -24,3 +24,15 @@ define tool_dir=tools/
 @&tool_dir.create_synonym.sql bl_fsm_next_commands
 
 define view_dir=core/views/
+
+-- Language-neutral technical views
+@&tool_dir.create_synonym.sql fsm_classes_tv
+@&tool_dir.create_synonym.sql fsm_sub_classes_tv
+@&tool_dir.create_synonym.sql fsm_status_groups_tv
+@&tool_dir.create_synonym.sql fsm_status_severities_tv
+@&tool_dir.create_synonym.sql fsm_monitor_status_tv
+@&tool_dir.create_synonym.sql fsm_events_tv
+@&tool_dir.create_synonym.sql fsm_status_tv
+@&tool_dir.create_synonym.sql fsm_transitions_tv
+@&tool_dir.create_synonym.sql fsm_objects_tv
+@&tool_dir.create_synonym.sql fsm_log_tv

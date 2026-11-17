@@ -22,3 +22,15 @@ define tool_dir=tools/
 @&tool_dir.grant_access_with_grant_option.sql read fsm_status_v
 @&tool_dir.grant_access_with_grant_option.sql read fsm_transitions_v
 @&tool_dir.grant_access_with_grant_option.sql read bl_fsm_next_commands
+
+-- Language-neutral technical views
+@&tool_dir.grant_access_with_grant_option.sql read fsm_classes_tv
+@&tool_dir.grant_access_with_grant_option.sql read fsm_sub_classes_tv
+@&tool_dir.grant_access_with_grant_option.sql read fsm_status_groups_tv
+@&tool_dir.grant_access_with_grant_option.sql read fsm_status_severities_tv
+@&tool_dir.grant_access_with_grant_option.sql read fsm_monitor_status_tv
+@&tool_dir.grant_access_with_grant_option.sql read fsm_events_tv
+@&tool_dir.grant_access_with_grant_option.sql read fsm_status_tv
+@&tool_dir.grant_access_with_grant_option.sql read fsm_transitions_tv
+@&tool_dir.grant_access_with_grant_option.sql read fsm_objects_tv
+@&tool_dir.grant_access_with_grant_option.sql read fsm_log_tv

@@ -7,6 +7,8 @@ This directory contains compact, durable maps for understanding and maintaining 
 - [architecture-map.md](architecture-map.md): components, responsibilities, dependencies, and source-of-truth locations
 - [runtime-flow.md](runtime-flow.md): event processing, persistence, retry, and failure paths
 
+- [technical-view-layer.md](technical-view-layer.md): complete technical read contracts, client lifecycle and external PIT severity prerequisite
+
 ## Maintenance rules
 
 1. Update a map when a code change alters an architectural relationship or runtime flow.

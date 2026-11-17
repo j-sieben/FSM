@@ -30,6 +30,18 @@ prompt &h2.Align Table Definitions
 prompt &h2.Cleanup Generated Objects
 @&tools.run_script cleanup_generated_objects
 
+prompt &h2.Create Technical Views
+@&tools.install_view fsm_classes_tv
+@&tools.install_view fsm_sub_classes_tv
+@&tools.install_view fsm_status_groups_tv
+@&tools.install_view fsm_status_severities_tv
+@&tools.install_view fsm_monitor_status_tv
+@&tools.install_view fsm_events_tv
+@&tools.install_view fsm_status_tv
+@&tools.install_view fsm_transitions_tv
+@&tools.install_view fsm_objects_tv
+@&tools.install_view fsm_log_tv
+
 prompt &h2.Create Views
 @&tools.install_view fsm_classes_v
 @&tools.install_view fsm_sub_classes_v

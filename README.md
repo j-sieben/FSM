@@ -208,6 +208,14 @@ That split matters because decision logic and state-machine control are not the 
 - the business layer decides what happened
 - the FSM layer decides how that result is represented as a state transition
 
+## Technical read access
+
+The additive `FSM_*_TV` views expose all ten core tables through explicit,
+language-neutral projections. Client installation adds READ grants with grant
+option and same-name synonyms. Existing `_V` contracts remain unchanged.
+See [.ai/technical-view-layer.md](.ai/technical-view-layer.md) for the inventory,
+PIT severity boundary, upgrade/client steps and validation status.
+
 ## Dependencies
 - [PIT](https://github.com/j-sieben/PIT) is required for logging and assertions.
 - [UTL_TEXT](https://github.com/j-sieben/UTL_TEXT) is used by `FSM_ADMIN` for code generation.

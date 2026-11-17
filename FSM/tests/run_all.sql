@@ -10,6 +10,7 @@ prompt FSM test suite
 prompt ============================================================
 
 @@installation_contract.sql
+@@technical_view_contract.sql
 @@monitor_scan.sql
 @@runtime_contract.sql
 @@log_reason_overloads.sql
@@ -22,6 +23,7 @@ begin
     from user_objects
    where object_name in (
            'FSM', 'FSM_ADMIN', 'FSM_MONITOR', 'FSM_TYPE',
+           'FSM_CLASSES_TV', 'FSM_SUB_CLASSES_TV', 'FSM_STATUS_GROUPS_TV', 'FSM_STATUS_SEVERITIES_TV', 'FSM_MONITOR_STATUS_TV', 'FSM_EVENTS_TV', 'FSM_STATUS_TV', 'FSM_TRANSITIONS_TV', 'FSM_OBJECTS_TV', 'FSM_LOG_TV',
            'FSM_CLASSES_V', 'FSM_SUB_CLASSES_V', 'FSM_STATUS_GROUPS_V',
            'FSM_STATUS_SEVERITIES_V', 'FSM_MONITOR_STATUS_V',
            'FSM_EVENTS_V', 'FSM_STATUS_V', 'FSM_TRANSITIONS_V',
