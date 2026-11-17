@@ -22,7 +22,7 @@ select fsm_id,
        fsm_monitor_status_date
   from fsm_objects;
 
-comment on table fsm_objects_tv is 'Language-neutral technical read contract for FSM_OBJECTS; all stored rows and columns';
+comment on table fsm_objects_tv is 'Language-neutral technical read contract for FSM_OBJECTS; not internationalized; no translated lookups; all stored rows and columns';
 comment on column fsm_objects_tv.fsm_id is 'Technical key, generated from FSM_SEQ, primary key';
 comment on column fsm_objects_tv.fsm_fcl_id is 'Document class, reference to FSM_CLASSES';
 comment on column fsm_objects_tv.fsm_fsc_id is 'Document class, reference to FSM_SUB_CLASSES';

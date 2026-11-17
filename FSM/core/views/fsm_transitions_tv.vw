@@ -20,7 +20,7 @@ select ftr_fst_id,
        ftr_reason_msg_id
   from fsm_transitions;
 
-comment on table fsm_transitions_tv is 'Language-neutral technical read contract for FSM_TRANSITIONS; all stored rows and columns';
+comment on table fsm_transitions_tv is 'Language-neutral technical read contract for FSM_TRANSITIONS; not internationalized; no translated lookups; all stored rows and columns';
 comment on column fsm_transitions_tv.ftr_fst_id is 'Primary key, reference to FSM_STATUS';
 comment on column fsm_transitions_tv.ftr_fev_id is 'Primary key, reference to FSM_EVENTS';
 comment on column fsm_transitions_tv.ftr_fcl_id is 'Primary key, Reference to FSM_CLASSES';

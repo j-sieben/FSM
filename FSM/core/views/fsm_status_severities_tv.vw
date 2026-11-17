@@ -15,7 +15,7 @@ select fss_id,
        fss_icon
   from fsm_status_severities;
 
-comment on table fsm_status_severities_tv is 'Language-neutral technical read contract for FSM_STATUS_SEVERITIES; all stored rows and columns';
+comment on table fsm_status_severities_tv is 'Language-neutral technical read contract for FSM_STATUS_SEVERITIES; not internationalized; no translated lookups; all stored rows and columns';
 comment on column fsm_status_severities_tv.fss_id is 'Technical key, equivalent to the FSM.C_STORY_* constants';
 comment on column fsm_status_severities_tv.fss_fcl_id is 'Technical Key. Message group. Defaults to FSM';
 comment on column fsm_status_severities_tv.fss_pti_id is 'Severity name';

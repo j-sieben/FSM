@@ -28,7 +28,7 @@ select fsl_id,
        fsl_reason_msg_args
   from fsm_log;
 
-comment on table fsm_log_tv is 'Language-neutral technical read contract for FSM_LOG; all stored rows and columns';
+comment on table fsm_log_tv is 'Language-neutral technical read contract for FSM_LOG; not internationalized; no translated lookups; all stored rows and columns';
 comment on column fsm_log_tv.fsl_id is 'Primary key, populated by PIT';
 comment on column fsm_log_tv.fsl_fsm_id is 'ID of the referenced FSM object, Reference to the FSM_OBJECTS';
 comment on column fsm_log_tv.fsl_user_name is 'Username that created this log entry';

@@ -16,7 +16,7 @@ select fsg_id,
        fsg_active
   from fsm_status_groups;
 
-comment on table fsm_status_groups_tv is 'Language-neutral technical read contract for FSM_STATUS_GROUPS; all stored rows and columns';
+comment on table fsm_status_groups_tv is 'Language-neutral technical read contract for FSM_STATUS_GROUPS; not internationalized; no translated lookups; all stored rows and columns';
 comment on column fsm_status_groups_tv.fsg_id is 'Primary key';
 comment on column fsm_status_groups_tv.fsg_fcl_id is 'Primary key, reference to FSM_CLASSES';
 comment on column fsm_status_groups_tv.fsg_pti_id is 'Translatable item, reference to PIT_TRANSLATABLE_ITEM';

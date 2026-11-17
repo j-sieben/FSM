@@ -14,7 +14,7 @@ select fsc_id,
        fsc_active
   from fsm_sub_classes;
 
-comment on table fsm_sub_classes_tv is 'Language-neutral technical read contract for FSM_SUB_CLASSES; all stored rows and columns';
+comment on table fsm_sub_classes_tv is 'Language-neutral technical read contract for FSM_SUB_CLASSES; not internationalized; no translated lookups; all stored rows and columns';
 comment on column fsm_sub_classes_tv.fsc_id is 'Primary key';
 comment on column fsm_sub_classes_tv.fsc_fcl_id is 'Primary key, Reference to FSM_CLASSES, constrains the subclass per class';
 comment on column fsm_sub_classes_tv.fsc_pti_id is 'Translatable item, reference to PIT_TRANSLATABLE_ITEM';

@@ -15,7 +15,7 @@ select fms_id,
        fms_active
   from fsm_monitor_status;
 
-comment on table fsm_monitor_status_tv is 'Language-neutral technical read contract for FSM_MONITOR_STATUS; all stored rows and columns';
+comment on table fsm_monitor_status_tv is 'Language-neutral technical read contract for FSM_MONITOR_STATUS; not internationalized; no translated lookups; all stored rows and columns';
 comment on column fsm_monitor_status_tv.fms_id is 'Technical monitor status identifier';
 comment on column fsm_monitor_status_tv.fms_pti_id is 'Translatable item in the FSM message group';
 comment on column fsm_monitor_status_tv.fms_pmg_name is 'PIT message group, fixed to FSM';

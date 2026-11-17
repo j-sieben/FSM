@@ -26,7 +26,7 @@ select fst_id,
        fst_active
   from fsm_status;
 
-comment on table fsm_status_tv is 'Language-neutral technical read contract for FSM_STATUS; all stored rows and columns';
+comment on table fsm_status_tv is 'Language-neutral technical read contract for FSM_STATUS; not internationalized; no translated lookups; all stored rows and columns';
 comment on column fsm_status_tv.fst_id is 'primary key';
 comment on column fsm_status_tv.fst_fcl_id is 'Primary key, reference to fsm_CLASS';
 comment on column fsm_status_tv.fst_fsg_id is 'Grouping criterion';

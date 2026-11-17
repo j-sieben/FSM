@@ -19,7 +19,7 @@ select fev_id,
        fev_active
   from fsm_events;
 
-comment on table fsm_events_tv is 'Language-neutral technical read contract for FSM_EVENTS; all stored rows and columns';
+comment on table fsm_events_tv is 'Language-neutral technical read contract for FSM_EVENTS; not internationalized; no translated lookups; all stored rows and columns';
 comment on column fsm_events_tv.fev_id is 'Primary key';
 comment on column fsm_events_tv.fev_fcl_id is 'Primary key, reference to FSM_CLASSES';
 comment on column fsm_events_tv.fev_msg_id is 'Name of a message to be used for logging, reference to PIT_MESSAGE';
