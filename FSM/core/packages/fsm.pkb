@@ -13,89 +13,84 @@ as
   /**
     Group: Private methods
    */
-  type context_rec is record(
-    reason_msg_id pit_util.ora_name_type,
-    reason_msg_args msg_args);
-  type context_tab is table of context_rec index by binary_integer;
-
-  g_context context_tab;
-
-  -- Loaded once at package initialization, never changed by an event call.
+  -- Session-lifetime policy; the event helper alone is SERIALLY_REUSABLE.
   g_auto_commit boolean;
-  type event_rec is record(
-    fsm_id number,
-    class_id varchar2(128),
-    subclass_id varchar2(128),
-    event_id varchar2(128),
-    previous_event varchar2(128),
-    previous_status varchar2(128),
-    initializing boolean,
-    confirmed boolean);
-  type event_tab is table of event_rec index by binary_integer;
-  g_events event_tab;
-  g_depth binary_integer := 0;
 
   /*
-    Procedure: require_event
-      Rejects state writes without the top event frame for this identity.
+    Function: require_event
+      Returns the matching current frame or rejects a write before mutation.
     Parameters:
       p_fsm - Instance whose write is being authorized.
+    Returns:
+      Validated current event frame.
    */
-  procedure require_event(p_fsm in fsm_type) as
+  function require_event(p_fsm in fsm_type) return fsm_event_context.event_rec as
   begin
-    if g_depth = 0 then
-      raise_application_error(-20001, 'FSM write requires an active event context');
-    end if;
-    if p_fsm.fsm_id is null or g_events(g_depth).fsm_id != p_fsm.fsm_id
-       or p_fsm.fsm_fcl_id is null or g_events(g_depth).class_id != p_fsm.fsm_fcl_id
-       or p_fsm.fsm_fsc_id is null or g_events(g_depth).subclass_id != p_fsm.fsm_fsc_id then
-      raise_application_error(-20001, 'FSM event context belongs to another instance');
-    end if;
+    return fsm_event_context.current_event(p_fsm.fsm_id, p_fsm.fsm_fcl_id, p_fsm.fsm_fsc_id);
   end require_event;
 
   /*
     Procedure: push_event
-      Saves a nested frame; only admission and initialization may call this.
+      Opens an admitted event or private initialization context.
     Parameters:
       p_fsm - Instance being processed.
       p_event - Event code.
-      p_initializing - TRUE permits first persistence of a new instance.
+      p_initializing - TRUE permits first persistence.
    */
-  procedure push_event(p_fsm in fsm_type, p_event in varchar2, p_initializing in boolean default false) as
+  procedure push_event(p_fsm in fsm_type, p_event varchar2, p_initializing boolean default false) as
+    l_event fsm_event_context.event_rec;
   begin
-    g_depth := g_depth + 1;
-    g_events(g_depth).fsm_id := p_fsm.fsm_id;
-    g_events(g_depth).class_id := p_fsm.fsm_fcl_id;
-    g_events(g_depth).subclass_id := p_fsm.fsm_fsc_id;
-    g_events(g_depth).event_id := p_event;
-    g_events(g_depth).previous_event := p_fsm.fsm_fev_id;
-    g_events(g_depth).previous_status := p_fsm.fsm_old_fst_id;
-    g_events(g_depth).initializing := p_initializing;
-    g_events(g_depth).confirmed := false;
+    l_event.fsm_id := p_fsm.fsm_id;
+    l_event.class_id := p_fsm.fsm_fcl_id;
+    l_event.subclass_id := p_fsm.fsm_fsc_id;
+    l_event.event_id := p_event;
+    l_event.previous_event := p_fsm.fsm_fev_id;
+    l_event.previous_status := p_fsm.fsm_old_fst_id;
+    l_event.initializing := p_initializing;
+    fsm_event_context.push_event(l_event);
   end push_event;
 
-
-
-  procedure ensure_context(
-    p_fsm in fsm_type)
-  as
+  /*
+    Procedure: complete_event
+      Internally closes a completed status or business retry. Only FSM owns the
+      commit policy; the helper just pops and reports stack emptiness.
+    Parameters:
+      p_fsm - Successfully processed instance. Restores parent event attributes.
+   */
+  procedure complete_event(p_fsm in out nocopy fsm_type) as
+    l_event fsm_event_context.event_rec;
   begin
-    if not g_context.exists(p_fsm.fsm_id) then
-      g_context(p_fsm.fsm_id).reason_msg_id := null;
-      g_context(p_fsm.fsm_id).reason_msg_args := null;
+    l_event := fsm_event_context.pop_event(p_fsm.fsm_id, p_fsm.fsm_fcl_id, p_fsm.fsm_fsc_id);
+    p_fsm.fsm_fev_id := l_event.previous_event;
+    p_fsm.fsm_old_fst_id := l_event.previous_status;
+    if fsm_event_context.is_empty then
+      p_fsm.fsm_fev_id := null;
+      p_fsm.fsm_old_fst_id := null;
+      fsm_event_context.clear_reason(p_fsm.fsm_id);
+      if g_auto_commit then
+        commit;
+      end if;
     end if;
-  end ensure_context;
+  end complete_event;
 
-
-  procedure clear_context(
-    p_fsm in fsm_type)
-  as
+  /*
+    Procedure: report_failure
+      Clears call-local state and autonomously diagnoses an FSM error via PIT.
+      Never rolls back or commits application state; callers use bare RAISE.
+    Parameters:
+      p_fsm - Diagnostic identity.
+      p_error_stack - Original FORMAT_ERROR_STACK.
+      p_backtrace - Original FORMAT_ERROR_BACKTRACE.
+   */
+  procedure report_failure(p_fsm in fsm_type, p_error_stack varchar2, p_backtrace varchar2) as
   begin
-    if g_context.exists(p_fsm.fsm_id) then
-      g_context.delete(p_fsm.fsm_id);
-    end if;
-  end clear_context;
-
+    fsm_event_context.clear_all;
+    pit.handle_exception(msg.FSM_TECHNICAL_ERROR,
+      msg_args(p_fsm.fsm_fcl_id, to_char(p_fsm.fsm_id), p_fsm.fsm_fev_id,
+               p_error_stack, p_backtrace));
+  exception when others then
+    null; -- Preserve the original exception even if diagnostics fail.
+  end report_failure;
 
   function get_transition_reason_msg_id(
     p_fsm in fsm_type,
@@ -142,6 +137,7 @@ as
     p_fev_id in fsm_events_v.fev_id%type,
     p_retry_schedule in fsm_objects.fsm_retry_schedule%type)
   as
+    l_event fsm_event_context.event_rec;
   begin
     pit.enter_detailed('persist_retry',
       p_params => msg_params(
@@ -149,7 +145,7 @@ as
                     msg_param('p_fev_id', p_fev_id),
                     msg_param('p_retry_schedule', p_retry_schedule)));
 
-    require_event(p_fsm);
+    l_event := require_event(p_fsm);
     update fsm_objects
        set fsm_validity = p_fsm.fsm_validity,
            fsm_fev_id = p_fev_id,
@@ -160,7 +156,7 @@ as
     if sql%rowcount != 1 then
       raise_application_error(-20002, 'FSM disappeared during retry persistence');
     end if;
-    g_events(g_depth).confirmed := true;
+    fsm_event_context.confirm_retry(p_fsm.fsm_id, p_fsm.fsm_fcl_id, p_fsm.fsm_fsc_id);
     pit.leave_detailed;
   end persist_retry;
 
@@ -176,8 +172,9 @@ as
   procedure force_error_status(
     p_fsm in out nocopy fsm_type)
   as
+    l_event fsm_event_context.event_rec;
   begin
-    require_event(p_fsm);
+    l_event := require_event(p_fsm);
     update fsm_objects
        set fsm_fst_id = fsm_fst.FSM_ERROR,
            fsm_fev_id = null,
@@ -195,7 +192,7 @@ as
     if sql%rowcount != 1 then
       raise_application_error(-20002, 'FSM disappeared during error persistence');
     end if;
-    g_events(g_depth).confirmed := true;
+    fsm_event_context.confirm_retry(p_fsm.fsm_id, p_fsm.fsm_fcl_id, p_fsm.fsm_fsc_id);
   end force_error_status;
 
 
@@ -366,7 +363,7 @@ as
     l_message_id fsm_events_v.fev_msg_id%type;
     l_user pit_util.ora_name_type;
     l_msg_args msg_args;
-    l_context context_rec;
+    l_context fsm_event_context.reason_rec;
     l_log_reason_msg_id pit_util.ora_name_type;
     l_log_reason_msg_args msg_args_char;
     l_transition_reason_msg_id fsm_transitions.ftr_reason_msg_id%type;
@@ -393,12 +390,10 @@ as
                    p_msg_args => l_msg_args,
                    p_affected_id => to_char(p_fsm.fsm_id));
 
-    if g_context.exists(p_fsm.fsm_id) then
-      l_context := g_context(p_fsm.fsm_id);
-      l_log_reason_msg_id := l_context.reason_msg_id;
-      if l_context.reason_msg_args is not null then
-        l_log_reason_msg_args := pit_util.cast_to_msg_args_char(l_context.reason_msg_args);
-      end if;
+    l_context := fsm_event_context.get_reason(p_fsm.fsm_id);
+    l_log_reason_msg_id := l_context.reason_msg_id;
+    if l_context.reason_msg_args is not null then
+      l_log_reason_msg_args := pit_util.cast_to_msg_args_char(l_context.reason_msg_args);
     end if;
 
     l_transition_reason_msg_id := get_transition_reason_msg_id(
@@ -421,7 +416,7 @@ as
       p_fsm.fsm_fev_id, p_fsm.fsm_old_fst_id, l_transition_reason_msg_id,
       l_log_reason_msg_id, l_log_reason_msg_args);
 
-    clear_context(p_fsm);
+    fsm_event_context.clear_reason(p_fsm.fsm_id);
 
     pit.leave_optional(
       p_params => msg_params(
@@ -499,10 +494,9 @@ as
                             p_msg_args => p_msg_args);
 
     pit.leave_mandatory;
-    finish_event(p_fsm);
   exception
     when others then
-      abort_event(p_fsm, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+      report_failure(p_fsm, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
       raise;
   end initialize;
 
@@ -514,13 +508,14 @@ as
   procedure persist(
     p_fsm in out nocopy fsm_type)
   as
+    l_event fsm_event_context.event_rec;
     l_status_change_date fsm_objects.fsm_status_change_date%type;
   begin
     pit.enter_mandatory('persist',
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id)));
 
-    require_event(p_fsm);
+    l_event := require_event(p_fsm);
 
     begin
       select case
@@ -532,7 +527,7 @@ as
        where fsm_id = p_fsm.fsm_id;
     exception
       when no_data_found then
-        if not g_events(g_depth).initializing then
+        if not l_event.initializing then
           raise_application_error(-20002, 'Cannot recreate a missing FSM');
         end if;
         l_status_change_date := sysdate;
@@ -612,66 +607,14 @@ as
     p_fsm.refresh_state;
     p_fsm.fsm_old_fst_id := p_fsm.fsm_fst_id;
     p_fsm.fsm_fev_id := p_fev_id;
-    ensure_context(p_fsm);
     log_change(p_fsm, p_fev_id => p_fev_id, p_msg => p_msg, p_msg_args => p_msg_args);
     p_fsm.fsm_validity := C_OK;
     pit.leave_mandatory;
     return C_OK;
+  exception when others then
+    report_failure(p_fsm, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+    raise;
   end raise_event;
-
-
-  /*
-    Procedure: finish_event
-      See: <FSM.finish_event>
-   */
-  procedure finish_event(p_fsm in out nocopy fsm_type) as
-  begin
-    require_event(p_fsm);
-    if not g_events(g_depth).confirmed then
-      raise_application_error(-20004, 'FSM event finished without a status or retry confirmation');
-    end if;
-    if g_depth = 1 and g_auto_commit then
-      commit;
-    end if;
-    p_fsm.fsm_fev_id := g_events(g_depth).previous_event;
-    p_fsm.fsm_old_fst_id := g_events(g_depth).previous_status;
-    g_events.delete(g_depth);
-    g_depth := g_depth - 1;
-    if g_depth = 0 then
-      p_fsm.fsm_fev_id := null;
-      p_fsm.fsm_old_fst_id := null;
-      clear_context(p_fsm);
-    end if;
-  end finish_event;
-
-
-  /*
-    Procedure: abort_event
-      See: <FSM.abort_event>
-   */
-  procedure abort_event(
-    p_fsm in fsm_type,
-    p_error_stack in varchar2 default null,
-    p_backtrace in varchar2 default null)
-  as
-  begin
-    -- An exception invalidates the entire synchronous chain, not the transaction.
-    g_events.delete;
-    g_depth := 0;
-    g_context.delete;
-    -- PIT_INTERNAL dispatches autonomously. Do not write diagnostic state to
-    -- FSM_OBJECTS/FSM_LOG, which may be locked or not yet committed.
-    pit.handle_exception(msg.FSM_TECHNICAL_ERROR,
-      msg_args(p_fsm.fsm_fcl_id, to_char(p_fsm.fsm_id), p_fsm.fsm_fev_id,
-               p_error_stack, p_backtrace),
-      p_params => msg_params(
-        msg_param('error_stack', p_error_stack),
-        msg_param('backtrace', p_backtrace)));
-  exception
-    when others then
-      -- Preserve the original exception in the caller, even if PIT itself fails.
-      null;
-  end abort_event;
 
 
   /*
@@ -683,6 +626,7 @@ as
     p_reason_code in pit_util.ora_name_type,
     p_msg_args in msg_args default null)
   as
+    l_reason fsm_event_context.reason_rec;
     l_reason_prefix pit_util.ora_name_type;
     l_reason_msg_id pit_util.ora_name_type;
   begin
@@ -697,10 +641,10 @@ as
                          else l_reason_prefix || p_reason_code
                        end;
 
-    ensure_context(p_fsm);
-    g_context(p_fsm.fsm_id).reason_msg_id := l_reason_msg_id;
-    g_context(p_fsm.fsm_id).reason_msg_args := p_msg_args;
+    l_reason.reason_msg_id := l_reason_msg_id;
+    l_reason.reason_msg_args := p_msg_args;
 
+    fsm_event_context.set_reason(p_fsm.fsm_id, l_reason);
     pit.leave_optional;
   end log_reason;
 
@@ -713,16 +657,17 @@ as
     p_fsm in out nocopy fsm_type,
     p_reason in message_type)
   as
+    l_reason fsm_event_context.reason_rec;
   begin
     pit.enter_optional(
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id),
                     msg_param('p_reason.message_name', p_reason.message_name)));
 
-    ensure_context(p_fsm);
-    g_context(p_fsm.fsm_id).reason_msg_id := p_reason.message_name;
-    g_context(p_fsm.fsm_id).reason_msg_args := p_reason.message_args;
+    l_reason.reason_msg_id := p_reason.message_name;
+    l_reason.reason_msg_args := p_reason.message_args;
 
+    fsm_event_context.set_reason(p_fsm.fsm_id, l_reason);
     pit.leave_optional;
   end log_reason;
 
@@ -735,6 +680,7 @@ as
     p_fsm in out nocopy fsm_type,
     p_fev_id in fsm_events_v.fev_id%type)
   as
+    l_event fsm_event_context.event_rec;
     cursor fsm_cur (p_fsm_id in fsm_objects.fsm_id%type) is
       select fsm.fsm_validity,
              fsm.fsm_fev_id,
@@ -750,7 +696,7 @@ as
        where fsm.fsm_id = p_fsm.fsm_id;
     l_validity fsm_objects.fsm_validity%type;
   begin
-    require_event(p_fsm);
+    l_event := require_event(p_fsm);
     pit.enter_mandatory('retry',
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id),
@@ -806,6 +752,14 @@ as
     end loop;
 
     pit.leave_mandatory;
+    l_event := require_event(p_fsm);
+    if not l_event.retry_confirmed then
+      raise_application_error(-20004, 'FSM retry finished without a persisted outcome');
+    end if;
+    complete_event(p_fsm);
+  exception when others then
+    report_failure(p_fsm, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+    raise;
   end retry;
 
 
@@ -866,9 +820,10 @@ as
     p_msg_args in msg_args default null)
     return number
   as
+    l_event fsm_event_context.event_rec;
     l_status_changed boolean;
   begin
-    require_event(p_fsm);
+    l_event := require_event(p_fsm);
     pit.enter_mandatory('set_status',
       p_params => msg_params(
                     msg_param('old_fst_id', p_fsm.fsm_fst_id),
@@ -876,8 +831,8 @@ as
                     msg_param('fsm_fev_id', p_fsm.fsm_fev_id)));
 
     pit.assert_not_null(p_fst_id, p_msg_args => msg_args('P_FST_ID'));
-    if not g_events(g_depth).initializing and not
-       (g_events(g_depth).event_id = fsm_fev.FSM_ERROR and p_fst_id = fsm_fst.FSM_ERROR) then
+    if not l_event.initializing and not
+       (l_event.event_id = fsm_fev.FSM_ERROR and p_fst_id = fsm_fst.FSM_ERROR) then
       declare
         l_allowed number;
       begin
@@ -885,7 +840,7 @@ as
          where ftr_fcl_id in (p_fsm.fsm_fcl_id, 'FSM')
            and ftr_fsc_id = p_fsm.fsm_fsc_id
            and ftr_fst_id = p_fsm.fsm_old_fst_id
-           and ftr_fev_id = g_events(g_depth).event_id
+           and ftr_fev_id = l_event.event_id
            and ftr_active = pit_util.C_TRUE
            and instr(':' || ftr_fst_list || ':', ':' || p_fst_id || ':') > 0;
         if l_allowed = 0 then
@@ -938,12 +893,15 @@ as
       p_fsm.finalize;
     end if;
 
-    g_events(g_depth).confirmed := true;
 
     pit.leave_mandatory(
       p_params => msg_params(
                     msg_param('Result', p_fsm.fsm_validity)));
+    complete_event(p_fsm);
     return p_fsm.fsm_validity;
+  exception when others then
+    report_failure(p_fsm, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+    raise;
   end set_status;
 
 

@@ -3,7 +3,7 @@ whenever sqlerror exit failure rollback
 create table fsm_tx_trace(marker varchar2(100 char));
 
 create or replace package fsm_tx_probe as
-  fail_after_status boolean := false;
+  fail_in_status boolean := false;
   refresh_count number := 0;
   function visible_status(p_id number) return varchar2;
   function available_for_lock(p_id number) return boolean;
@@ -38,7 +38,8 @@ create or replace type fsm_tx_type under fsm_type(
   overriding member function raise_event(
     self in out nocopy fsm_tx_type, p_fev_id in varchar2,
     p_msg in varchar2 default null, p_msg_args in msg_args default null) return number,
-  overriding member procedure refresh_state(self in out nocopy fsm_tx_type));
+  overriding member procedure refresh_state(self in out nocopy fsm_tx_type),
+  overriding member procedure after_transition(self in out nocopy fsm_tx_type));
 /
 create or replace type body fsm_tx_type as
   overriding member function raise_event(
@@ -49,19 +50,18 @@ create or replace type body fsm_tx_type as
   begin
     l_result := fsm.raise_event(self, p_fev_id, p_msg, p_msg_args);
     l_result := self.set_status(fsm.get_next_status(self, p_fev_id));
-    if fsm_tx_probe.fail_after_status then
-      raise_application_error(-20080, 'Injected handler failure after SET_STATUS');
-    end if;
-    fsm.finish_event(self);
+
     return l_result;
-  exception
-    when others then
-      fsm.abort_event(self, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
-      raise;
   end;
   overriding member procedure refresh_state(self in out nocopy fsm_tx_type) as
   begin
     fsm_tx_probe.refresh_count := fsm_tx_probe.refresh_count + 1;
+  end;
+  overriding member procedure after_transition(self in out nocopy fsm_tx_type) as
+  begin
+    if fsm_tx_probe.fail_in_status and self.fsm_fst_id != 'START' then
+      raise_application_error(-20080, 'Injected failure inside SET_STATUS');
+    end if;
   end;
 end;
 /

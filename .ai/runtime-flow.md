@@ -21,7 +21,6 @@ sequenceDiagram
   Core->>Log: record transition/reason
   Core->>Meta: resolve optional automatic event
   Core-->>Concrete: resulting status / validity
-  Concrete->>Core: finish_event (outermost optional commit)
   Concrete-->>Caller: result
 ```
 
@@ -31,9 +30,11 @@ The detailed implementation lives primarily in `FSM/core/packages/fsm.pkb`; the 
 
 RAISE_EVENT now locks conditionally, reloads common/subtype state and validates
 before the concrete handler calculates its target. Public SET_STATUS requires
-that event context. Concrete wrappers finish or abort it explicitly. Automatic
-nested events do not commit independently. PIT parameter FSM.AUTO_COMMIT is read
-once at package initialization; only the successful outermost finish may commit.
+that event context and internally pops it at successful completion. The internal
+SERIALLY_REUSABLE FSM_EVENT_CONTEXT stores frames/reasons only for the server
+call; it is not exposed to concrete handlers. Automatic nested events do not
+commit independently. PIT parameter FSM.AUTO_COMMIT is read
+once at package initialization; only successful completion with an empty event stack may commit.
 FALSE leaves all state, retry and history changes to the caller transaction.
 Technical errors are reported to PIT's autonomous output and propagate without
 conversion to FSM_ERROR. Business retries/error routes remain modeled state

@@ -27,8 +27,9 @@ as object(
       constructor that called <FSM.initialize>, after the automatic event chain
       reaches a stable status. Terminal instances are finalized; the completed
       transition chain is committed only when FSM.AUTO_COMMIT is TRUE.
-      Concrete event overrides must call FSM.finish_event after business retry
-      processing and FSM.abort_event followed by RAISE on exceptions. Direct
+      SET_STATUS internally closes its event frame after all synchronous child
+      events. Concrete handlers perform their transactional work before their
+      final SET_STATUS; no explicit completion/abort calls are required. Direct
       SET_STATUS requires an active event or internal initialization context.
    */
   fsm_id number,
@@ -59,7 +60,8 @@ as object(
     Function: set_status
       Delegates the handler-calculated target to FSM.SET_STATUS. Requires the
       active event context for this instance, except for framework initialization.
-      Never commits; technical errors propagate to the outer concrete event.
+      Internally closes the event; the outermost completion may commit according
+      to FSM.AUTO_COMMIT. Technical errors clear context and propagate.
     Parameters:
       p_fst_id - Target status allowed by the active transition.
       p_msg - Optional PIT message key.

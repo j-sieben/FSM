@@ -172,13 +172,16 @@ chain; FALSE leaves commit/rollback to the caller. No savepoints are used.
 
 `RAISE_EVENT` locks, refreshes and validates the instance before the concrete
 handler calculates its target. `SET_STATUS` remains public for that calculation,
-but requires an event context. Concrete handlers must finish the event on success
-and abort context/rethrow on exceptions. `LOCK_FSM` has been removed.
+but requires an event context. SET_STATUS internally completes its frame and
+conditionally commits when no parent remains. Concrete handlers need no explicit
+completion calls and must do transactional work before their final SET_STATUS.
+An internal SERIALLY_REUSABLE package holds event context for one server call;
+LOCK_FSM has been removed.
 
 Retry and modeled error states share the business transaction. Technical errors
 propagate and are reported through PIT's autonomous diagnostic output; configure
 a persistent output module so diagnostics survive rollback. Existing concrete
-handlers need migration to the completion protocol. See
+handlers must remove the previous explicit completion calls. See
 [the transaction contract](.ai/transaction-boundary.md) for details, examples and
 the independent autonomous monitor boundary.
 

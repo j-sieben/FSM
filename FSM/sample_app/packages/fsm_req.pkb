@@ -299,16 +299,19 @@ as
       end case;
     end if;
     p_req.fsm_validity := g_result;
-    if g_result != fsm.C_OK then
-      p_req.retry(p_fev_id);
-      g_result := p_req.fsm_validity;
-    end if;
     pit.leave_mandatory;
-    fsm.finish_event(p_req);
     return g_result;
   exception
     when others then
-      fsm.abort_event(p_req, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+      -- Normal application diagnostics; event state expires at server-call end
+      -- if target calculation failed before SET_STATUS could clean it.
+      begin
+        pit.handle_exception(msg.FSM_TECHNICAL_ERROR,
+          msg_args(p_req.fsm_fcl_id, to_char(p_req.fsm_id), p_fev_id,
+                   dbms_utility.format_error_stack, dbms_utility.format_error_backtrace));
+      exception when others then
+        null; -- Do not replace the original handler exception.
+      end;
       raise;
   end raise_event;
   

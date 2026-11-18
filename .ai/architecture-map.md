@@ -83,7 +83,9 @@ the external PIT message-severity prerequisite are recorded in
 
 The FSM runtime owns conditional event admission, row locking, refresh and a
 nested event context. SET_STATUS is a context-guarded public target assignment;
-concrete handlers finish or abort their frames. PIT's FSM.AUTO_COMMIT parameter
+SET_STATUS internally pops its frame. Owner-only FSM_EVENT_CONTEXT is
+SERIALLY_REUSABLE and stores events/reasons for one server call, while normal FSM
+keeps transaction policy and runtime logic. PIT's FSM.AUTO_COMMIT parameter
 is cached per package initialization. Retry/error state changes share the main
 transaction; technical diagnostics use PIT's autonomous output. LOCK_FSM has been
 removed. See [transaction-boundary.md](transaction-boundary.md) for migration and

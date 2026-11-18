@@ -1,123 +1,121 @@
 # Event and transaction boundary
 
-## Policy
+## Policy and lifetime
 
 `FSM/core/scripts/ParameterGroup_FSM.sql` creates PIT boolean `FSM.AUTO_COMMIT`
-(default TRUE) only when absent. The common owner install invokes it before FSM
-can be initialized, including on repeat installation; configured default/local
-values survive. Owner uninstall removes the parameter group. `PARAM`,
-`PARAM_ADMIN` and their existing PIT client registration are prerequisites.
+(default TRUE) only when absent. Owner installation installs it before FSM can
+initialize, including on repeat installation; existing values survive. Owner
+uninstall removes the parameter group. PARAM/PARAM_ADMIN and normal PIT client
+registration are prerequisites.
 
-The initialization section of `FSM/core/packages/fsm.pkb` reads the effective
-PIT value once into private `g_auto_commit`. There is no setter or per-call
-parameter. Changing PIT configuration does not change an already instantiated
-package. Use a fresh session or reset packages at a clean transaction boundary;
-connection pools must not assume rollback resets package variables.
+FSM reads the effective value once into private `g_auto_commit` at package
+initialization. It is not SERIALLY_REUSABLE: pool sessions retain this setting.
+Changing PIT configuration requires a new session or package reset at a clean
+transaction boundary. TRUE commits once at the successful outermost SET_STATUS
+completion, after all synchronous children. FALSE leaves transaction and lock
+duration to the caller. Internal commits also commit the caller's prior work.
+There are no savepoints or FSM rollbacks.
 
-TRUE commits once, at successful completion of the outermost event/initialization
-chain. This commits all prior work in that session too. FALSE performs no FSM
-commit or rollback: the caller owns the transaction and lock duration. Rejection
-and technical errors never commit in either mode. There are no savepoints.
+Only the event/reason store is short-lived: the new `FSM_EVENT_CONTEXT` package
+has `pragma serially_reusable` in spec and body. Its private stack is shared by
+all instances within one server call, with full FSM identity on each frame, and
+is discarded when that server call ends. It is not per object, per method call,
+or per transaction. It contains no commits or PIT parameter lookup. ACCESSIBLE
+BY (FSM) restricts direct use, and it receives no client grants or synonyms.
 
-## Context protocol and locking
+## Event admission and successful completion
 
-`LOCK_FSM` has been removed from the public package and body. `FSM.RAISE_EVENT`
-conditionally selects the FSM row FOR UPDATE using its persisted allowed-event
-list (plus the existing generic ERROR event). Initial rejection locks no row;
-NULL is rejected. After any wait, a separate SELECT reloads common state and
-ALLOWS_EVENT rechecks it. Rejection at that point can retain the row lock; only
-the caller's commit/rollback releases it. ALLOWS_EVENT remains an optional,
-non-locking, in-memory advisory query, not an admission guarantee.
+LOCK_FSM is removed. FSM.RAISE_EVENT conditionally selects the FSM row FOR UPDATE
+using its persisted event list (plus the generic ERROR event), then rereads common
+state and rechecks ALLOWS_EVENT after any wait. Initial rejection locks no row;
+post-wait rejection may retain a lock until the caller commits/rolls back.
+ALLOWS_EVENT is optional advisory inspection of the in-memory object, without
+locking or refreshing.
 
-Admission pushes a nested event frame and calls the new `FSM_TYPE.refresh_state`
-hook to reload subtype payload under the same lock. Overrides must only load,
-not write, commit or alter common identity/event state. The sample request type
-reloads its domain columns directly from its local table. Common FSM identity,
-status, validity, event list and automatic flag are refreshed by FSM itself.
-Unsaved local payload modifications are intentionally replaced: pass command
-inputs separately or apply them after admission.
+Admission pushes a frame and calls FSM_TYPE.refresh_state to reload subtype
+payload under the same lock. Overrides only load: no writes, commits or mutation
+of common identity/event fields. The sample request type reloads local domain
+columns. Unsaved payload modifications are replaced; apply command inputs after
+admission or keep them separately. The handler computes a target and calls public
+SET_STATUS, which requires the current frame and validates the target transition.
+No second refresh overwrites the handler's decision.
 
-The generic RAISE_EVENT returns to the concrete handler, which calculates a
-potentially data-dependent target and calls the public SET_STATUS. This method
-requires the top context for that FSM ID/class/subclass; the target must be in
-the active transition's list (or the generic ERROR target). It does not reload or
-commit. PERSIST likewise requires context and cannot recreate a missing existing
-instance. Initialization has a private insert-capable frame and rejects reuse of
-an existing identity. Object attributes/constructors are unchanged; REFRESH_STATE
-is an added virtual method.
+Automatic children enter through the instance's RAISE_EVENT and push their own
+frames. Each successful SET_STATUS internally pops its frame and restores parent
+event attributes. FSM's private completion method commits only if the stack is
+then empty and g_auto_commit is TRUE. The helper reports emptiness but never
+makes the commit decision. New-instance initialization uses a private
+insert-capable frame; it does not complete twice after SET_STATUS returns.
 
-Every concrete entry must call FINISH_EVENT after handler/business retry work,
-and ABORT_EVENT plus bare RAISE in its exception handler. FINISH_EVENT requires a
-status or retry confirmation. Only the outermost finish optionally commits;
-nested finishes restore the parent's transient event attributes. Contexts are
-closed even when external transaction control retains the physical lock. They
-are not evidence of lock ownership after a call. No SQL transaction is inferred
-from persistent package state. A different in-memory object with the same ID is
-not distinguishable by Oracle row locks; concrete code must continue using the
-same refreshed object throughout its handler.
+**SET_STATUS is the successful transaction boundary.** Concrete handlers need no
+FINISH_EVENT/ABORT_EVENT API; both have been removed from the FSM spec and callers.
+Handlers must perform all transactional business work before their final
+SET_STATUS. Work or exceptions afterward cannot undo an already committed status.
+This differs deliberately from the previous implementation's handler-return
+boundary. Existing wrapper completion calls must be removed when upgrading.
 
-## Retry and diagnosis
+PERSIST is context-guarded and cannot recreate deleted existing rows. DROP_OBJECT
+remains an explicit deletion API with normal DELETE locking and caller-owned
+transaction control. A row lock does not identify an in-memory object; handlers
+must keep using the refreshed instance.
 
-PERSIST_RETRY and FORCE_ERROR_STATUS are ordinary writes in the admitted event
-transaction. Standalone RETRY is rejected. Retry reservations, counters and FSM
-logs roll back with the business data. A cross-delivery MQ attempt counter must
-be maintained separately by the delivery infrastructure.
+## Retry and technical failures
 
-Explicit business failure can schedule/re-fire a retry, execute the class/subclass
-error transition, or force the modeled ERROR state if no error route exists.
-Ambiguous error metadata, SQL errors, hook failures and logging errors propagate;
-they are not converted to business ERROR by SET_STATUS. Error-route lookup uses
-the full class/subclass and active flag; its NO_DATA_FOUND handling is confined
-to that lookup. Retry persists its permitted error event list before nested
-admission. Synchronous retry sleeps hold the parent lock until completion.
+Retry/error state is written in the main transaction, never autonomously.
+Explicit business RETRY must run inside an admitted event **instead of after a
+completed SET_STATUS**. It retains a parent frame during synchronous child
+re-fires, then closes its own frame internally after a confirmed persisted retry
+reservation or modeled error outcome. Pending scheduled retries may complete
+without changing the status; terminal/no-op retry does not trigger a commit.
+Counters, retry reservations and FSM_LOG rows roll back with application data.
+Cross-delivery MQ attempt accounting belongs outside this rollback boundary.
 
-ABORT_EVENT clears all event/reason frames and passes identity, captured error
-stack and backtrace to PIT. The inspected sibling PIT implementation dispatches
-output modules autonomously (`PIT_INTERNAL.raise_event`); no new FSM diagnostic
-table, grants or autonomous state writers are introduced. Durable visibility
-requires an installed, active persistent PIT output (e.g. PIT_TABLE). It must not
-write locked FSM rows or depend on an uncommitted FSM FK. Check its output after
-rolling back a fault-injected event. Logging infrastructure failures cannot
-replace the original exception: ABORT_EVENT preserves the caller's bare RAISE.
-Nested catches may report the same exception at more than one boundary.
+Ambiguous error metadata, SQL failures, subtype-hook and log-persistence errors
+propagate rather than becoming business FSM_ERROR. Failures caught inside FSM
+(admission, initialization, SET_STATUS, RETRY) clear all helper frames/reasons and
+report FSM_TECHNICAL_ERROR with captured stack/backtrace to PIT. PIT dispatches
+output modules autonomously. Durable diagnosis requires an active persistent
+output such as PIT_TABLE; it must not update locked FSM rows or require an
+uncommitted FSM FK. Diagnostic failures must not replace the original exception.
 
-Rollback does not restore SQL object attributes or package variables. After a
-technical error, discard/reload the instance and roll back the failed unit before
-continuing. Do not catch errors and commit its partially executed business work.
+A concrete handler can fail **before** entering SET_STATUS, outside FSM's catch
+scope. Such an abandoned context expires at server-call completion, including
+when the exception exits the work unit. If application code catches that error
+inside the same server call, it must end that work unit and must not continue
+processing or reuse the failed instance there. There is deliberately no exposed
+context-cleanup API. A rollback alone does not clear call-local state. Diagnostic
+logging for errors outside FSM remains the concrete application's normal PIT
+exception handling responsibility. A later server call starts with an empty
+helper even though FSM's cached commit setting remains alive.
 
-## Migration and scope
+Oracle forbids access to SERIALLY_REUSABLE packages from triggers and from PL/SQL
+invoked by SQL statements. Use procedural PL/SQL for FSM events, initialization
+and logging; do not invoke these from SQL object constructors/functions or
+triggers. The helper follows Oracle's [server-call lifetime and restrictions](https://docs.oracle.com/en/database/oracle/oracle-database/19/lnpls/serially_reusable-packages.html).
 
-The sample package and utPLSQL handler use the completion protocol. External
-concrete handlers must be migrated too; old handlers which only call the generic
-RAISE_EVENT and SET_STATUS leave a context open and no longer auto-commit.
-Recompile dependent subtypes/packages after installing the updated base type.
-Audit hooks and concrete BL packages for independent commits/autonomous writes.
-The sample handler/BL paths contain no such commits.
+## Installation, scope and tests
 
-DROP_OBJECT remains an explicit deletion API; DELETE obtains its normal row lock
-and the caller owns its transaction. No public standalone lock replaces LOCK_FSM.
-The autonomous monitor is a separate existing transaction contract and is not
-changed here. It writes FSM_OBJECTS/FSM_LOG, can contend with events, and must not
-be invoked synchronously inside a transaction holding those rows. Schedule it
-from a separate session; its state/logs are outside MQ rollback atomicity.
-Metadata administration and direct application-table editing are separate APIs.
+The shared owner install creates the helper spec before FSM's spec and its body
+before FSM's body. Repeat installation replaces it; owner uninstall drops it.
+Client registration and deregistration do not publish it. FSM_TYPE attributes and
+constructors are unchanged. Dependent subtypes still need the refresh hook for
+persisted payload; the sample and test handlers need no completion protocol.
 
-## Verification
+The autonomous monitor remains separate and unchanged. It can contend with FSM
+rows; do not call it inside a transaction holding those rows. Schedule separately.
+Its independently committed state/logs are outside MQ rollback atomicity.
 
-`tests/static/transaction_contract.py` checks the single gated commit, absence of
-savepoints/autonomous state writes, guarded mutation paths, admission/refresh
-ordering and concrete completion/abort wiring. It is not an Oracle compiler.
-`tests/transactions/run.sql` tests TRUE/FALSE in fresh package instances,
-repeat parameter installation, cached policy, rollback/visibility via an
-independent autonomous reader, stale state refresh, direct-write rejection,
-original error propagation, context cleanup, nested automatic chains and retry
-under the parent's lock. Use a disposable, quiet owner; it changes realm-local
-PIT configuration and restores it on normal completion. On failure, preserve the
-original settings and restore/clean the disposable fixture manually.
+`tests/static/transaction_contract.py` checks restricted helper access, SR in both
+units, no helper transaction/configuration policy, owner-only lifecycle, absence
+of exposed completion calls, and nested-before-pop / empty-stack-before-commit
+ordering. `tests/transactions/run.sql` checks TRUE/FALSE, cached PIT policy,
+parameter reinstallation, refresh, rollback, nested failures within SET_STATUS,
+retry/error persistence and separate-server-call cleanup. The new
+`call_boundary.sql` deliberately abandons an admitted context and verifies that
+the next server call cannot use it and can commit its own new root event.
 
-`tests/transactions/concurrent_a.sql` and `concurrent_b.sql` exercise actual lock
-waits and post-wait refresh/rejection in two sessions. Existing utPLSQL tests now
-use events for unchanged-state changes and expect direct writes/technical
-fallback errors to be rejected. See `FSM/tests/README.md` for execution details.
-No live target was designated: Oracle compilation and database regressions are
-pending, not represented by the passing source checks.
+Two-session concurrency scripts check actual waiting and post-wait decisions.
+The existing owner and utPLSQL regressions remain relevant. No live target was
+designated: Oracle compilation, ACCESSIBLE BY runtime checks, call-boundary
+behavior and regression execution remain pending. Passing source checks are not
+an Oracle compile result. See FSM/tests/README.md for disposable-target execution.

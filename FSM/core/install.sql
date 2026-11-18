@@ -63,11 +63,13 @@ prompt &h2.Create Views
 prompt &h2.Create Types and Packages
 prompt &h3.Specifications
 @&tools.install_type_spec fsm_type
+@&tools.install_package_spec fsm_event_context
 @&tools.install_package_spec fsm
 @&tools.install_package_spec fsm_admin
 @&tools.install_package_spec fsm_monitor
 
 prompt &h3.Bodies
+@&tools.install_package_body fsm_event_context
 @&tools.install_type_body fsm_type
 @&tools.install_package_body fsm_admin
 

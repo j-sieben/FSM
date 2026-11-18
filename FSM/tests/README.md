@@ -99,7 +99,7 @@ Checks include parameter value preservation on repeated installation, cached
 package policy, initialization/event visibility from an autonomous read-only
 probe, rollback, stale-object refresh, subtype reload hook invocation, rejection
 without caller commit, direct-write protection after success/failure, original
-handler error propagation, nested automatic failure without intermediate commits,
+status-hook error propagation, nested automatic failure without intermediate commits,
 and retry while the parent already holds the FSM lock. The probe's rollback is
 confined to its independent test transaction; production FSM contains no rollback
 or savepoint.
@@ -129,7 +129,19 @@ particular target has durable diagnostics enabled.
 
 Run owner installation twice, `run_all.sql`, and the updated utPLSQL runtime
 suite. Compare invalid objects before/after, including external dependent SQL
-subtypes. Existing consumers must add `finish_event`/`abort_event` around their
-entire concrete handler/retry execution and implement `refresh_state` for their
-persisted payload. See [.ai/transaction-boundary.md](../../.ai/transaction-boundary.md).
+subtypes. Concrete handlers no longer call finish_event/abort_event: SET_STATUS
+owns successful completion. Implement refresh_state for persisted subtype payload,
+and perform all transactional work before the final SET_STATUS. See [.ai/transaction-boundary.md](../../.ai/transaction-boundary.md).
 No live compilation or regression run is implied by the source checks.
+
+The internal FSM_EVENT_CONTEXT package is SERIALLY_REUSABLE and accessible only
+by FSM. It has no client grants/synonyms and no commit policy. The transaction
+runner additionally executes call_boundary.sql as separate server calls: a
+context abandoned before SET_STATUS must expire, without resetting normal FSM
+package state. Direct anonymous access to the helper must fail with PLS-00904.
+Fault injection now happens in AFTER_TRANSITION inside SET_STATUS, not after its
+successful return, since that return is the new completion/commit boundary.
+Errors caught in concrete handlers before SET_STATUS require ending the server
+call; rollback alone does not clear an abandoned context in that same call.
+Oracle prohibits SR access from SQL-invoked PL/SQL and triggers, so run the suite
+and FSM event entry procedurally, not through SELECT or trigger execution.

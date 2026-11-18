@@ -14,6 +14,7 @@ end;
 @@install.sql
 @@mode.sql FALSE
 @@mode.sql TRUE
+@@call_boundary.sql
 begin
   if :old_local = 1 then
     param.set_boolean('AUTO_COMMIT', 'FSM', :old_boolean = 1);

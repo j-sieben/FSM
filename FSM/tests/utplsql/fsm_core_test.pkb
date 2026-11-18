@@ -255,7 +255,7 @@ create or replace package body fsm_core_test as
     l_fsm := new_fsm('RETRY');
     l_result := fsm.raise_event(l_fsm, 'ADVANCE');
     fsm.retry(l_fsm, 'ADVANCE');
-    fsm.finish_event(l_fsm);
+
     select fsm_fst_id, fsm_validity, fsm_fev_id
       into l_status, l_validity, l_retry_event
       from fsm_objects where fsm_id = l_fsm.fsm_id;
@@ -274,7 +274,7 @@ create or replace package body fsm_core_test as
     commit;
     l_result := fsm.raise_event(l_fsm, 'ADVANCE');
     fsm.retry(l_fsm, 'ADVANCE');
-    fsm.finish_event(l_fsm);
+
     select fsm_fst_id into l_status from fsm_objects where fsm_id = l_fsm.fsm_id;
     ut.expect(l_status).to_equal('ERROR');
   end retry_exhausted;
@@ -295,10 +295,10 @@ create or replace package body fsm_core_test as
       l_result := fsm.raise_event(l_fsm, 'ADVANCE');
       -- Admission starts a new attempt; retry reads persisted error validity.
       fsm.retry(l_fsm, 'ADVANCE');
-      fsm.finish_event(l_fsm);
+
     exception
       when too_many_rows then
-        fsm.abort_event(l_fsm, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+
         l_rejected := true;
     end;
     ut.expect(l_rejected).to_be_true;

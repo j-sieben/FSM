@@ -40,6 +40,10 @@ create or replace type body fsm_type as
     return self.fsm_validity;
   end get_validity;
 
+  /*
+    Function: set_status
+      See: <FSM_TYPE.set_status>. FSM owns the internal pop and optional commit.
+   */
   member function set_status(
     self in out nocopy fsm_type,
     p_fst_id in varchar2,

@@ -23,12 +23,12 @@ declare
   l_result number;
 begin
   l_result := fsm.raise_event(l_fsm, 'ADVANCE');
-  l_result := l_fsm.set_status('MIDDLE');
   dbms_session.sleep(30);
-  fsm.finish_event(l_fsm);
+  l_result := l_fsm.set_status('MIDDLE');
+
   commit;
 exception when others then
-  fsm.abort_event(l_fsm, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+
   rollback;
   raise;
 end;

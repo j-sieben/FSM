@@ -75,7 +75,7 @@ begin
 
   l_fsm := new_instance;
   commit;
-  fsm_tx_probe.fail_after_status := true;
+  fsm_tx_probe.fail_in_status := true;
   insert into fsm_tx_trace values('uncommitted before failure');
   l_rejected := false;
   begin
@@ -85,9 +85,9 @@ begin
     l_rejected := true;
   end;
   check(l_rejected, 'original technical exception propagated');
-  check(fsm_tx_probe.visible_status(l_fsm.fsm_id) = 'START', 'no commit before handler completion');
+  check(fsm_tx_probe.visible_status(l_fsm.fsm_id) = 'START', 'no commit before status completion');
   rollback;
-  fsm_tx_probe.fail_after_status := false;
+  fsm_tx_probe.fail_in_status := false;
   select count(*) into l_count from fsm_tx_trace;
   check(l_count = 0, 'caller changes roll back with failed transition');
   l_rejected := false;
@@ -105,7 +105,7 @@ begin
   rollback;
 
   -- Failure in the first nested handler must not commit initialization or a child.
-  fsm_tx_probe.fail_after_status := true;
+  fsm_tx_probe.fail_in_status := true;
   l_rejected := false;
   l_fsm := fsm_tx_type(null, 'FTX', 'AUTO', null, null, null, fsm.C_OK, null, 'N');
   begin fsm.initialize(l_fsm);
@@ -116,14 +116,14 @@ begin
   check(l_rejected, 'nested automatic error propagated');
   check(fsm_tx_probe.visible_status(l_fsm.fsm_id) is null, 'no intermediate automatic commit');
   rollback;
-  fsm_tx_probe.fail_after_status := false;
+  fsm_tx_probe.fail_in_status := false;
 
   -- Retry runs under an admitted context on a row already locked by the parent.
   l_fsm := new_instance;
   commit;
   l_result := fsm.raise_event(l_fsm, 'ADVANCE');
   fsm.retry(l_fsm, 'ADVANCE');
-  fsm.finish_event(l_fsm);
+
   check(l_fsm.fsm_fst_id = 'MIDDLE', 'retry under parent row lock');
   check(fsm_tx_probe.visible_status(l_fsm.fsm_id) = case when l_auto then 'MIDDLE' else 'START' end,
         'retry shares transaction policy');
@@ -135,7 +135,7 @@ begin
   update fsm_objects set fsm_validity = fsm.C_ERROR where fsm_id = l_fsm.fsm_id;
   l_result := fsm.raise_event(l_fsm, 'ADVANCE');
   fsm.retry(l_fsm, 'ADVANCE');
-  fsm.finish_event(l_fsm);
+
   check(l_fsm.fsm_fst_id = 'ERROR', 'business error fallback under parent row lock');
   check(fsm_tx_probe.visible_status(l_fsm.fsm_id) = case when l_auto then 'ERROR' else 'START' end,
         'error fallback shares transaction policy');
