@@ -17,6 +17,11 @@ begin
      and object_type in ('PACKAGE', 'TYPE');
   assert_equals(l_count, 4, 'public runtime objects are installed');
 
+  select count(*) into l_count from parameter_v
+   where par_id = 'AUTO_COMMIT' and par_pgr_id = 'FSM'
+     and par_boolean_value is not null;
+  assert_equals(l_count, 1, 'FSM commit policy is installed as a PIT boolean');
+
   select count(*) into l_count
     from user_tab_columns
    where table_name = 'FSM_OBJECTS'

@@ -384,6 +384,15 @@ begin
     p_error_number => null
   );
 	
+  pit_admin.merge_message(
+    p_pms_name => 'FSM_TECHNICAL_ERROR',
+    p_pms_pmg_name => 'FSM',
+    p_pms_text => q'^Technical FSM error: class #1#, ID #2#, event #3#. Error stack: #4#. Backtrace: #5#.^',
+    p_pms_description => q'^Autonomous technical diagnosis; FSM and business state remain in the caller transaction.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'AMERICAN',
+    p_error_number => null);
+
   commit;
   pit_admin.create_message_package;
 end;

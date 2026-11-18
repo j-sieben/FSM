@@ -63,6 +63,9 @@ as
 
   /**
     Function: raise_event
+      Runs generic admission, the concrete target decision and business retry in
+      one event context. Finishes only on success; aborts context and propagates
+      technical errors. Uses FSM.AUTO_COMMIT at the outermost completion.
       Method to manually raise an event. This method is called if an event has to be called manually for a
       given instance of FSM_REQ_TYPE. Calling an event can be accomplished
       by calling this method manually, from a button or from a database job fi.

@@ -47,10 +47,12 @@ create or replace package body fsm_core_test as
       p_fst_name => 'Error', p_fst_description => 'Deterministic fallback state',
       p_fst_severity => fsm.C_STORY_ERROR, p_fst_msg_id => msg.FSM_FINAL_STATE,
       p_fst_terminal_status => true);
+    fsm_admin.merge_event('STAY', C_CLASS, 'Stay', 'Confirm current state', 'FUT_STAY');
     fsm_admin.merge_event('ADVANCE', C_CLASS, 'Advance', 'Advance the FSM', 'FUT_ADVANCE');
     fsm_admin.merge_event('FINISH', C_CLASS, 'Finish', 'Finish the FSM', 'FUT_FINISH');
     fsm_admin.merge_event('AUTO', C_CLASS, 'Automatic', 'Automatic completion', 'FUT_AUTO');
     fsm_admin.merge_event('RECOVER', C_CLASS, 'Recover', 'Configured error event', 'FUT_RECOVER');
+    fsm_admin.merge_transition('START', 'STAY', C_CLASS, 'MASTER', 'START', false);
     fsm_admin.merge_transition('START', 'ADVANCE', C_CLASS, 'MASTER', 'MIDDLE', false);
     fsm_admin.merge_transition('MIDDLE', 'FINISH', C_CLASS, 'MASTER', 'DONE', false);
     fsm_admin.merge_transition('START', 'AUTO', C_CLASS, 'AUTO', 'DONE', true);
@@ -102,7 +104,7 @@ create or replace package body fsm_core_test as
     select fsm_fst_id, fsm_fev_list into l_status, l_events
       from fsm_objects where fsm_id = l_fsm.fsm_id;
     ut.expect(l_status).to_equal('START');
-    ut.expect(l_events).to_equal('ADVANCE');
+    ut.expect(l_events).to_equal('ADVANCE:STAY');
     ut.expect(trace_for(l_fsm.fsm_id)).to_equal('BEFORE:PERSIST:ENTER:AFTER');
   end initialize_instance;
 
@@ -127,7 +129,7 @@ create or replace package body fsm_core_test as
     l_fsm := new_fsm;
     delete from fsm_ut_trace where fsm_id = l_fsm.fsm_id;
     commit;
-    l_result := l_fsm.set_status('START');
+    l_result := l_fsm.raise_event('STAY');
     ut.expect(l_result).to_equal(fsm.C_OK);
     ut.expect(trace_for(l_fsm.fsm_id)).to_equal('BEFORE:PERSIST:AFTER');
   end unchanged_status;
@@ -164,12 +166,19 @@ create or replace package body fsm_core_test as
     l_fsm fsm_ut_type;
     l_result number;
     l_status varchar2(30);
+    l_rejected boolean := false;
   begin
     l_fsm := new_fsm;
-    l_result := l_fsm.set_status('UNKNOWN_STATUS');
+    begin
+      l_result := l_fsm.set_status('UNKNOWN_STATUS');
+    exception
+      when others then
+        if sqlcode != -20001 then raise; end if;
+        l_rejected := true;
+    end;
     select fsm_fst_id into l_status from fsm_objects where fsm_id = l_fsm.fsm_id;
-    ut.expect(l_result).to_equal(fsm.C_OK);
-    ut.expect(l_status).to_equal('ERROR');
+    ut.expect(l_rejected).to_be_true;
+    ut.expect(l_status).to_equal('START');
   end invalid_status_fallback;
 
   procedure activity_timestamp as
@@ -186,7 +195,7 @@ create or replace package body fsm_core_test as
            fsm_status_change_date = C_OLD_STATUS
      where fsm_id = l_fsm.fsm_id;
     commit;
-    l_result := l_fsm.set_status('START');
+    l_result := l_fsm.raise_event('STAY');
     select fsm_last_change_date, fsm_status_change_date
       into l_activity_date, l_status_date
       from fsm_objects where fsm_id = l_fsm.fsm_id;
@@ -237,13 +246,16 @@ create or replace package body fsm_core_test as
   end ambiguous_next_status;
 
   procedure retry_succeeds as
+    l_result number;
     l_fsm fsm_ut_type;
     l_status varchar2(30);
     l_validity number;
     l_retry_event varchar2(30);
   begin
     l_fsm := new_fsm('RETRY');
+    l_result := fsm.raise_event(l_fsm, 'ADVANCE');
     fsm.retry(l_fsm, 'ADVANCE');
+    fsm.finish_event(l_fsm);
     select fsm_fst_id, fsm_validity, fsm_fev_id
       into l_status, l_validity, l_retry_event
       from fsm_objects where fsm_id = l_fsm.fsm_id;
@@ -253,22 +265,24 @@ create or replace package body fsm_core_test as
   end retry_succeeds;
 
   procedure retry_exhausted as
+    l_result number;
     l_fsm fsm_ut_type;
     l_status varchar2(30);
   begin
     l_fsm := new_fsm('RETRY');
     update fsm_objects set fsm_validity = 2 where fsm_id = l_fsm.fsm_id;
     commit;
+    l_result := fsm.raise_event(l_fsm, 'ADVANCE');
     fsm.retry(l_fsm, 'ADVANCE');
+    fsm.finish_event(l_fsm);
     select fsm_fst_id into l_status from fsm_objects where fsm_id = l_fsm.fsm_id;
     ut.expect(l_status).to_equal('ERROR');
   end retry_exhausted;
 
   procedure hard_fallback as
     l_fsm fsm_ut_type;
-    l_status varchar2(30);
-    l_validity number;
-    l_events varchar2(500);
+    l_result number;
+    l_rejected boolean := false;
   begin
     l_fsm := new_fsm('RETRY');
     fsm_admin.merge_transition(
@@ -277,13 +291,18 @@ create or replace package body fsm_core_test as
       p_ftr_raise_automatically => false, p_ftr_raise_on_status => fsm.C_ERROR);
     update fsm_objects set fsm_validity = fsm.C_ERROR where fsm_id = l_fsm.fsm_id;
     commit;
-    fsm.retry(l_fsm, 'ADVANCE');
-    select fsm_fst_id, fsm_validity, fsm_fev_list
-      into l_status, l_validity, l_events
-      from fsm_objects where fsm_id = l_fsm.fsm_id;
-    ut.expect(l_status).to_equal('ERROR');
-    ut.expect(l_validity).to_equal(fsm.C_ERROR);
-    ut.expect(l_events).to_be_null;
+    begin
+      l_result := fsm.raise_event(l_fsm, 'ADVANCE');
+      -- Admission starts a new attempt; retry reads persisted error validity.
+      fsm.retry(l_fsm, 'ADVANCE');
+      fsm.finish_event(l_fsm);
+    exception
+      when too_many_rows then
+        fsm.abort_event(l_fsm, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+        l_rejected := true;
+    end;
+    ut.expect(l_rejected).to_be_true;
+    rollback;
   end hard_fallback;
 
   procedure terminal_metadata_valid as

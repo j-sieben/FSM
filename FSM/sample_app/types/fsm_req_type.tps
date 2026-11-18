@@ -20,6 +20,11 @@ create or replace type fsm_req_type under fsm_type(
     p_msg in varchar2 default null,
     p_msg_args in msg_args default null)
     return number,
+  /**
+    Procedure: refresh_state
+      See: <FSM_TYPE.refresh_state>. Reloads request attributes under the FSM lock.
+   */
+  overriding member procedure refresh_state(self in out nocopy fsm_req_type),
   overriding member procedure persist_state(
     self in out nocopy fsm_req_type)
 );

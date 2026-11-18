@@ -20,6 +20,61 @@ as
 
   g_context context_tab;
 
+  -- Loaded once at package initialization, never changed by an event call.
+  g_auto_commit boolean;
+  type event_rec is record(
+    fsm_id number,
+    class_id varchar2(128),
+    subclass_id varchar2(128),
+    event_id varchar2(128),
+    previous_event varchar2(128),
+    previous_status varchar2(128),
+    initializing boolean,
+    confirmed boolean);
+  type event_tab is table of event_rec index by binary_integer;
+  g_events event_tab;
+  g_depth binary_integer := 0;
+
+  /*
+    Procedure: require_event
+      Rejects state writes without the top event frame for this identity.
+    Parameters:
+      p_fsm - Instance whose write is being authorized.
+   */
+  procedure require_event(p_fsm in fsm_type) as
+  begin
+    if g_depth = 0 then
+      raise_application_error(-20001, 'FSM write requires an active event context');
+    end if;
+    if p_fsm.fsm_id is null or g_events(g_depth).fsm_id != p_fsm.fsm_id
+       or p_fsm.fsm_fcl_id is null or g_events(g_depth).class_id != p_fsm.fsm_fcl_id
+       or p_fsm.fsm_fsc_id is null or g_events(g_depth).subclass_id != p_fsm.fsm_fsc_id then
+      raise_application_error(-20001, 'FSM event context belongs to another instance');
+    end if;
+  end require_event;
+
+  /*
+    Procedure: push_event
+      Saves a nested frame; only admission and initialization may call this.
+    Parameters:
+      p_fsm - Instance being processed.
+      p_event - Event code.
+      p_initializing - TRUE permits first persistence of a new instance.
+   */
+  procedure push_event(p_fsm in fsm_type, p_event in varchar2, p_initializing in boolean default false) as
+  begin
+    g_depth := g_depth + 1;
+    g_events(g_depth).fsm_id := p_fsm.fsm_id;
+    g_events(g_depth).class_id := p_fsm.fsm_fcl_id;
+    g_events(g_depth).subclass_id := p_fsm.fsm_fsc_id;
+    g_events(g_depth).event_id := p_event;
+    g_events(g_depth).previous_event := p_fsm.fsm_fev_id;
+    g_events(g_depth).previous_status := p_fsm.fsm_old_fst_id;
+    g_events(g_depth).initializing := p_initializing;
+    g_events(g_depth).confirmed := false;
+  end push_event;
+
+
 
   procedure ensure_context(
     p_fsm in fsm_type)
@@ -87,7 +142,6 @@ as
     p_fev_id in fsm_events_v.fev_id%type,
     p_retry_schedule in fsm_objects.fsm_retry_schedule%type)
   as
-    pragma autonomous_transaction;
   begin
     pit.enter_detailed('persist_retry',
       p_params => msg_params(
@@ -95,13 +149,18 @@ as
                     msg_param('p_fev_id', p_fev_id),
                     msg_param('p_retry_schedule', p_retry_schedule)));
 
+    require_event(p_fsm);
     update fsm_objects
        set fsm_validity = p_fsm.fsm_validity,
            fsm_fev_id = p_fev_id,
-           fsm_retry_schedule = p_retry_schedule
+           fsm_retry_schedule = p_retry_schedule,
+           fsm_fev_list = p_fsm.fsm_fev_list
      where fsm_id = p_fsm.fsm_id;
-    commit;
 
+    if sql%rowcount != 1 then
+      raise_application_error(-20002, 'FSM disappeared during retry persistence');
+    end if;
+    g_events(g_depth).confirmed := true;
     pit.leave_detailed;
   end persist_retry;
 
@@ -117,10 +176,12 @@ as
   procedure force_error_status(
     p_fsm in out nocopy fsm_type)
   as
-    pragma autonomous_transaction;
   begin
+    require_event(p_fsm);
     update fsm_objects
        set fsm_fst_id = fsm_fst.FSM_ERROR,
+           fsm_fev_id = null,
+           fsm_retry_schedule = null,
            fsm_validity = C_ERROR,
            fsm_fev_list = null,
            fsm_last_change_date = sysdate,
@@ -131,10 +192,10 @@ as
     p_fsm.fsm_validity := C_ERROR;
     p_fsm.fsm_fev_list := null;
 
-    commit;
-  exception
-    when others then
-      rollback;
+    if sql%rowcount != 1 then
+      raise_application_error(-20002, 'FSM disappeared during error persistence');
+    end if;
+    g_events(g_depth).confirmed := true;
   end force_error_status;
 
 
@@ -205,12 +266,21 @@ as
       msg_args(
         to_char(p_fsm.fsm_validity)),
         p_fsm.fsm_id);
-    select ftr_fev_id
-      into l_event
-      from fsm_transitions
-     where ftr_fst_id = p_fsm.fsm_fst_id
-       and ftr_fcl_id = p_fsm.fsm_fcl_id
-       and ftr_raise_on_status = 1;
+    begin
+      select ftr_fev_id
+        into l_event
+        from fsm_transitions
+       where ftr_fst_id = p_fsm.fsm_fst_id
+         and ftr_fcl_id = p_fsm.fsm_fcl_id
+         and ftr_fsc_id = p_fsm.fsm_fsc_id
+         and ftr_active = pit_util.C_TRUE
+         and ftr_raise_on_status = 1;
+    exception
+      when no_data_found then
+        force_error_status(p_fsm);
+        pit.leave_optional;
+        return;
+    end;
     pit.raise_verbose(msg.FSM_THROW_ERROR_EVENT, msg_args(l_event), p_fsm.fsm_id);
 
     p_fsm.fsm_fev_list := l_event;
@@ -220,12 +290,6 @@ as
 
     l_result := p_fsm.raise_event(l_event);
     pit.leave_optional;
-  exception
-    when no_data_found then
-      -- Throw generic error
-      l_result := p_fsm.raise_event(fsm_fev.FSM_ERROR);
-    when others then
-      force_error_status(p_fsm);
   end proceed_with_error_event;
 
 
@@ -362,43 +426,7 @@ as
     pit.leave_optional(
       p_params => msg_params(
                     msg_param('Message', l_message.message_text)));
-  exception
-    when others then
-      pit.handle_exception(msg.PIT_SQL_ERROR);
   end log_change;
-
-
-  /*
-    Function: handle_set_status_error
-      Handles the fallback from an arbitrary status to FSM_ERROR and enforces
-      a hard error status if this fallback is already exhausted.
-
-    Parameters:
-      p_fsm - FSM instance
-      p_leave - Controls whether PIT.LEAVE_MANDATORY must be called before recursion
-
-    Returns:
-      C_ERROR or the result of setting FSM_ERROR.
-   */
-  function handle_set_status_error(
-    p_fsm in out nocopy fsm_type,
-    p_leave in boolean default false)
-    return number
-  as
-  begin
-    if p_fsm.fsm_fst_id != fsm_fst.FSM_ERROR then
-      if p_leave then
-        pit.leave_mandatory;
-      end if;
-      return set_status(p_fsm, fsm_fst.FSM_ERROR);
-    else
-      force_error_status(p_fsm);
-      if p_leave then
-        pit.leave_mandatory;
-      end if;
-      return C_ERROR;
-    end if;
-  end handle_set_status_error;
 
 
   /**
@@ -434,10 +462,15 @@ as
   as
     l_initial_fst_id fsm_status.fst_id%type;
     l_initial_count binary_integer;
+    l_exists binary_integer;
   begin
     pit.enter_mandatory('initialize');
 
     p_fsm.fsm_id := coalesce(p_fsm.fsm_id, fsm_seq.nextval);
+    select count(*) into l_exists from fsm_objects where fsm_id = p_fsm.fsm_id;
+    if l_exists != 0 then
+      raise_application_error(-20002, 'FSM initialization requires a new instance');
+    end if;
     p_fsm.fsm_fst_id := null;
     p_fsm.fsm_old_fst_id := null;
     p_fsm.fsm_fev_id := fsm_fev.FSM_INITIALIZE;
@@ -449,6 +482,7 @@ as
       from fsm_transitions
       join fsm_status
         on fst_id = ftr_fst_id
+       and fst_fcl_id = ftr_fcl_id
      where ftr_active = pit_util.C_TRUE
        and fst_active = pit_util.C_TRUE
        and fst_initial_status = pit_util.C_TRUE
@@ -458,38 +492,19 @@ as
     pit.assert(l_initial_count > 0, msg.FSM_NO_INITIAL_STATUS);
     pit.assert(l_initial_count = 1, msg.FSM_TOO_MANY_INITIALS);
 
+    push_event(p_fsm, fsm_fev.FSM_INITIALIZE, true);
     p_fsm.fsm_validity := p_fsm.set_status(
                             p_fst_id => l_initial_fst_id,
                             p_msg => p_msg,
                             p_msg_args => p_msg_args);
 
     pit.leave_mandatory;
-  end initialize;
-
-
-  /*
-    Procedure: lock_fsm
-      See  <FSM.lock_fsm>
-   */
-  procedure lock_fsm(
-    p_fsm_id in out nocopy fsm_objects.fsm_id%type)
-  as
-  begin
-    pit.enter_mandatory('lock_fsm',
-      p_params => msg_params(
-                    msg_param('p_fsm_id', p_fsm_id)));
-
-    select fsm_id
-      into p_fsm_id
-      from fsm_objects
-     where fsm_id = p_fsm_id
-       for update;
-
-    pit.leave_mandatory;
+    finish_event(p_fsm);
   exception
-    when NO_DATA_FOUND then
-      pit.leave_mandatory;
-  end lock_fsm;
+    when others then
+      abort_event(p_fsm, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+      raise;
+  end initialize;
 
 
   /*
@@ -505,7 +520,7 @@ as
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id)));
 
-    p_fsm.fsm_id := coalesce(p_fsm.fsm_id, fsm_seq.nextval);
+    require_event(p_fsm);
 
     begin
       select case
@@ -517,6 +532,9 @@ as
        where fsm_id = p_fsm.fsm_id;
     exception
       when no_data_found then
+        if not g_events(g_depth).initializing then
+          raise_application_error(-20002, 'Cannot recreate a missing FSM');
+        end if;
         l_status_change_date := sysdate;
     end;
 
@@ -557,35 +575,103 @@ as
     p_msg_args in msg_args default null)
     return integer
   as
+    l_id number;
+    l_row fsm_objects%rowtype;
   begin
-    pit.enter_mandatory(
-      p_params => msg_params(
-                    msg_param('p_fsm', p_fsm.fsm_id),
-                    msg_param('fsm_fst_id', p_fsm.fsm_fst_id),
-                    msg_param('p_fev_id', p_fev_id)));
+    pit.enter_mandatory('raise_event');
+    -- The predicate avoids locking an instance for an initially disallowed event.
+    -- ERROR is the existing generic framework event, also accepted by ALLOWS_EVENT.
+    begin
+      select fsm_id into l_id
+        from fsm_objects
+       where fsm_id = p_fsm.fsm_id
+         and p_fev_id is not null
+         and (p_fev_id = fsm_fev.FSM_ERROR
+              or instr(':' || fsm_fev_list || ':', ':' || p_fev_id || ':') > 0)
+         for update;
+    exception
+      when no_data_found then
+        pit.leave_mandatory;
+        raise_application_error(-20003, 'FSM missing or event not allowed: ' || p_fev_id);
+    end;
 
-    lock_fsm(p_fsm.fsm_id);
+    -- New statement after any lock wait: never decide using the old object.
+    select * into l_row from fsm_objects where fsm_id = l_id;
+    p_fsm.fsm_fcl_id := l_row.fsm_fcl_id;
+    p_fsm.fsm_fsc_id := l_row.fsm_fsc_id;
+    p_fsm.fsm_fst_id := l_row.fsm_fst_id;
+    p_fsm.fsm_validity := l_row.fsm_validity;
+    p_fsm.fsm_fev_list := l_row.fsm_fev_list;
+    p_fsm.fsm_auto_raise := pit_util.C_FALSE;
+    if not allows_event(p_fsm, p_fev_id) then
+      pit.leave_mandatory;
+      raise_application_error(-20003, 'FSM event no longer allowed: ' || p_fev_id);
+    end if;
+
+    push_event(p_fsm, p_fev_id);
+    p_fsm.refresh_state;
     p_fsm.fsm_old_fst_id := p_fsm.fsm_fst_id;
     p_fsm.fsm_fev_id := p_fev_id;
     ensure_context(p_fsm);
-
-    -- LOG verwalten
-    log_change(
-      p_fsm => p_fsm,
-      p_fev_id => p_fev_id,
-      p_msg => p_msg,
-      p_msg_args => p_msg_args);
+    log_change(p_fsm, p_fev_id => p_fev_id, p_msg => p_msg, p_msg_args => p_msg_args);
     p_fsm.fsm_validity := C_OK;
-
-    pit.leave_mandatory(
-      p_params => msg_params(
-                    msg_param('Status', C_OK)));
+    pit.leave_mandatory;
     return C_OK;
+  end raise_event;
+
+
+  /*
+    Procedure: finish_event
+      See: <FSM.finish_event>
+   */
+  procedure finish_event(p_fsm in out nocopy fsm_type) as
+  begin
+    require_event(p_fsm);
+    if not g_events(g_depth).confirmed then
+      raise_application_error(-20004, 'FSM event finished without a status or retry confirmation');
+    end if;
+    if g_depth = 1 and g_auto_commit then
+      commit;
+    end if;
+    p_fsm.fsm_fev_id := g_events(g_depth).previous_event;
+    p_fsm.fsm_old_fst_id := g_events(g_depth).previous_status;
+    g_events.delete(g_depth);
+    g_depth := g_depth - 1;
+    if g_depth = 0 then
+      p_fsm.fsm_fev_id := null;
+      p_fsm.fsm_old_fst_id := null;
+      clear_context(p_fsm);
+    end if;
+  end finish_event;
+
+
+  /*
+    Procedure: abort_event
+      See: <FSM.abort_event>
+   */
+  procedure abort_event(
+    p_fsm in fsm_type,
+    p_error_stack in varchar2 default null,
+    p_backtrace in varchar2 default null)
+  as
+  begin
+    -- An exception invalidates the entire synchronous chain, not the transaction.
+    g_events.delete;
+    g_depth := 0;
+    g_context.delete;
+    -- PIT_INTERNAL dispatches autonomously. Do not write diagnostic state to
+    -- FSM_OBJECTS/FSM_LOG, which may be locked or not yet committed.
+    pit.handle_exception(msg.FSM_TECHNICAL_ERROR,
+      msg_args(p_fsm.fsm_fcl_id, to_char(p_fsm.fsm_id), p_fsm.fsm_fev_id,
+               p_error_stack, p_backtrace),
+      p_params => msg_params(
+        msg_param('error_stack', p_error_stack),
+        msg_param('backtrace', p_backtrace)));
   exception
     when others then
-      pit.handle_exception(msg.FSM_SQL_ERROR, msg_args(p_fsm.fsm_fcl_id, to_char(p_fsm.fsm_id), p_fev_id));
-      return C_ERROR;
-  end raise_event;
+      -- Preserve the original exception in the caller, even if PIT itself fails.
+      null;
+  end abort_event;
 
 
   /*
@@ -664,6 +750,7 @@ as
        where fsm.fsm_id = p_fsm.fsm_id;
     l_validity fsm_objects.fsm_validity%type;
   begin
+    require_event(p_fsm);
     pit.enter_mandatory('retry',
       p_params => msg_params(
                     msg_param('p_fsm', p_fsm.fsm_id),
@@ -742,7 +829,9 @@ as
                     msg_param('p_fev_id', p_fev_id)));
 
     -- Check if event is allowed in current state
-    l_result := instr(':' || p_fsm.fsm_fev_list || ':ERROR:', ':' || p_fev_id || ':') > 0;
+    l_result := p_fev_id is not null and
+      (p_fev_id = fsm_fev.FSM_ERROR or
+       instr(':' || p_fsm.fsm_fev_list || ':', ':' || p_fev_id || ':') > 0);
 
     -- Check if current user has required role rights
     -- TODO: Add role support
@@ -779,6 +868,7 @@ as
   as
     l_status_changed boolean;
   begin
+    require_event(p_fsm);
     pit.enter_mandatory('set_status',
       p_params => msg_params(
                     msg_param('old_fst_id', p_fsm.fsm_fst_id),
@@ -786,6 +876,23 @@ as
                     msg_param('fsm_fev_id', p_fsm.fsm_fev_id)));
 
     pit.assert_not_null(p_fst_id, p_msg_args => msg_args('P_FST_ID'));
+    if not g_events(g_depth).initializing and not
+       (g_events(g_depth).event_id = fsm_fev.FSM_ERROR and p_fst_id = fsm_fst.FSM_ERROR) then
+      declare
+        l_allowed number;
+      begin
+        select count(*) into l_allowed from fsm_transitions
+         where ftr_fcl_id in (p_fsm.fsm_fcl_id, 'FSM')
+           and ftr_fsc_id = p_fsm.fsm_fsc_id
+           and ftr_fst_id = p_fsm.fsm_old_fst_id
+           and ftr_fev_id = g_events(g_depth).event_id
+           and ftr_active = pit_util.C_TRUE
+           and instr(':' || ftr_fst_list || ':', ':' || p_fst_id || ':') > 0;
+        if l_allowed = 0 then
+          raise_application_error(-20005, 'Target status is not allowed by the active event');
+        end if;
+      end;
+    end if;
     p_fsm.fsm_validity := coalesce(p_fsm.fsm_validity, C_OK);
     p_fsm.fsm_old_fst_id := p_fsm.fsm_fst_id;
     l_status_changed := p_fsm.fsm_old_fst_id is null
@@ -831,23 +938,12 @@ as
       p_fsm.finalize;
     end if;
 
-    p_fsm.fsm_old_fst_id := null;
-    p_fsm.fsm_fev_id := null;
-
-    commit;
+    g_events(g_depth).confirmed := true;
 
     pit.leave_mandatory(
       p_params => msg_params(
                     msg_param('Result', p_fsm.fsm_validity)));
     return p_fsm.fsm_validity;
-  exception
-    when msg.PIT_ASSERTION_FAILED_ERR then
-      return handle_set_status_error(
-               p_fsm => p_fsm,
-               p_leave => true);
-    when others then
-      pit.handle_exception(msg.PIT_SQL_ERROR);
-      return handle_set_status_error(p_fsm => p_fsm);
   end set_status;
 
 
@@ -1058,5 +1154,10 @@ as
     pit.leave_mandatory;
   end finalize;
 
+begin
+  g_auto_commit := param.get_boolean('AUTO_COMMIT', 'FSM');
+  if g_auto_commit is null then
+    raise_application_error(-20006, 'FSM.AUTO_COMMIT must be a non-null PIT boolean parameter');
+  end if;
 end fsm;
 /

@@ -78,3 +78,13 @@ managed by the existing core lifecycle scripts. Runtime and enriched `_v`
 contracts remain unchanged. Inventory, keys, installation paths, validation and
 the external PIT message-severity prerequisite are recorded in
 [technical-view-layer.md](technical-view-layer.md).
+
+## Event transaction ownership
+
+The FSM runtime owns conditional event admission, row locking, refresh and a
+nested event context. SET_STATUS is a context-guarded public target assignment;
+concrete handlers finish or abort their frames. PIT's FSM.AUTO_COMMIT parameter
+is cached per package initialization. Retry/error state changes share the main
+transaction; technical diagnostics use PIT's autonomous output. LOCK_FSM has been
+removed. See [transaction-boundary.md](transaction-boundary.md) for migration and
+explicit remaining monitor/application boundaries.

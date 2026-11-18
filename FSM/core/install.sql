@@ -4,6 +4,9 @@ prompt &h2.Create Default Messages
 @&tools.run_language_script create_messages
 @&tools.run_language_script TranslatableItemsGroup_FSM
 
+prompt &h2.Create Runtime Parameters
+@&tools.run_script ParameterGroup_FSM
+
 prompt &h2.Create Sequences
 @&tools.check_has_sequence fsm_seq
 @&tools.check_has_sequence fsm_log_seq

@@ -17,7 +17,9 @@ declare
       
   cursor pkg_cur is
     (select 'PIT' object_name, 'PACKAGE' object_type
-      from dual)
+      from dual
+    union all select 'PARAM', 'PACKAGE' from dual
+    union all select 'PARAM_ADMIN', 'PACKAGE' from dual)
     minus
     select object_name, object_type
       from all_objects

@@ -13,37 +13,34 @@ sequenceDiagram
 
   Caller->>Concrete: raise_event(event)
   Concrete->>Core: validate / dispatch event
-  Core->>Meta: check allowed transition
+  Core->>Obj: conditional lock and refresh
+  Core->>Meta: recheck allowed event
   Concrete->>Concrete: execute domain decision
   Concrete->>Core: set_status(target)
-  Core->>Obj: lock and persist state/activity
+  Core->>Obj: persist state/activity under existing lock
   Core->>Log: record transition/reason
   Core->>Meta: resolve optional automatic event
   Core-->>Concrete: resulting status / validity
+  Concrete->>Core: finish_event (outermost optional commit)
   Concrete-->>Caller: result
 ```
 
 The detailed implementation lives primarily in `FSM/core/packages/fsm.pkb`; the overridable contract and hooks are in `FSM/core/types/fsm_type.tps`.
 
-## Failure and retry branches
+## Event and transaction lifecycle
 
-```mermaid
-flowchart TD
-  Event[Incoming event] --> Allowed{Allowed by metadata?}
-  Allowed -- yes --> Handler[Concrete handler / business logic]
-  Allowed -- no --> Error[Controlled error path]
-  Handler --> Outcome{Successful outcome?}
-  Outcome -- yes --> Persist[Persist status or activity timestamp]
-  Outcome -- retry --> Retry[Persist failed event and retry schedule]
-  Outcome -- no --> Error
-  Error --> ErrorTransition{FSM_ERROR transition works?}
-  ErrorTransition -- yes --> PersistError[Persist FSM_ERROR]
-  ErrorTransition -- no --> HardFallback[Force deterministic FSM_ERROR]
-  Persist --> Log[Log movement]
-  Retry --> Log
-  PersistError --> Log
-  HardFallback --> Log
-```
+RAISE_EVENT now locks conditionally, reloads common/subtype state and validates
+before the concrete handler calculates its target. Public SET_STATUS requires
+that event context. Concrete wrappers finish or abort it explicitly. Automatic
+nested events do not commit independently. PIT parameter FSM.AUTO_COMMIT is read
+once at package initialization; only the successful outermost finish may commit.
+FALSE leaves all state, retry and history changes to the caller transaction.
+Technical errors are reported to PIT's autonomous output and propagate without
+conversion to FSM_ERROR. Business retries/error routes remain modeled state
+changes. No savepoints or public LOCK_FSM remain.
+
+See [transaction-boundary.md](transaction-boundary.md) for protocol, deployment,
+monitor boundary and validation.
 
 ## Escalation time model
 

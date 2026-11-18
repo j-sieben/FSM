@@ -9,6 +9,8 @@ This directory contains compact, durable maps for understanding and maintaining 
 
 - [technical-view-layer.md](technical-view-layer.md): complete technical read contracts, client lifecycle and external PIT severity prerequisite
 
+- [transaction-boundary.md](transaction-boundary.md): commit policy, event context, locking, retry and concrete-handler migration
+
 ## Maintenance rules
 
 1. Update a map when a code change alters an architectural relationship or runtime flow.

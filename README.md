@@ -165,15 +165,22 @@ example above instead. Remove a generated job with
 This turns the FSM into more than a pure transition engine. It also becomes a monitoring aid for stalled or silent processes.
 
 ## Error Handling and Retry
-The runtime has a controlled failure path:
+PIT parameter `FSM.AUTO_COMMIT` controls transaction ownership. It defaults to
+TRUE, is installed without overwriting existing values, and is read once when
+the FSM package initializes. TRUE commits after the complete successful event
+chain; FALSE leaves commit/rollback to the caller. No savepoints are used.
 
-- invalid events are treated as errors
-- `SET_STATUS` falls back to `FSM_ERROR` if normal processing fails
-- if even that path cannot be executed, a hard fallback forces the object into `FSM_ERROR`
+`RAISE_EVENT` locks, refreshes and validates the instance before the concrete
+handler calculates its target. `SET_STATUS` remains public for that calculation,
+but requires an event context. Concrete handlers must finish the event on success
+and abort context/rethrow on exceptions. `LOCK_FSM` has been removed.
 
-Retries persist the failed event and retry schedule in `FSM_OBJECTS`. The current implementation performs retries synchronously.
-
-The important design decision here is that the framework tries to leave an object in a deterministic technical state, even when business logic, metadata or follow-up transitions fail.
+Retry and modeled error states share the business transaction. Technical errors
+propagate and are reported through PIT's autonomous diagnostic output; configure
+a persistent output module so diagnostics survive rollback. Existing concrete
+handlers need migration to the completion protocol. See
+[the transaction contract](.ai/transaction-boundary.md) for details, examples and
+the independent autonomous monitor boundary.
 
 ## Visibility of Concrete FSM Classes
 Concrete classes are linked to their implementing SQL subtype via `FSM_CLASSES.FCL_TYPE_NAME`.

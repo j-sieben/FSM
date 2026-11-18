@@ -29,7 +29,7 @@ create or replace package fsm_core_test as
   --%test(Unknown instance has no escalation state)
   procedure unknown_escalation_state;
 
-  --%test(Invalid target status falls back to the error status)
+  --%test(Direct SET_STATUS is rejected without an event context)
   procedure invalid_status_fallback;
 
   --%test(Unchanged status updates activity but preserves status date)
@@ -52,7 +52,7 @@ create or replace package fsm_core_test as
   --%test(Exhausted retry follows the configured error transition)
   procedure retry_exhausted;
 
-  --%test(Ambiguous error handling invokes the hard fallback)
+  --%test(Ambiguous error handling propagates its technical error)
   procedure hard_fallback;
 
   --%test(Terminal status without outgoing transition is valid metadata)

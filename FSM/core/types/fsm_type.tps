@@ -26,7 +26,10 @@ as object(
       sequence recursively. Control returns to the original caller, including a
       constructor that called <FSM.initialize>, after the automatic event chain
       reaches a stable status. Terminal instances are finalized; the completed
-      transition chain is committed before <FSM.initialize> returns.
+      transition chain is committed only when FSM.AUTO_COMMIT is TRUE.
+      Concrete event overrides must call FSM.finish_event after business retry
+      processing and FSM.abort_event followed by RAISE on exceptions. Direct
+      SET_STATUS requires an active event or internal initialization context.
    */
   fsm_id number,
   fsm_fcl_id &ORA_NAME_TYPE.,
@@ -52,12 +55,32 @@ as object(
   member procedure retry(
     self in out nocopy fsm_type,
     p_fev_id in varchar2),
+  /**
+    Function: set_status
+      Delegates the handler-calculated target to FSM.SET_STATUS. Requires the
+      active event context for this instance, except for framework initialization.
+      Never commits; technical errors propagate to the outer concrete event.
+    Parameters:
+      p_fst_id - Target status allowed by the active transition.
+      p_msg - Optional PIT message key.
+      p_msg_args - Optional message arguments.
+    Returns:
+      Resulting FSM validity.
+   */
   member function set_status(
     self in out nocopy fsm_type,
     p_fst_id in varchar2,
     p_msg in varchar2 default null,
     p_msg_args in msg_args default null)
     return number,
+  /**
+    Procedure: refresh_state
+      Reloads persisted subtype attributes after RAISE_EVENT has locked and
+      refreshed the common FSM state. Default implementation does nothing.
+      Override for subtypes with persisted domain attributes. Do not change FSM
+      identity, event attributes or transaction boundaries. Do not persist here.
+   */
+  member procedure refresh_state(self in out nocopy fsm_type),
   /**
     Procedure: leave_status
       Lifecycle hook called immediately before an existing status is left.
@@ -78,8 +101,8 @@ as object(
     Procedure: persist_state
       Lifecycle hook called after FSM has persisted the common FSM attributes.
       Concrete subtypes persist their own attributes here. Implementations must
-      not commit because FSM owns the transaction for the complete transition
-      chain.
+      not commit: the complete transition chain follows the PIT parameter
+      FSM.AUTO_COMMIT, otherwise the caller owns the transaction.
    */
   member procedure persist_state(
     self in out nocopy fsm_type),

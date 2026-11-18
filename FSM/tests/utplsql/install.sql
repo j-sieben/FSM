@@ -35,7 +35,12 @@ create or replace type body fsm_ut_type as
     if l_result = fsm.C_OK then
       l_result := self.set_status(fsm.get_next_status(self, p_fev_id));
     end if;
+    fsm.finish_event(self);
     return l_result;
+  exception
+    when others then
+      fsm.abort_event(self, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+      raise;
   end raise_event;
 
   overriding member procedure leave_status(self in out nocopy fsm_ut_type) as

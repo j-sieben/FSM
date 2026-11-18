@@ -285,7 +285,7 @@ as
     g_result := fsm.raise_event(p_req, p_fev_id, p_msg, p_msg_args);
 
     -- process event
-    if instr(':' || p_req.fsm_fev_list || ':', ':' || p_fev_id || ':') > 0 then
+    if g_result = fsm.C_OK then
       -- event switch
       case p_fev_id
       -- explicit event handlers
@@ -297,13 +297,19 @@ as
         -- default event handler
         g_result := raise_default(p_req, p_fev_id);
       end case;
-    else
-      pit.warn(msg.fsm_EVENT_NOT_ALLOWED, msg_args(p_fev_id, p_req.fsm_fst_id), p_req.fsm_id);
-      g_result := fsm.C_ERROR;
     end if;
-    
+    p_req.fsm_validity := g_result;
+    if g_result != fsm.C_OK then
+      p_req.retry(p_fev_id);
+      g_result := p_req.fsm_validity;
+    end if;
     pit.leave_mandatory;
+    fsm.finish_event(p_req);
     return g_result;
+  exception
+    when others then
+      fsm.abort_event(p_req, dbms_utility.format_error_stack, dbms_utility.format_error_backtrace);
+      raise;
   end raise_event;
   
 

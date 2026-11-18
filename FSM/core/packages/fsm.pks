@@ -71,7 +71,10 @@ as
       follow-up events before this procedure returns.
 
       The caller assigns the class, subclass and all subtype-specific attributes
-      required by PERSIST_STATE before calling this procedure.
+      required by PERSIST_STATE before calling this procedure. Existing IDs are
+      rejected. A private initialization context permits first persistence.
+      The complete initial/automatic chain follows cached FSM.AUTO_COMMIT;
+      technical errors abort context and propagate without a commit or rollback.
 
     Parameter:
       p_fsm - New FSM instance to initialize
@@ -89,8 +92,12 @@ as
    */
   /**
     Function: raise_event
-      On an abstract level this methods only task is to take care of logging.
-      Is called by the corresponding function of type FSM_TYPE.
+      Opens an event context after conditionally locking the persisted instance,
+      refreshing common and subtype state, and checking the event again after any
+      lock wait. Concrete handlers then calculate the target and call SET_STATUS.
+      They must call FINISH_EVENT on success, ABORT_EVENT and RAISE on exceptions.
+      Initially disallowed events lock no row; rejection after waiting may retain
+      the lock until the caller ends the transaction. No commit on rejection.
       
     Parameters:
       p_fsm - Instance of the class FSM_TYPE
@@ -99,7 +106,7 @@ as
       p_msg_args - Optional parameters to pass to the log message
       
     Returns:
-      C_OK or C_ERROR. C_ERROR only if no logging is performed
+      C_OK on admission. Missing/disallowed instances raise an exception.
    */
   function raise_event(
     p_fsm in out nocopy fsm_type,
@@ -110,23 +117,45 @@ as
     
     
   /**
-    Procedure: lock_fsm
-      Method implements pessimistic locking for a given FSM instance. If called,
-      FSM locks the FSM instance for update. This lock is released after having
-      written using the persist method or upon rollback
+    Procedure: finish_event
+      Completes one successful concrete event invocation. Call after the handler
+      and any business retry processing. Commits only at the outermost successful
+      boundary when PIT parameter FSM.AUTO_COMMIT was TRUE at package initialization.
+      No savepoints or rollback are used. Every admitted event must confirm a
+      status or retry. Automatic nested events must each finish their own frame.
       
-    Parameter:
-      p_fsm_id - FSM ID
-   */
-  procedure lock_fsm(
-    p_fsm_id in out nocopy fsm_objects.fsm_id%type);
+    Parameters:
+      p_fsm - The instance passed to the matching successful <raise_event> call.
 
+    Raises:
+      An exception if context is absent, belongs to another instance, or has no
+      status/retry confirmation. The caller must abort and rethrow on failure.
+   */
+  procedure finish_event(p_fsm in out nocopy fsm_type);
+
+  /**
+    Procedure: abort_event
+      Clears the entire event/reason context and reports a technical error to
+      PIT's autonomous diagnostic output. Never commits or rolls back application
+      state. Call from a concrete event exception handler, then use bare RAISE.
+      Discard/reload the in-memory instance after failure. Persistent PIT output
+      must be configured; it must not update FSM_OBJECTS or depend on FSM row FKs.
+
+    Parameters:
+      p_fsm - Failed instance, used only as diagnostic identity.
+      p_error_stack - FORMAT_ERROR_STACK captured in the original handler.
+      p_backtrace - FORMAT_ERROR_BACKTRACE captured in the original handler.
+   */
+  procedure abort_event(
+    p_fsm in fsm_type,
+    p_error_stack in varchar2 default null,
+    p_backtrace in varchar2 default null);
 
   /**
     Procedure: persist
       Method persists FSM_TYPE attributes of a concrete derived class in FSM_OBJECT.
-      Called by the constructors of the derived classes to to create an entry in FSM_OBJECT. 
-      If available, attributes are updated, otherwise the class is created again.
+      Requires an active event or initialization context. Missing existing rows
+      are not recreated. Initialization is the only insert-capable path.
    
     Parameter:
       p_fsm - FSM_TYPE instance
@@ -137,7 +166,8 @@ as
 
   /**
     Procedure: retry
-      Method called when an event produces an error.
+      Requires an active event context. Called for an explicit business failure,
+      never to recover a technical exception. Changes share the caller transaction.
       It checks if the event can be executed again (possibly based on a schedule)
       If positive, it throws the event again. If not, the FSM is set to status ERROR.
       
@@ -188,7 +218,9 @@ as
   /**
     Function: allows_event
       Method checks if an fsm allows an event to be searched for.
-      Called by APEX application to check whether a control should be displayed or executed
+      Optional advisory check of the in-memory event list, without locking or
+      refreshing. Useful for APEX controls; RAISE_EVENT always revalidates current
+      persisted state. Includes the generic ERROR event. Not a prerequisite.
       
     Parameters:
       p_fsm - fsm instance
@@ -206,6 +238,9 @@ as
   /**
     Function: set_status
       Method sets the status of an FSM instance. Overloaded as procedure.
+      Requires the active event context for this instance (or internal initial
+      entry). Direct calls without context fail before mutation. Technical errors
+      propagate; they are never converted into an FSM_ERROR status. No commit.
       A new status is determined by the logic of the event handler or by calling GET_NEXT_STATUS.
       Based on the new status, allowed events are determined.
       The transition is processed synchronously in the following order:
@@ -223,7 +258,8 @@ as
       9. Raise an automatic event synchronously. The resulting status change
          repeats this sequence recursively. If no automatic event remains, a
          terminal instance is finalized.
-      10. Clear the transition context and commit before returning.
+      10. Confirm the status in the event context. FINISH_EVENT owns the final
+          optional commit after the complete concrete handler returns.
 
       Consequently, an initial status assigned by a concrete constructor is
       fully processed, including all automatic follow-up events, before the
@@ -231,7 +267,7 @@ as
       FSM waits for an event to be triggered externally.
       The procedure overload executes the same lifecycle but discards the
       numeric return value; the resulting validity remains available on the FSM
-      instance.
+      instance. Completion remains the responsibility of the concrete event entry.
       
     Parameters:
       p_fsm - Instance of fsm (concrete class of the type inherited from FSM_TYPE)
@@ -256,8 +292,8 @@ as
 
   /**
     Procedure: set_status
-      Overload as procedure. Is used to set the status directly and not as a 
-      consequence of an event raised.
+      Procedure overload of <FSM.set_status>. Requires the same active event or
+      initialization context, propagates technical errors and never commits.
       
     Parameters:
       p_fsm - Instance of fsm (concrete class of the type inherited from FSM_TYPE)

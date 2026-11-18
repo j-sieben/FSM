@@ -43,6 +43,7 @@ begin
     end;
   end loop;
   
+  param_admin.delete_parameter_group('FSM', true);
   pit_admin.delete_message_group('FSM', true);
   
 end;

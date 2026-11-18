@@ -384,6 +384,15 @@ begin
     p_error_number => null
   );
   
+  pit_admin.merge_message(
+    p_pms_name => 'FSM_TECHNICAL_ERROR',
+    p_pms_pmg_name => 'FSM',
+    p_pms_text => q'^Technischer FSM-Fehler: Klasse #1#, ID #2#, Ereignis #3#. Fehlerstack: #4#. Backtrace: #5#.^',
+    p_pms_description => q'^Autonome technische Diagnose; FSM- und Anwendungszustand bleiben Teil der aufrufenden Transaktion.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => null);
+
   commit;
   pit_admin.create_message_package;
 end;

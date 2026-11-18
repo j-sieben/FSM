@@ -89,8 +89,9 @@ test must be used to detect missing grants.
 includes all ten owner views. Repeated registration replaces synonyms and
 repeated deregistration tolerates absent grants/synonyms by existing convention.
 Removing a client may invalidate its own dependent views, as with existing read
-contracts. Runtime, administration, public package/type contracts and b3m_ingest
-remain unchanged. Application mapping views and page 29 migration are separate.
+contracts. The technical view addition itself leaves runtime, administration and consuming
+applications unchanged. Subsequent runtime transaction changes are documented in
+[transaction-boundary.md](transaction-boundary.md). Application mapping views and page 29 migration are separate.
 
 ## Validation and target status
 

@@ -41,18 +41,25 @@ as
   as
     l_result integer;
   begin
-    -- if fsm_pkg.allows_event(self, p_fev_id) then
     l_result := fsm_req.raise_event(self, p_fev_id, p_msg, p_msg_args);
     self.fsm_validity := l_result;
-    if self.fsm_validity != 0 then
-      self.retry(p_fev_id);
-      l_result := self.fsm_validity;
-    end if;
-    -- end if;
     return l_result;
   end raise_event;
   
   
+  /*
+    Procedure: refresh_state
+      See: <FSM_TYPE.refresh_state>
+      Reloads request payload under the common FSM row lock using the technical
+      state contract, without translated views or writes.
+   */
+  overriding member procedure refresh_state(self in out nocopy fsm_req_type) as
+  begin
+    select req_id, req_rtp_id, req_rre_id, req_text
+      into self.req_id, self.req_rtp_id, self.req_rre_id, self.req_text
+      from fsm_requests where req_fsm_id = self.fsm_id;
+  end refresh_state;
+
   overriding member procedure persist_state(
     self in out nocopy fsm_req_type)
   as

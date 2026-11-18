@@ -52,6 +52,15 @@ create or replace type body fsm_type as
   end set_status;
 
 
+  /*
+    Procedure: refresh_state
+      See: <FSM_TYPE.refresh_state>
+   */
+  member procedure refresh_state(self in out nocopy fsm_type) as
+  begin
+    null;
+  end refresh_state;
+
   member procedure leave_status(
     self in out nocopy fsm_type)
   as
