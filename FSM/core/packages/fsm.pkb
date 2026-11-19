@@ -427,6 +427,28 @@ as
   /**
     Group: Interface
    */
+  /**
+    Function: get_version
+      See: <FSM.get_version>
+   */
+  function get_version return varchar2
+  as
+  begin
+    return '&FSM_VERSION.';
+  end get_version;
+
+
+  /**
+    Function: get_git_commit
+      See: <FSM.get_git_commit>
+   */
+  function get_git_commit return varchar2
+  as
+  begin
+    return '&FSM_GIT_COMMIT.';
+  end get_git_commit;
+
+
   /*
     Procedure: drop_object
       See  <FSM.drop_object>

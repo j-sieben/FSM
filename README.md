@@ -256,6 +256,88 @@ FSM_SERVICE=MYDB \
 
 CLI values override environment values. Missing values fall back to interactive prompts. In non-interactive mode, missing required values fail fast with a non-zero exit code.
 
+### Installed version
+
+Owner installation uses Bash 3.2+ on Unix and PowerShell 5.1+ on Windows;
+Python is not required. The starters run `FSM/tools/version.sh` or
+`FSM/tools/version.ps1` before connecting to the database.
+In a Git checkout, Git must be available, the full history must
+be present, and the entire repository must be clean, including untracked files.
+Commit the implementation before trying the new installation path.
+
+`VERSION` contains the manually maintained major/minor version, initially `1.0`.
+The installer appends `git rev-list --count <commit>` and records the full commit
+hash. All Git queries refer to the same captured commit. Changes anywhere in the
+repository count; a major/minor change does not reset the count.
+
+Installation commands remain unchanged:
+
+```sh
+./FSM/fsm.sh install
+# Windows: FSM\fsm.bat install
+```
+
+Query the installed identity from the owner or an already registered client:
+
+```sql
+select fsm.get_version, fsm.get_git_commit from dual;
+```
+
+SQL*Plus substitutes `FSM_VERSION` and `FSM_GIT_COMMIT` directly in `fsm.pkb`.
+No version package/table is created, and subsequent Git commits do not affect
+an existing database installation. The usual FSM package initialization still
+requires the PIT `FSM.AUTO_COMMIT` parameter. Final installation checks require
+a valid FSM specification/body and verify both values through the SQL API.
+An Oracle installation is not transactional: failure can leave partially updated
+objects; the version API does not detect later manual object changes.
+
+For a release that can be installed without Git, export from a clean checkout:
+
+```sh
+bash FSM/tools/version.sh export /tmp/FSM-release.zip
+# Windows:
+# powershell.exe -NoProfile -ExecutionPolicy Bypass -File FSM\tools\version.ps1 export C:\Temp\FSM-release.zip
+```
+
+The destination must not exist. Extract the ZIP and use its normal installer.
+The archive includes `FSM/install_scripts/release-version.txt` with the version
+and commit, while PL/SQL sources retain the substitution anchors. Unix export
+requires the standard `zip` utility; Windows export uses .NET ZIP support.
+Installing a prepared release requires neither Git nor Python. A plain source ZIP without this
+metadata cannot infer the commit count. A real checkout always uses Git rather
+than prepared metadata; dirty/shallow checkouts cannot bypass checks this way.
+Prepared metadata identifies the exported source, not subsequent edits to the ZIP.
+
+For direct SQL*Plus/SQLcl installation, first obtain validated values:
+
+```sh
+bash FSM/tools/version.sh resolve
+# Windows:
+# powershell.exe -NoProfile -ExecutionPolicy Bypass -File FSM\tools\version.ps1 resolve
+```
+
+Then, from the `FSM` directory, pass those trusted values explicitly (example):
+
+```sql
+@install_scripts/install.sql FSM GERMAN 1.0.124 0123456789abcdef0123456789abcdef01234567
+```
+
+Direct SQL execution does not perform Git checks. To reinstall just the body
+from source, first define both values; otherwise SQL*Plus prompts for them:
+
+```sql
+set define on
+set verify off
+define FSM_VERSION = '1.0.124'
+define FSM_GIT_COMMIT = '0123456789abcdef0123456789abcdef01234567'
+@tools/validate_version.sql
+@core/packages/fsm.pkb
+@tools/verify_version.sql
+```
+
+A plain `alter package fsm compile body` uses the already substituted stored
+source and needs no variables.
+
 ## Legacy CLI
 The previous shell entrypoints such as `install.sh`, `install_client.sh`, `install_sample.sh`, `install.bat` or `install_sample.bat` are no longer supported as top-level entrypoints.
 

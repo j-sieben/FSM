@@ -68,6 +68,7 @@ Environment:
 Notes:
   Passwords are intentionally not accepted as CLI options.
   Missing values fall back from CLI to environment and finally to interactive prompts.
+  Owner installation requires a clean, full Git checkout or a prepared release.
 EOF
 }
 
@@ -127,13 +128,16 @@ run_sqlplus() {
 
   echo "Running ${sql_script} as ${db_user}@${db_service}"
 
-  sqlplus -s /nolog <<SQL
+  (
+    cd "${SCRIPT_DIR}"
+    sqlplus -s /nolog <<SQL
 whenever oserror exit failure rollback
 whenever sqlerror exit failure rollback
 connect ${db_user}/"${db_password}"@${db_service}
-@${sql_script} $*
+@"${sql_script}" $*
 exit
 SQL
+  )
 }
 
 parse_args() {
@@ -202,6 +206,8 @@ case "${COMMAND}" in
     usage
     ;;
   install)
+    VERSION_INFO="$(bash "${SCRIPT_DIR}/tools/version.sh" resolve)" || exit 1
+    read -r FSM_VERSION FSM_GIT_COMMIT <<< "${VERSION_INFO}"
     OWNER="${OWNER:-${FSM_OWNER:-}}"
     SERVICE="${SERVICE:-${FSM_SERVICE:-}}"
 
@@ -210,7 +216,8 @@ case "${COMMAND}" in
     prompt_value SERVICE "Enter service name of the database or PDB: "
 
     setup_logging "install" "Install_FSM.log"
-    run_sqlplus "${OWNER}" "${OWNER_PW}" "${SERVICE}" "${SCRIPT_DIR}/install_scripts/install.sql" "${OWNER}" "${DEFAULT_LANGUAGE}"
+    echo "Installing FSM ${FSM_VERSION}, Git commit ${FSM_GIT_COMMIT}"
+    run_sqlplus "${OWNER}" "${OWNER_PW}" "${SERVICE}" "${SCRIPT_DIR}/install_scripts/install.sql" "${OWNER}" "${DEFAULT_LANGUAGE}" "${FSM_VERSION}" "${FSM_GIT_COMMIT}"
     ;;
   install-client)
     OWNER="${OWNER:-${FSM_OWNER:-}}"

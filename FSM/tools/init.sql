@@ -4,7 +4,7 @@ set echo off
 set feedback off
 set lines 120
 set pages 9999
-whenever sqlerror exit
+whenever sqlerror exit failure rollback
 set termout off
 col install_user new_val INSTALL_USER format a128
 col remote_user new_val REMOTE_USER format a128

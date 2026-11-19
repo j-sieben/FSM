@@ -6,6 +6,10 @@ prompt Running FSM client-schema contract tests
 
 define FSM_OWNER = '&1.'
 
+-- Existing FSM grants/synonyms must expose the new methods without new grants.
+select fsm.get_version as fsm_version, fsm.get_git_commit as fsm_git_commit
+  from dual;
+
 declare
   l_count binary_integer;
   procedure assert_equals(p_actual in number, p_expected in number, p_test in varchar2) as

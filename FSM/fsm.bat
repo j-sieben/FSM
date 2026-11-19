@@ -31,6 +31,7 @@ echo   uninstall-sample
 echo   help
 echo.
 echo Use fsm.sh for the full CLI option set on Unix-like systems.
+echo Owner installation requires PowerShell 5.1+ and a clean, full Git checkout or a prepared release.
 exit /b 0
 
 :read_secret
@@ -63,14 +64,33 @@ set "DB_USER=%~1"
 set "DB_PASSWORD=%~2"
 set "DB_SERVICE=%~3"
 set "SQL_SCRIPT=%~4"
-shift
-shift
-shift
-shift
-sqlplus -s /nolog @%SCRIPT_DIR%install_scripts\sqlplus_runner.sql "%DB_USER%" "%DB_PASSWORD%" "%DB_SERVICE%" "%SQL_SCRIPT%" %*
-exit /b %ERRORLEVEL%
+rem SHIFT does not change %%*: forward the four script arguments explicitly.
+pushd "%SCRIPT_DIR%" || exit /b 1
+sqlplus -s /nolog @"%SCRIPT_DIR%install_scripts\sqlplus_runner.sql" "%DB_USER%" "%DB_PASSWORD%" "%DB_SERVICE%" "%SQL_SCRIPT%" "%~5" "%~6" "%~7" "%~8"
+set "SQL_RESULT=%ERRORLEVEL%"
+popd
+exit /b %SQL_RESULT%
+
+:resolve_version
+set "VERSION_FILE=%TEMP%\fsm-version-%RANDOM%-%RANDOM%.txt"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%tools\version.ps1" resolve > "%VERSION_FILE%"
+if errorlevel 1 (
+  del "%VERSION_FILE%" >nul 2>nul
+  exit /b 1
+)
+set "FSM_VERSION="
+set "FSM_GIT_COMMIT="
+for /f "usebackq tokens=1,2" %%a in ("%VERSION_FILE%") do (
+  set "FSM_VERSION=%%a"
+  set "FSM_GIT_COMMIT=%%b"
+)
+del "%VERSION_FILE%" >nul 2>nul
+if not defined FSM_VERSION exit /b 1
+if not defined FSM_GIT_COMMIT exit /b 1
+exit /b 0
 
 :install
+call :resolve_version || exit /b 1
 if not defined FSM_OWNER set "FSM_OWNER="
 if not defined FSM_OWNER_PW set "FSM_OWNER_PW="
 if not defined FSM_SERVICE set "FSM_SERVICE="
@@ -78,7 +98,8 @@ if not defined FSM_DEFAULT_LANGUAGE set "FSM_DEFAULT_LANGUAGE=GERMAN"
 call :require_value FSM_OWNER "Enter owner schema for FSM: " || exit /b 1
 call :require_secret FSM_OWNER_PW "Enter password for %FSM_OWNER%" || exit /b 1
 call :require_value FSM_SERVICE "Enter service name of the database or PDB: " || exit /b 1
-call :run_sqlplus "%FSM_OWNER%" "%FSM_OWNER_PW%" "%FSM_SERVICE%" "%SCRIPT_DIR%install_scripts\install.sql" "%FSM_OWNER%" "%FSM_DEFAULT_LANGUAGE%"
+echo Installing FSM %FSM_VERSION%, Git commit %FSM_GIT_COMMIT%
+call :run_sqlplus "%FSM_OWNER%" "%FSM_OWNER_PW%" "%FSM_SERVICE%" "%SCRIPT_DIR%install_scripts\install.sql" "%FSM_OWNER%" "%FSM_DEFAULT_LANGUAGE%" "%FSM_VERSION%" "%FSM_GIT_COMMIT%"
 exit /b %ERRORLEVEL%
 
 :install_client

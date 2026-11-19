@@ -37,6 +37,7 @@ flowchart LR
 | Monitor metadata | Global translated states and severity order | `FSM/core/tables/fsm_monitor_status.tbl` |
 | Read models | Enriched metadata, state, valid commands, and graph edges | `FSM/core/views/*.vw` |
 | Installation | Schema setup, initial data, generated objects, grants; optional local scheduler scripts are excluded from standard installation | `FSM/core/install.sql`, `FSM/install_scripts/`, `FSM/core/scripts/` |
+| Installation identity | Git-derived product version and commit substituted directly into FSM getter methods | `VERSION`, `FSM/tools/version.sh`, `version.ps1`, `FSM/core/packages/fsm.pks`, `fsm.pkb` |
 
 ## Metadata relationships
 
@@ -69,6 +70,38 @@ erDiagram
 - PIT is an external dependency for logging/assertions and translations; UTL_TEXT is required by `FSM_ADMIN` for generation.
 - Monitoring is centrally defined but locally invoked. `FSM_MONITOR` never calls consuming schemas and never instantiates concrete FSM types.
 - Scheduler jobs are optional objects of consuming schemas. The scripts in `FSM/install_scripts/optional/` are not called by standard installation and create monitor jobs disabled so that activation remains an explicit local decision.
+
+## Installation identity flow
+
+`fsm.sh install` runs `tools/version.sh resolve` with Bash 3.2+;
+`fsm.bat install` runs `tools/version.ps1 resolve` with PowerShell 5.1+ before
+credentials/SQL*Plus. No Python dependency exists in installation or export.
+A clean full Git checkout
+supplies `VERSION` (major/minor), all reachable commit count and full hash from a
+single captured commit. No path filtering or count reset is applied. Stale
+release metadata never overrides the checkout. Outside Git, prepared
+`install_scripts/release-version.txt` supplies the same pair. Each helper's
+`export` command creates a committed-source ZIP and adds that metadata only to
+the archive; it does not rewrite source files. Unix export uses Git and the
+standard `zip` utility; Windows uses Git and .NET ZIP support. Offline installation
+needs neither Git nor an archive utility.
+
+Starters run SQL*Plus from `FSM/` and pass owner, language, version and commit.
+The Windows runner forwards arguments 5--8 explicitly (SHIFT does not alter
+`%*`). `install_scripts/install.sql` captures arguments 3/4 into named variables
+before nested scripts overwrite positional parameters and validates their format
+before DDL. `core/install.sql` also validates these variables for direct callers.
+SQL*Plus substitutes the values inside the existing FSM body. No extra database
+object, grant, synonym, runtime data or PIT message is needed. Final
+`tools/verify_version.sql` requires a valid FSM specification/body and compares
+SQL getter results to the installation inputs before reporting success.
+
+The public functions `fsm.get_version` and `fsm.get_git_commit` return the
+installed product identity without logging or transaction changes. FSM's normal
+PIT AUTO_COMMIT initialization still applies, but the getters do not access the
+SERIALLY_REUSABLE event context. Direct source reinstalls require the named
+variables; recompiling stored source does not. DDL is not atomic, and this
+identity is not an integrity check for later manual database/ZIP edits.
 
 ## Technical client read layer
 

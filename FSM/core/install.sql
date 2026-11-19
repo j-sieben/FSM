@@ -1,3 +1,4 @@
+@tools/validate_version.sql
 @tools/set_folders core
 
 prompt &h2.Create Default Messages
@@ -85,5 +86,6 @@ begin
 end;
 /
 
+set define on
 @&tools.install_package_body fsm
 @&tools.install_package_body fsm_monitor

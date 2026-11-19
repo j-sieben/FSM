@@ -50,6 +50,33 @@ as
   C_STORY_DETAIL constant binary_integer := 70;
 
   /**
+    Group: Installation identity
+   */
+  /**
+    Function: get_version
+      Returns the installed FSM product version. Takes no parameters and has
+      no transaction or logging side effects. The normal FSM package
+      initialization still requires a valid PIT FSM.AUTO_COMMIT parameter.
+
+    Returns:
+      Major.Minor.CommitCount fixed by SQL*Plus substitution at installation.
+   */
+  function get_version return varchar2;
+
+
+  /**
+    Function: get_git_commit
+      Returns the source commit of the installed FSM product, including changes
+      outside this package. Takes no parameters and has no transaction or
+      logging side effects. Normal FSM package initialization requirements apply.
+
+    Returns:
+      Full Git commit hash fixed at installation, not the current checkout HEAD.
+   */
+  function get_git_commit return varchar2;
+
+
+  /**
     Group: Object maintenance
    */
   /**

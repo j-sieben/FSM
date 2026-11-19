@@ -17,13 +17,39 @@ constant packages are covered by the separate repeated-installation check,
 because regenerating them invalidates dependent stateful packages in the current
 database session.
 
-Run `install_scripts/install.sql` twice from the `FSM` directory before the
-suite to verify an idempotent installation. Client grants and synonyms require a
+Run the supported owner installer twice before the suite, or supply trusted
+version/commit arguments to `install_scripts/install.sql` from the `FSM`
+directory (see the root README). Do not omit these arguments on direct SQL runs.
+Repeated installation verifies idempotency. Client grants and synonyms require a
 separate saved connection for the consuming schema and can be checked there with:
 
 ```sh
 sql -S -L -name "<client connection>" @FSM/tests/client_contract.sql B3M_UTILS
 ```
+
+## Installation versioning
+
+```sh
+python3 FSM/tests/static/versioning.py
+```
+
+This creates temporary Git repositories and a fake SQL*Plus executable. It checks
+whole-repository counting, major/minor changes, dirty/staged/untracked and shallow
+checkout rejection, invalid version rejection, offline ZIP metadata and stale
+metadata precedence. It exercises the Unix starter from another directory with
+spaces in the source path and verifies SQL*Plus argument forwarding and failure
+propagation. With `pwsh` available it also tests the PowerShell helper against the
+same cases; otherwise those cases are skipped. Offline installation is tested
+with a PATH containing neither Python nor Git. Python runs only this optional
+test suite, not installation or export. No database is contacted. Windows batch
+execution and Windows PowerShell 5.1 require a separate Windows host; this suite
+tests PowerShell Core on the current host when available.
+
+`installation_contract.sql` exercises the SQL version API; `client_contract.sql`
+also queries it through existing client grants and synonyms. The installation's
+own final check compares both returned values to the supplied identity. Run a
+real owner installation twice and the owner/client contracts on a designated
+test database to verify Oracle compilation and substitution end to end.
 
 ## utPLSQL runtime suite
 

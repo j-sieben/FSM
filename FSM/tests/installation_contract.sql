@@ -1,6 +1,19 @@
 prompt Running installation contract tests
 
 declare
+  l_version varchar2(40);
+  l_commit varchar2(64);
+begin
+  select fsm.get_version, fsm.get_git_commit into l_version, l_commit from dual;
+  if l_version is null or not regexp_like(l_version, '^[0-9]+\.[0-9]+\.[0-9]+$', 'c') or
+     l_commit is null or not regexp_like(l_commit, '^([0-9a-f]{40}|[0-9a-f]{64})$', 'c') then
+    raise_application_error(-20000, 'FSM installation identity is missing or unresolved');
+  end if;
+  dbms_output.put_line('PASS: SQL version API: ' || l_version || ' (' || l_commit || ')');
+end;
+/
+
+declare
   l_count binary_integer;
   procedure assert_equals(p_actual in number, p_expected in number, p_test in varchar2) as
   begin

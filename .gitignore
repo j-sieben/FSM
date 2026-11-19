@@ -1,3 +1,5 @@
 .DS_Store
 **/.DS_Store
 FSM/logs/Install_FSM.log
+FSM/install_scripts/release-version.txt
+__pycache__/
