@@ -12,6 +12,9 @@ for table in tables:
     body = source.split('create table ' + name)[1].split('constraint pk_')[0]
     columns = re.findall(r'^\s*([a-z]+_[a-z_]+)\s+(?:&|number|varchar2|timestamp|date|clob|msg_args_char|interval)', body, re.M)
     view = (core / 'views' / (name + '_tv.vw')).read_text()
+    for line in view.splitlines():
+        if re.match(r'\s*comment\s+on\s+', line, re.I):
+            assert re.fullmatch(r"\s*comment on (?:table|column) [a-z_0-9.]+ is '(?:[^']|'')*';\s*", line, re.I), (name, 'malformed SQL comment', line)
     sql = re.sub(r'/\*.*?\*/', '', view, flags=re.S).split(';')[0].strip()
     expected = r'create or replace view ' + name + r'_tv as\s+select\s+' + r'\s*,\s*'.join(columns) + r'\s+from ' + name
     assert re.fullmatch(expected, sql, re.I), name + ': exact projection'

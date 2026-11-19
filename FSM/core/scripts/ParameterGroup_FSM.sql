@@ -19,7 +19,8 @@ begin
       p_par_pgr_id => 'FSM',
       p_par_description => 'Commit the complete successful FSM event chain. Read once per FSM package initialization.',
       p_par_boolean_value => true,
-      p_par_is_modifiable => true);
+      -- Inherit group modifiability; PIT permits only false or null here.
+      p_par_is_modifiable => null);
   end if;
   commit;
 end;

@@ -6,7 +6,9 @@
 (default TRUE) only when absent. Owner installation installs it before FSM can
 initialize, including on repeat installation; existing values survive. Owner
 uninstall removes the parameter group. PARAM/PARAM_ADMIN and normal PIT client
-registration are prerequisites.
+registration are prerequisites. The parameter uses NULL for its individual
+modifiability flag and inherits the editable group policy. An explicit TRUE
+violates PIT's PARAMETER_TAB constraint, which permits only FALSE or NULL.
 
 FSM reads the effective value once into private `g_auto_commit` at package
 initialization. It is not SERIALLY_REUSABLE: pool sessions retain this setting.

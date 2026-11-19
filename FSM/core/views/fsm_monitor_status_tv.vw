@@ -19,5 +19,5 @@ comment on table fsm_monitor_status_tv is 'Language-neutral technical read contr
 comment on column fsm_monitor_status_tv.fms_id is 'Technical monitor status identifier';
 comment on column fsm_monitor_status_tv.fms_pti_id is 'Translatable item in the FSM message group';
 comment on column fsm_monitor_status_tv.fms_pmg_name is 'PIT message group, fixed to FSM';
-comment on column fsm_monitor_status_tv.fms_sort_seq is 'Severity order;
+comment on column fsm_monitor_status_tv.fms_sort_seq is 'Severity order';
 comment on column fsm_monitor_status_tv.fms_active is 'Flag indicating whether the monitor status is active';
