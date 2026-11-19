@@ -17,6 +17,7 @@ end;
 
 declare
   l_fsm fsm_tx_type;
+  l_child fsm_tx_type;
   l_result number;
   l_count number;
   l_rejected boolean;
@@ -36,6 +37,24 @@ begin
   l_fsm := new_instance;
   check((fsm_tx_probe.visible_status(l_fsm.fsm_id) = 'START' and l_auto)
         or (fsm_tx_probe.visible_status(l_fsm.fsm_id) is null and not l_auto), 'initialization visibility');
+  commit;
+
+  -- An unchanged child must restore its parent without committing or taking
+  -- ADVANCE's modeled transition to MIDDLE.
+  l_child := new_instance;
+  commit;
+  insert into fsm_tx_trace values('unchanged child');
+  l_result := fsm.raise_event(l_fsm, 'ADVANCE');
+  l_result := fsm.raise_event(l_child, 'ADVANCE');
+  l_result := l_child.set_status('START');
+  check(l_result = fsm.C_OK, 'unchanged child accepted without self-transition');
+  check(not fsm_tx_probe.available_for_lock(l_fsm.fsm_id), 'unchanged child does not commit parent');
+  l_result := l_fsm.set_status('START');
+  check(fsm_tx_probe.available_for_lock(l_fsm.fsm_id) = l_auto, 'unchanged root commit policy');
+  rollback;
+  select count(*) into l_count from fsm_tx_trace where marker = 'unchanged child';
+  check(l_count = case when l_auto then 1 else 0 end, 'unchanged completion caller-work commit policy');
+  delete from fsm_tx_trace;
   commit;
 
   -- A stale object must be corrected before event decisions.

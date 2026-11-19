@@ -17,8 +17,11 @@ create or replace package fsm_core_test as
   --%test(Status transition follows the lifecycle contract)
   procedure transition_lifecycle;
 
-  --%test(An unchanged status skips leave and enter hooks)
+  --%test(An unchanged status skips all transition hooks)
   procedure unchanged_status;
+
+  --%test(An unchanged child without self-transition restores the parent context)
+  procedure unchanged_child;
 
   --%test(Automatic events complete synchronously and finalize)
   procedure automatic_event_chain;
@@ -32,7 +35,7 @@ create or replace package fsm_core_test as
   --%test(Direct SET_STATUS is rejected without an event context)
   procedure invalid_status_fallback;
 
-  --%test(Unchanged status updates activity but preserves status date)
+  --%test(Unchanged status preserves activity and status dates)
   procedure activity_timestamp;
 
   --%test(Status transition updates activity and status dates)

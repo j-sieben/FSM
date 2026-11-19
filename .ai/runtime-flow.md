@@ -53,3 +53,16 @@ monitor boundary and validation.
 - Each newly crossed upward state is returned and logged; a downward movement returns and logs the new current state, including `OK`.
 - `FSM_OBJECTS_V.STATUS_STATE` exposes the last monitor state persisted by a scan.
 - The scan operates in an autonomous transaction, so later local signal handling cannot roll back the detected state or its log entry.
+
+
+## Unchanged target completion
+
+Concrete handlers must call SET_STATUS for every successful admitted event,
+including unchanged targets. After context and non-null-target checks, an
+unchanged target closes the event before target validation and skips every
+transition hook, persistence, status logging, notification, automatic event and
+finalization. No self-transition metadata is needed. Admission logging remains;
+activity/status dates and retry state are unchanged. Pending runtime reasons are
+cleared. Parent context restoration and outermost AUTO_COMMIT policy still apply.
+Initialization always runs the full lifecycle. A stack identity mismatch remains
+an error and never causes automatic popping of unrelated frames.

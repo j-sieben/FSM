@@ -131,8 +131,28 @@ create or replace package body fsm_core_test as
     commit;
     l_result := l_fsm.raise_event('STAY');
     ut.expect(l_result).to_equal(fsm.C_OK);
-    ut.expect(trace_for(l_fsm.fsm_id)).to_equal('BEFORE:PERSIST:AFTER');
+    ut.expect(trace_for(l_fsm.fsm_id)).to_be_null;
   end unchanged_status;
+
+  procedure unchanged_child as
+    l_parent fsm_ut_type;
+    l_child fsm_ut_type;
+    l_result number;
+  begin
+    l_parent := new_fsm;
+    l_child := new_fsm;
+    delete from fsm_ut_trace;
+    commit;
+    l_result := fsm.raise_event(l_parent, 'ADVANCE');
+    l_result := fsm.raise_event(l_child, 'ADVANCE');
+    -- ADVANCE allows only MIDDLE; retaining START needs no self-transition.
+    l_result := l_child.set_status('START');
+    ut.expect(l_result).to_equal(fsm.C_OK);
+    ut.expect(trace_for(l_child.fsm_id)).to_be_null;
+    l_result := l_parent.set_status('MIDDLE');
+    ut.expect(l_result).to_equal(fsm.C_OK);
+    ut.expect(l_parent.fsm_fst_id).to_equal('MIDDLE');
+  end unchanged_child;
 
   procedure automatic_event_chain as
     l_fsm fsm_ut_type;
@@ -179,6 +199,15 @@ create or replace package body fsm_core_test as
     select fsm_fst_id into l_status from fsm_objects where fsm_id = l_fsm.fsm_id;
     ut.expect(l_rejected).to_be_true;
     ut.expect(l_status).to_equal('START');
+    l_rejected := false;
+    begin
+      l_result := l_fsm.set_status('START');
+    exception
+      when others then
+        if sqlcode != -20001 then raise; end if;
+        l_rejected := true;
+    end;
+    ut.expect(l_rejected).to_be_true;
   end invalid_status_fallback;
 
   procedure activity_timestamp as
@@ -199,7 +228,7 @@ create or replace package body fsm_core_test as
     select fsm_last_change_date, fsm_status_change_date
       into l_activity_date, l_status_date
       from fsm_objects where fsm_id = l_fsm.fsm_id;
-    ut.expect(l_activity_date).to_be_greater_than(C_OLD_ACTIVITY);
+    ut.expect(l_activity_date).to_equal(C_OLD_ACTIVITY);
     ut.expect(l_status_date).to_equal(C_OLD_STATUS);
   end activity_timestamp;
 

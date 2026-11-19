@@ -60,10 +60,12 @@ as object(
     Function: set_status
       Delegates the handler-calculated target to FSM.SET_STATUS. Requires the
       active event context for this instance, except for framework initialization.
+      An unchanged target only closes the event, without transition validation
+      or lifecycle side effects. An explicit self-transition is not required.
       Internally closes the event; the outermost completion may commit according
       to FSM.AUTO_COMMIT. Technical errors clear context and propagate.
     Parameters:
-      p_fst_id - Target status allowed by the active transition.
+      p_fst_id - Current status, or target allowed by the active transition.
       p_msg - Optional PIT message key.
       p_msg_args - Optional message arguments.
     Returns:
@@ -94,8 +96,8 @@ as object(
   /**
     Procedure: before_transition
       Lifecycle hook called before common and subtype-specific state is
-      persisted. It runs for initial entry and unchanged-status transitions as
-      well as for regular status changes.
+      persisted. It runs for initial entry and regular status changes;
+      unchanged-status completion skips all lifecycle hooks.
    */
   member procedure before_transition(
     self in out nocopy fsm_type),
@@ -117,9 +119,9 @@ as object(
     self in out nocopy fsm_type),
   /**
     Procedure: after_transition
-      Lifecycle hook called after <enter_status>, or directly after logging when
-      the status did not change. Automatic events are raised only after this
-      hook has returned.
+      Lifecycle hook called after <enter_status> for initial entry and status
+      changes. Unchanged-status completion skips this hook. Automatic events
+      are raised only after this hook has returned.
    */
   member procedure after_transition(
     self in out nocopy fsm_type),

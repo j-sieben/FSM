@@ -156,7 +156,10 @@ particular target has durable diagnostics enabled.
 Run owner installation twice, `run_all.sql`, and the updated utPLSQL runtime
 suite. Compare invalid objects before/after, including external dependent SQL
 subtypes. Concrete handlers no longer call finish_event/abort_event: SET_STATUS
-owns successful completion. Implement refresh_state for persisted subtype payload,
+owns successful completion, including unchanged targets. These skip all transition
+hooks and persistence; activity/status dates are preserved. The utPLSQL suite
+also checks an unchanged child without self-transition metadata followed by
+successful parent completion. Implement refresh_state for persisted subtype payload,
 and perform all transactional work before the final SET_STATUS. See [.ai/transaction-boundary.md](../../.ai/transaction-boundary.md).
 No live compilation or regression run is implied by the source checks.
 

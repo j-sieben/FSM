@@ -833,7 +833,8 @@ as
 
   /*
     Function: set_status
-      See  <FSM.set_status>
+      See: <FSM.set_status>. An unchanged target only completes the admitted
+      event, before target validation or transition side effects.
    */
   function set_status(
     p_fsm in out nocopy fsm_type,
@@ -853,6 +854,14 @@ as
                     msg_param('fsm_fev_id', p_fsm.fsm_fev_id)));
 
     pit.assert_not_null(p_fst_id, p_msg_args => msg_args('P_FST_ID'));
+    if not l_event.initializing and p_fst_id = p_fsm.fsm_fst_id then
+      -- Admission already validated the event. No transition is being taken.
+      fsm_event_context.clear_reason(p_fsm.fsm_id);
+      pit.leave_mandatory;
+      complete_event(p_fsm);
+      return p_fsm.fsm_validity;
+    end if;
+
     if not l_event.initializing and not
        (l_event.event_id = fsm_fev.FSM_ERROR and p_fst_id = fsm_fst.FSM_ERROR) then
       declare

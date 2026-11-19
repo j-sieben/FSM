@@ -39,7 +39,7 @@ payload under the same lock. Overrides only load: no writes, commits or mutation
 of common identity/event fields. The sample request type reloads local domain
 columns. Unsaved payload modifications are replaced; apply command inputs after
 admission or keep them separately. The handler computes a target and calls public
-SET_STATUS, which requires the current frame and validates the target transition.
+SET_STATUS, which requires the current frame and validates changed target transitions.
 No second refresh overwrites the handler's decision.
 
 Automatic children enter through the instance's RAISE_EVENT and push their own
@@ -121,3 +121,25 @@ The existing owner and utPLSQL regressions remain relevant. No live target was
 designated: Oracle compilation, ACCESSIBLE BY runtime checks, call-boundary
 behavior and regression execution remain pending. Passing source checks are not
 an Oracle compile result. See FSM/tests/README.md for disposable-target execution.
+
+
+## Unchanged target completion
+
+Concrete handlers must call SET_STATUS for every successful admitted event,
+including unchanged targets. After context and non-null-target checks, an
+unchanged target closes the event before target validation and skips every
+transition hook, persistence, status logging, notification, automatic event and
+finalization. No self-transition metadata is needed. Admission logging remains;
+activity/status dates and retry state are unchanged. Pending runtime reasons are
+cleared. Parent context restoration and outermost AUTO_COMMIT policy still apply.
+Initialization always runs the full lifecycle. A stack identity mismatch remains
+an error and never causes automatic popping of unrelated frames.
+
+
+Validation on Rack (2026-11-19): the changed FSM package body compiled without
+errors; FSM, FSM_EVENT_CONTEXT and FSM_TYPE are VALID. In B3M, INGEST_PROCESS,
+FSM_INDE and FSM_INOR bodies were installed, and FSM_INJO/FSM_INDL recompiled;
+all checked FSM subtype specifications/bodies are VALID, with no invalid B3M
+objects. Source transaction checks and diff checks pass. New Oracle runtime
+regressions remain unexecuted. The targeted FSM body deployment retained the
+previously installed version/commit identity; it was not a versioned release.

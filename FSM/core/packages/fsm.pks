@@ -236,9 +236,15 @@ as
       entry). Direct calls without context fail before mutation. Technical errors
       propagate; they are never converted into an FSM_ERROR status. The outermost
       successful completion follows cached FSM.AUTO_COMMIT.
+      An unchanged target completes the event without target-transition validation,
+      lifecycle hooks, persistence, status logging, notifications, automatic events
+      or finalization. No explicit self-transition is required. Admission logging
+      remains in RAISE_EVENT; activity/status dates and retry state are unchanged.
+      Pending runtime reasons are discarded. The same outermost commit policy
+      applies, including caller work performed before this completion.
       A new status is determined by the logic of the event handler or by calling GET_NEXT_STATUS.
       Based on the new status, allowed events are determined.
-      The transition is processed synchronously in the following order:
+      A changed target or initial entry is processed synchronously in this order:
 
       1. Store the previous status and assign the target status.
       2. Call FSM_TYPE.leave_status if an existing status is left.
@@ -266,7 +272,7 @@ as
       
     Parameters:
       p_fsm - Instance of fsm (concrete class of the type inherited from FSM_TYPE)
-      p_fst_id - Target status of the transition
+      p_fst_id - Current status for completion, or target status of the transition
       p_msg - Reference to MSG, will be created as message
       p_msg_args - Optional parameters to pass to the log message
   
@@ -292,7 +298,7 @@ as
       
     Parameters:
       p_fsm - Instance of fsm (concrete class of the type inherited from FSM_TYPE)
-      p_fst_id - Target status of the transition
+      p_fst_id - Current status for completion, or target status of the transition
       p_msg - Reference to MSG, will be created as message
       p_msg_args - Optional parameters to pass to the log message
    */

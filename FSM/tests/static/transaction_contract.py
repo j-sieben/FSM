@@ -12,7 +12,7 @@ assert len(re.findall(r'\bcommit\s*;', code, re.I)) == 1
 complete = code.split('procedure complete_event(')[1].split('end complete_event;')[0]
 assert complete.index('pop_event') < complete.index('if fsm_event_context.is_empty') < complete.index('if g_auto_commit') < complete.index('commit;')
 status = code.split('function set_status(')[1].split('end set_status;')[0]
-assert status.index('p_fsm.raise_event') < status.index('complete_event(p_fsm)')
+assert status.index('p_fsm.raise_event') < status.rindex('complete_event(p_fsm)')
 assert 'report_failure' in status and 'raise;' in status
 assert not re.search(r'\b(?:finish_event|abort_event|g_events|g_depth|g_context)\b', code + spec, re.I)
 helper_spec = (root / 'core/packages/fsm_event_context.pks').read_text()
